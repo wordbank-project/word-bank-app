@@ -1,10 +1,25 @@
 import React from "react";
-import { ScrollView, Text } from "react-native";
+import { globalStyles } from "@/styles/global";
+import { ActivityIndicator, FlatList, StyleProp, ViewStyle } from "react-native";
+import { Book } from "@/models/book";
+import BookItem from "./BookItem";
 
-export default function BooksList() {
+type BooksListProps = {
+    books: Book[];
+    loading?: boolean;
+    header?: React.ReactElement;
+    style?: StyleProp<ViewStyle>;
+};
+
+export default function BooksList({ books, loading, header, style }: BooksListProps) {
     return (
-        <ScrollView>
-            <Text>All books</Text>
-        </ScrollView>
+        <FlatList
+            style={style}
+            data={books}
+            keyExtractor={(item) => item.key}
+            renderItem={({ item }) => <BookItem book={item} />}
+            ListHeaderComponent={header}
+            ListEmptyComponent={loading ? <ActivityIndicator size="large" style={globalStyles.loadingContainer} /> : null}
+        />
     );
 }

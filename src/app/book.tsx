@@ -1,9 +1,9 @@
 import { ScrollView, Text } from "react-native";
 
-export default function Book() {
+export default function BookDetail() {
     return (
         <ScrollView>
-            <Text>Book details</Text>
+            <Text>Book detail</Text>
         </ScrollView>
     );
 }

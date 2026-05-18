@@ -39,4 +39,7 @@ export const globalStyles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'red',
     },
+    loadingContainer: {
+        marginTop: 50,
+    },
 });
