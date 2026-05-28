@@ -1,7 +1,7 @@
-import { Ionicons } from '@expo/vector-icons';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useColorScheme } from '@/context/theme-context';
 import { Colors } from '@/styles/global';
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
@@ -45,6 +45,15 @@ export default function TabLayout() {
                     title: "Saved Books",
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="book" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="read-list"
+                options={{
+                    title: "Read List",
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="list" size={size} color={color} />
                     ),
                 }}
             />
