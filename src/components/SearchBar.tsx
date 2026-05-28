@@ -1,15 +1,14 @@
 import { useColorScheme } from "@/context/theme-context";
-import { Book } from "@/models/book";
 import { ACCENT, Colors } from "@/styles/global";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 type SearchBarProps = {
-    onResults: (books: Book[]) => void;
-    onLoadingChange?: (loading: boolean) => void;
+    onSearch: (query: string) => void;
+    loading: boolean;
 };
 
-export default function SearchBar({ onResults, onLoadingChange }: SearchBarProps) {
+export default function SearchBar({ onSearch, loading }: SearchBarProps) {
     const scheme = useColorScheme();
     const styles = scheme === 'dark' ? darkStyles : lightStyles;
     const placeholderColor = scheme === 'dark'
@@ -17,29 +16,10 @@ export default function SearchBar({ onResults, onLoadingChange }: SearchBarProps
         : Colors.light.textPlaceholder;
 
     const [query, setQuery] = useState<string>("");
-    const [loading, setLoading] = useState<boolean>(false);
 
-    function updateLoading(value: boolean): void {
-        setLoading(value);
-        onLoadingChange?.(value);
-    }
-
-    async function handleSearch(): Promise<void> {
+    function handleSearch(): void {
         Keyboard.dismiss();
-        if (!query.trim()) return;
-        updateLoading(true);
-        try {
-            const BOOKS_API_URL = "https://openlibrary.org/search.json";
-
-            const res = await fetch(`${BOOKS_API_URL}?q=${encodeURIComponent(query)}&limit=20`);
-            const data = await res.json();
-
-            onResults(data.docs ?? []);
-        } catch {
-            onResults([]);
-        } finally {
-            updateLoading(false);
-        }
+        onSearch(query);
     }
 
     return (
@@ -55,7 +35,11 @@ export default function SearchBar({ onResults, onLoadingChange }: SearchBarProps
                 autoCorrect={false}
                 autoCapitalize="none"
             />
-            <Pressable style={[styles.button, loading && styles.buttonDisabled]} onPress={handleSearch} disabled={loading}>
+            <Pressable
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleSearch}
+                disabled={loading}
+            >
                 <Text style={styles.buttonText}>{loading ? "Searching..." : "Search"}</Text>
             </Pressable>
         </View>
