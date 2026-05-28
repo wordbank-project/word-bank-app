@@ -3,7 +3,34 @@ import { Book } from "@/models/book";
 import { ACCENT, Colors } from "@/styles/global";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Animated, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import Reanimated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 import BookItem from "./BookItem";
+
+const SKELETON_TITLE_WIDTHS  = ['72%', '58%', '80%', '65%', '75%', '50%', '68%', '78%'] as const;
+const SKELETON_AUTHOR_WIDTHS = ['45%', '38%', '52%', '42%', '48%', '35%', '44%', '50%'] as const;
+
+function BookSkeletons({ styles }: { styles: ReturnType<typeof buildStyles> }) {
+    const opacity = useSharedValue(1);
+    useEffect(() => {
+        opacity.value = withRepeat(withTiming(0.35, { duration: 750 }), -1, true);
+    }, []);
+    const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+    return (
+        <>
+            {SKELETON_TITLE_WIDTHS.map((titleW, i) => (
+                <Reanimated.View key={i} style={[styles.bookRow, animStyle]}>
+                    <View style={[styles.cover, styles.skeletonBox]} />
+                    <View style={styles.bookInfo}>
+                        <View style={[styles.skeletonBox, styles.skeletonLine, { width: titleW, height: 14 }]} />
+                        <View style={[styles.skeletonBox, styles.skeletonLine, { width: SKELETON_AUTHOR_WIDTHS[i], height: 12 }]} />
+                        <View style={[styles.skeletonBox, styles.skeletonLine, { width: '22%', height: 11 }]} />
+                    </View>
+                </Reanimated.View>
+            ))}
+        </>
+    );
+}
 
 const SCROLL_THRESHOLD = 300;
 
@@ -62,9 +89,7 @@ export default function BooksList({
                 }}
                 ListEmptyComponent={
                     loading ? (
-                        <View style={styles.loaderContainer}>
-                            <ActivityIndicator size="large" color={ACCENT} />
-                        </View>
+                        <BookSkeletons styles={styles} />
                     ) : searched && books.length === 0 ? (
                         <Text style={styles.empty}>No books found.</Text>
                     ) : null
@@ -108,9 +133,29 @@ function buildStyles(C: typeof Colors.light) {
             backgroundColor: C.background,
             paddingHorizontal: 12,
         },
-        loaderContainer: {
-            marginTop: 48,
-            alignItems: 'center',
+        bookRow: {
+            flexDirection: 'row',
+            gap: 12,
+            paddingVertical: 10,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: C.border,
+        },
+        cover: {
+            width: 48,
+            height: 64,
+            borderRadius: 4,
+        },
+        bookInfo: {
+            flex: 1,
+            justifyContent: 'center',
+            gap: 4,
+        },
+        skeletonBox: {
+            backgroundColor: C.coverPlaceholder,
+            borderRadius: 4,
+        },
+        skeletonLine: {
+            borderRadius: 4,
         },
         empty: {
             marginTop: 24,
