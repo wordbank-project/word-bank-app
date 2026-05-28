@@ -1,26 +1,40 @@
-import { globalStyles } from "@/styles/global";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
+import { useColorScheme } from "@/context/theme-context";
 import { type Book } from "@/models/book";
-
+import { Colors } from "@/styles/global";
 import BooksList from "@/components/BooksList";
-import HomeHeader from "@/components/HomeHeader";
 import SearchBar from "@/components/SearchBar";
 
 export default function HomeScreen() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+    const scheme = useColorScheme();
+    const styles = scheme === 'dark' ? darkStyles : lightStyles;
 
-  const header = (
-    <View>
-      <Text style={globalStyles.title}>Welcome to Word Bank!</Text>
-      <HomeHeader />
-      <SearchBar onResults={setBooks} onLoadingChange={setLoading} />
-    </View>
-  );
+    const [books, setBooks] = useState<Book[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
 
-  return (
-    <BooksList books={books} loading={loading} header={header} style={globalStyles.container} />
-  );
+    const header = (
+        <View>
+            <SearchBar onResults={setBooks} onLoadingChange={setLoading} />
+        </View>
+    );
+
+    return (
+        <View style={styles.container}>
+            <BooksList books={books} loading={loading} header={header} />
+        </View>
+    );
 }
+
+function buildStyles(C: typeof Colors.light) {
+    return StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: C.background,
+        },
+    });
+}
+
+const lightStyles = buildStyles(Colors.light);
+const darkStyles = buildStyles(Colors.dark);

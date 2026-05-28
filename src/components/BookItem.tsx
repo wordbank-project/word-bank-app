@@ -1,8 +1,13 @@
+import { useColorScheme } from "@/context/theme-context";
 import { Book } from "@/models/book";
+import { ACCENT, Colors } from "@/styles/global";
 import { router } from "expo-router";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function BookItem({ book }: { book: Book }) {
+    const scheme = useColorScheme();
+    const styles = scheme === 'dark' ? darkStyles : lightStyles;
+
     const { key, title, author_name, first_publish_year, cover_i } = book;
     return (
         <Pressable
@@ -44,38 +49,43 @@ export default function BookItem({ book }: { book: Book }) {
     );
 }
 
-const styles = StyleSheet.create({
-    bookRow: {
-        flexDirection: "row",
-        gap: 12,
-        paddingVertical: 10,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: "#e0e0e0",
-    },
-    cover: {
-        width: 48,
-        height: 64,
-        borderRadius: 4,
-    },
-    coverPlaceholder: {
-        backgroundColor: "#ddd",
-    },
-    bookInfo: {
-        flex: 1,
-        justifyContent: "center",
-        gap: 4,
-    },
-    title: {
-        fontSize: 15,
-        fontWeight: "600",
-        color: "#11181C",
-    },
-    author: {
-        fontSize: 13,
-        color: "#555",
-    },
-    year: {
-        fontSize: 12,
-        color: "#888",
-    },
-});
+function buildStyles(C: typeof Colors.light) {
+    return StyleSheet.create({
+        bookRow: {
+            flexDirection: "row",
+            gap: 12,
+            paddingVertical: 10,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: C.border,
+        },
+        cover: {
+            width: 48,
+            height: 64,
+            borderRadius: 4,
+        },
+        coverPlaceholder: {
+            backgroundColor: C.coverPlaceholder,
+        },
+        bookInfo: {
+            flex: 1,
+            justifyContent: "center",
+            gap: 4,
+        },
+        title: {
+            fontSize: 15,
+            fontWeight: "600",
+            color: C.text,
+        },
+        author: {
+            fontSize: 13,
+            color: C.textSecondary,
+        },
+        year: {
+            fontSize: 12,
+            color: C.textMuted,
+        },
+    });
+}
+
+const lightStyles = buildStyles(Colors.light);
+const darkStyles = buildStyles(Colors.dark);

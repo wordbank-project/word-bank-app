@@ -1,29 +1,33 @@
 import { Ionicons } from '@expo/vector-icons';
+import ThemeToggle from '@/components/ThemeToggle';
+import { useColorScheme } from '@/context/theme-context';
+import { Colors } from '@/styles/global';
 import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
+    const colorScheme = useColorScheme();
+    const C = Colors[colorScheme];
+
     return (
         <Tabs
             screenOptions={{
                 headerShown: true,
                 headerStyle: {
-                    backgroundColor: '#1e1e1e',
-                    borderBottomColor: 'rgb(39, 39, 41)',
+                    backgroundColor: C.background,
                 },
                 headerTitleStyle: {
-                    color: 'white',
+                    color: C.text,
                     fontWeight: 'bold',
                     fontSize: 25,
                 },
                 headerTitleAlign: 'center',
+                headerRight: () => <ThemeToggle />,
                 tabBarStyle: {
-                    backgroundColor: '#1e1e1e',
-                    borderTopColor: 'rgb(39, 39, 41)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
+                    backgroundColor: C.background,
+                    borderTopColor: C.border,
                 },
-                tabBarActiveTintColor: 'white',
+                tabBarActiveTintColor: C.tint,
+                tabBarInactiveTintColor: C.tabIconDefault,
             }}
         >
             <Tabs.Screen

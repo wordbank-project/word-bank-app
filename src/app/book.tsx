@@ -1,12 +1,18 @@
+import { useColorScheme } from "@/context/theme-context";
 import { BookWord } from "@/models/book-word";
+import { ACCENT, Colors, ERROR } from "@/styles/global";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function BookDetail() {
+    const scheme = useColorScheme();
+    const styles = scheme === 'dark' ? darkStyles : lightStyles;
+    const placeholderColor = scheme === 'dark'
+        ? Colors.dark.textPlaceholder
+        : Colors.light.textPlaceholder;
 
-    const { key, title, author, year, cover_i } = useLocalSearchParams<{
-        key: string;
+    const { title, author, year, cover_i } = useLocalSearchParams<{
         title: string;
         author: string;
         year: string;
@@ -16,15 +22,13 @@ export default function BookDetail() {
     const coverUri = cover_i
         ? `https://covers.openlibrary.org/b/id/${cover_i}-M.jpg`
         : null;
-    console.log(coverUri);
 
-    const [words, setWords] = useState<BookWord[]>([]);
+    const [words, setWordsState] = useState<BookWord[]>([]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     async function handleAddWord() {
-        console.log("test");
         const word = input.trim().toLowerCase();
         if (!word) return;
         if (words.some((w) => w.word === word)) {
@@ -58,13 +62,12 @@ export default function BookDetail() {
     }
 
     async function persistWords(updated: BookWord[]) {
-        // Save to asyncstorage
+        setWordsState(updated);
     }
-
 
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1 }}
+            style={styles.container}
             behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <Stack.Screen options={{ title: title ?? "Book Detail", headerShown: true, headerBackVisible: true }} />
@@ -86,7 +89,7 @@ export default function BookDetail() {
                 <TextInput
                     style={styles.input}
                     placeholder="Add a word..."
-                    placeholderTextColor={styles.input.color}
+                    placeholderTextColor={placeholderColor}
                     value={input}
                     onChangeText={(t) => { setInput(t); setError(""); }}
                     onSubmitEditing={handleAddWord}
@@ -108,82 +111,94 @@ export default function BookDetail() {
             </View>
 
             {error ? <Text style={styles.error}>{error}</Text> : null}
-
         </KeyboardAvoidingView>
     );
 }
 
-const styles = StyleSheet.create({
-    header: {
-        flexDirection: "row",
-        gap: 14,
-        padding: 16,
-        display: "flex",
-        alignItems: "center",
-    },
-    cover: {
-        width: 120,
-        height: 160,
-        borderRadius: 8,
-    },
-    coverPlaceholder: {
-        backgroundColor: "#ddd",
-    },
-    headerInfo: {
-        flex: 1,
-        justifyContent: "center",
-        gap: 6,
-    },
-    bookTitle: {
-        fontSize: 20,
-        fontWeight: "700",
-        color: "#11181C",
-    },
-    bookAuthor: {
-        fontSize: 16,
-        color: "#555",
-    },
-    bookYear: {
-        fontSize: 14,
-        color: "#888",
-    },
-    addRow: {
-        flexDirection: "row",
-        gap: 8,
-        padding: 12,
-        paddingBottom: 4,
-    },
-    input: {
-        flex: 1,
-        height: 44,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        paddingHorizontal: 12,
-        fontSize: 16,
-        color: "#11181C",
-        backgroundColor: "#f9f9f9",
-    },
-    addButton: {
-        backgroundColor: "#0a7ea4",
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        justifyContent: "center",
-        minWidth: 56,
-        alignItems: "center",
-    },
-    addButtonDisabled: {
-        opacity: 0.6,
-    },
-    addButtonText: {
-        color: "#fff",
-        fontWeight: "600",
-        fontSize: 16,
-    },
-    error: {
-        color: "#e05252",
-        fontSize: 13,
-        paddingHorizontal: 12,
-        paddingBottom: 4,
-    },
-});
+function buildStyles(C: typeof Colors.light) {
+    return StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: C.background,
+        },
+        header: {
+            flexDirection: "row",
+            gap: 14,
+            padding: 16,
+            alignItems: "center",
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: C.border,
+        },
+        cover: {
+            width: 120,
+            height: 160,
+            borderRadius: 8,
+        },
+        coverPlaceholder: {
+            backgroundColor: C.coverPlaceholder,
+        },
+        headerInfo: {
+            flex: 1,
+            justifyContent: "center",
+            gap: 6,
+        },
+        bookTitle: {
+            fontSize: 20,
+            fontWeight: "700",
+            color: C.text,
+        },
+        bookAuthor: {
+            fontSize: 16,
+            color: C.textSecondary,
+        },
+        bookYear: {
+            fontSize: 14,
+            color: C.textMuted,
+        },
+        addRow: {
+            flexDirection: "row",
+            gap: 8,
+            padding: 12,
+            paddingBottom: 4,
+        },
+        input: {
+            flex: 1,
+            height: 44,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: C.borderInput,
+            paddingHorizontal: 12,
+            paddingVertical: 0,
+            fontSize: 16,
+            color: C.text,
+            backgroundColor: C.backgroundInput,
+            textAlignVertical: 'center',
+            includeFontPadding: false,
+        },
+        addButton: {
+            backgroundColor: ACCENT,
+            borderRadius: 8,
+            paddingHorizontal: 16,
+            justifyContent: "center",
+            minWidth: 56,
+            alignItems: "center",
+        },
+        addButtonDisabled: {
+            opacity: 0.6,
+        },
+        addButtonText: {
+            color: "#fff",
+            fontWeight: "600",
+            fontSize: 16,
+        },
+        error: {
+            color: ERROR,
+            fontSize: 13,
+            paddingHorizontal: 12,
+            paddingBottom: 4,
+        },
+    });
+}
+
+const lightStyles = buildStyles(Colors.light);
+const darkStyles = buildStyles(Colors.dark);
