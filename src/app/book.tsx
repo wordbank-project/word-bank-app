@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Image, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
 
 import { Stack, useLocalSearchParams } from "expo-router";
 
@@ -41,6 +42,13 @@ export default function BookDetail() {
     const [draft, setDraft] = useState<EditDraft>({ sentence: '', notes: '' });
 
     const notesRef = useRef<TextInput>(null);
+    const sentenceRef = useRef<TextInput>(null);
+
+    useEffect(() => {
+        if (editingWord) {
+            setTimeout(() => sentenceRef.current?.focus(), 50);
+        }
+    }, [editingWord]);
 
     useEffect(() => {
         if (key) getWords(key).then(setWordsState);
@@ -106,151 +114,157 @@ export default function BookDetail() {
     }
 
     return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
+        <React.Fragment>
             <Stack.Screen options={{ title: title ?? "Book Detail", headerShown: true, headerBackVisible: true }} />
 
-            <View style={styles.header}>
-                {coverUri ? (
-                    <Image source={{ uri: coverUri }} style={styles.cover} />
-                ) : (
-                    <View style={[styles.cover, styles.coverPlaceholder]} />
-                )}
-                <View style={styles.headerInfo}>
-                    <Text style={styles.bookTitle} numberOfLines={3}>{title}</Text>
-                    {author ? <Text style={styles.bookAuthor}>{author}</Text> : null}
-                    {year ? <Text style={styles.bookYear}>{year}</Text> : null}
-                </View>
-            </View>
-
-            <View style={styles.addRow}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Add a word..."
-                    placeholderTextColor={placeholderColor}
-                    value={input}
-                    onChangeText={(t) => { setInput(t); setError(""); }}
-                    onSubmitEditing={handleAddWord}
-                    returnKeyType="done"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                />
-                <Pressable
-                    style={[styles.addButton, loading && styles.addButtonDisabled]}
-                    onPress={handleAddWord}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" size="small" />
-                    ) : (
-                        <Text style={styles.addButtonText}>Add</Text>
-                    )}
-                </Pressable>
-            </View>
-
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            <FlatList
-                data={words}
-                keyExtractor={(item) => item.word}
-                contentContainerStyle={styles.list}
+            <KeyboardAwareScrollView
+                style={styles.container}
+                contentContainerStyle={styles.scrollContent}
                 keyboardShouldPersistTaps="handled"
-                ListEmptyComponent={
-                    <Text style={styles.empty}>No words yet. Add one above.</Text>
-                }
-                renderItem={({ item }) => {
-                    const isEditing = editingWord === item.word;
-                    return (
-                        <View style={styles.card}>
-                            <View style={styles.cardHeader}>
-                                <Text style={styles.word}>{item.word}</Text>
-                                {item.phonetic ? (
-                                    <Text style={styles.phonetic}>{item.phonetic}</Text>
-                                ) : null}
-                                <Pressable
-                                    style={styles.editButton}
-                                    hitSlop={8}
-                                    onPress={() => {
-                                        if (isEditing) {
-                                            setEditingWord(null);
-                                        } else {
-                                            setEditingWord(item.word);
-                                            setDraft({ sentence: item.sentence ?? '', notes: item.notes ?? '' });
-                                        }
-                                    }}
-                                >
-                                    <Text style={styles.editText}>{isEditing ? 'Cancel' : 'Edit'}</Text>
-                                </Pressable>
-                            </View>
+                // Adjust the space between the keyboard and the selected input to ensure the input is not covered by the keyboard.
+                bottomOffset={230}
+            >
+                <View style={styles.header}>
+                    {coverUri ? (
+                        <Image source={{ uri: coverUri }} style={styles.cover} />
+                    ) : (
+                        <View style={[styles.cover, styles.coverPlaceholder]} />
+                    )}
+                    <View style={styles.headerInfo}>
+                        <Text style={styles.bookTitle} numberOfLines={3}>{title}</Text>
+                        {author ? <Text style={styles.bookAuthor}>{author}</Text> : null}
+                        {year ? <Text style={styles.bookYear}>{year}</Text> : null}
+                    </View>
+                </View>
 
-                            <Text style={styles.partOfSpeech}>{item.partOfSpeech}</Text>
-                            <Text style={styles.definition}>{item.definition}</Text>
+                {!editingWord && (
+                    <View style={styles.addRow}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Add a word..."
+                            placeholderTextColor={placeholderColor}
+                            value={input}
+                            onChangeText={(t) => { setInput(t); setError(""); }}
+                            onSubmitEditing={handleAddWord}
+                            returnKeyType="done"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                        <Pressable
+                            style={[styles.addButton, loading && styles.addButtonDisabled]}
+                            onPress={handleAddWord}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" size="small" />
+                            ) : (
+                                <Text style={styles.addButtonText}>Add</Text>
+                            )}
+                        </Pressable>
+                    </View>
+                )}
 
-                            {!isEditing && item.sentence ? (
-                                <View style={styles.metaBlock}>
-                                    <Text style={styles.metaLabel}>Sentence</Text>
-                                    <Text style={styles.metaValue}>{item.sentence}</Text>
-                                </View>
-                            ) : null}
+                {error ? <Text style={styles.error}>{error}</Text> : null}
 
-                            {!isEditing && item.notes ? (
-                                <View style={styles.metaBlock}>
-                                    <Text style={styles.metaLabel}>Notes</Text>
-                                    <Text style={styles.metaValue}>{item.notes}</Text>
-                                </View>
-                            ) : null}
-
-                            {isEditing ? (
-                                <View style={styles.editForm}>
-                                    <View style={styles.labelRow}>
-                                        <Text style={styles.metaLabel}>Sentence</Text>
-                                        <Text style={styles.charCount}>{draft.sentence.length} / {SENTENCE_MAX}</Text>
+                <View style={styles.list}>
+                    {words.length === 0 ? (
+                        <Text style={styles.empty}>No words yet. Add one above.</Text>
+                    ) : (
+                        words.map((item) => {
+                            const isEditing = editingWord === item.word;
+                            return (
+                                <View key={item.word} style={styles.card}>
+                                    <View style={styles.cardHeader}>
+                                        <Text style={styles.word}>{item.word}</Text>
+                                        {item.phonetic ? (
+                                            <Text style={styles.phonetic}>{item.phonetic}</Text>
+                                        ) : null}
+                                        <Pressable
+                                            style={styles.editButton}
+                                            hitSlop={8}
+                                            onPress={() => {
+                                                if (isEditing) {
+                                                    setEditingWord(null);
+                                                } else {
+                                                    setEditingWord(item.word);
+                                                    setDraft({ sentence: item.sentence ?? '', notes: item.notes ?? '' });
+                                                }
+                                            }}
+                                        >
+                                            <Text style={styles.editText}>{isEditing ? 'Cancel' : 'Edit'}</Text>
+                                        </Pressable>
                                     </View>
-                                    <TextInput
-                                        style={styles.editInput}
-                                        placeholder={`e.g. 'I encountered "${item.word}" while reading...'`}
-                                        placeholderTextColor={placeholderColor}
-                                        value={draft.sentence}
-                                        onChangeText={(t) => setDraft({ ...draft, sentence: t })}
-                                        multiline
-                                        autoCorrect
-                                        autoFocus
-                                        maxLength={SENTENCE_MAX}
-                                        returnKeyType="next"
-                                        submitBehavior="submit"
-                                        onSubmitEditing={() => {
-                                            Keyboard.dismiss();
-                                            setTimeout(() => notesRef.current?.focus(), 100);
-                                        }}
-                                    />
-                                    <Text style={styles.metaLabel}>Notes</Text>
-                                    <TextInput
-                                        ref={notesRef}
-                                        style={styles.editInput}
-                                        placeholder="e.g. Similar to 'optimistic', used in formal writing"
-                                        placeholderTextColor={placeholderColor}
-                                        value={draft.notes}
-                                        onChangeText={(t) => setDraft({ ...draft, notes: t })}
-                                        multiline
-                                        autoCorrect
-                                        returnKeyType="done"
-                                        onSubmitEditing={Keyboard.dismiss}
-                                    />
-                                    <Pressable
-                                        style={styles.saveButton}
-                                        onPress={() => { Keyboard.dismiss(); handleSaveEdit(item.word); }}
-                                    >
-                                        <Text style={styles.saveButtonText}>Save</Text>
-                                    </Pressable>
+
+                                    <Text style={styles.partOfSpeech}>{item.partOfSpeech}</Text>
+                                    <Text style={styles.definition}>{item.definition}</Text>
+
+                                    {!isEditing && item.sentence ? (
+                                        <View style={styles.metaBlock}>
+                                            <Text style={styles.metaLabel}>Sentence</Text>
+                                            <Text style={styles.metaValue}>{item.sentence}</Text>
+                                        </View>
+                                    ) : null}
+
+                                    {!isEditing && item.notes ? (
+                                        <View style={styles.metaBlock}>
+                                            <Text style={styles.metaLabel}>Notes</Text>
+                                            <Text style={styles.metaValue}>{item.notes}</Text>
+                                        </View>
+                                    ) : null}
+
+                                    {isEditing ? (
+                                        <View style={styles.editForm}>
+                                            <View style={styles.labelRow}>
+                                                <Text style={styles.metaLabel}>Sentence</Text>
+                                                <Text style={styles.charCount}>{draft.sentence.length} / {SENTENCE_MAX}</Text>
+                                            </View>
+                                            <TextInput
+                                                style={styles.editInput}
+                                                placeholder={`e.g. 'I encountered "${item.word}" while reading...'`}
+                                                placeholderTextColor={placeholderColor}
+                                                value={draft.sentence}
+                                                onChangeText={(t) => setDraft({ ...draft, sentence: t })}
+                                                multiline
+                                                autoCorrect
+                                                ref={sentenceRef}
+                                                maxLength={SENTENCE_MAX}
+                                                returnKeyType="next"
+                                                submitBehavior="submit"
+                                                onSubmitEditing={() => {
+                                                    Keyboard.dismiss();
+                                                    setTimeout(() => notesRef.current?.focus(), 100);
+                                                }}
+                                            />
+                                            <Text style={styles.metaLabel}>Notes</Text>
+                                            <TextInput
+                                                ref={notesRef}
+                                                style={styles.editInput}
+                                                placeholder="e.g. Similar to 'optimistic', used in formal writing"
+                                                placeholderTextColor={placeholderColor}
+                                                value={draft.notes}
+                                                onChangeText={(t) => setDraft({ ...draft, notes: t })}
+                                                multiline
+                                                autoCorrect
+                                                returnKeyType="done"
+                                                onSubmitEditing={Keyboard.dismiss}
+                                            />
+                                            <Pressable
+                                                style={styles.saveButton}
+                                                onPress={() => { Keyboard.dismiss(); handleSaveEdit(item.word); }}
+                                            >
+                                                <Text style={styles.saveButtonText}>Save</Text>
+                                            </Pressable>
+                                        </View>
+                                    ) : null}
                                 </View>
-                            ) : null}
-                        </View>
-                    );
-                }}
-            />
-        </KeyboardAvoidingView>
+                            );
+                        })
+                    )}
+                </View>
+            </KeyboardAwareScrollView>
+
+            {editingWord ? <KeyboardToolbar /> : null}
+        </React.Fragment>
     );
 }
 
@@ -259,6 +273,9 @@ function buildStyles(C: typeof Colors.light) {
         container: {
             flex: 1,
             backgroundColor: C.background,
+        },
+        scrollContent: {
+            paddingBottom: 400,
         },
         header: {
             flexDirection: "row",

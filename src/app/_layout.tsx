@@ -2,6 +2,7 @@ import { AppThemeProvider, useTheme } from '@/context/theme-context';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 function ThemedStack() {
@@ -19,9 +20,11 @@ function ThemedStack() {
 export default function RootLayout() {
     return (
         <SafeAreaProvider>
-            <AppThemeProvider>
-                <ThemedStack />
-            </AppThemeProvider>
+            <KeyboardProvider>
+                <AppThemeProvider>
+                    <ThemedStack />
+                </AppThemeProvider>
+            </KeyboardProvider>
         </SafeAreaProvider>
     );
 }
