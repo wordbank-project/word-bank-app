@@ -96,3 +96,34 @@ useEffect(() => {
 
 <TextInput ref={sentenceRef} ... />
 ```
+
+# OTA Updates (EAS Update)
+
+JS/UI changes can be pushed over-the-air without a full rebuild using EAS Update. Native changes (adding/removing packages) always require a new build.
+
+## Push an update to preview testers
+```bash
+npm run update:preview
+```
+
+## Push an update to production
+```bash
+npm run update:production
+```
+
+`--auto` uses the current git commit message as the update description.
+
+## How testers receive updates
+The app checks for updates on every launch (`checkAutomatically: "ON_LOAD"` in `app.json`). If an update is available it downloads in the background and applies on the next launch.
+
+## When a full rebuild is needed
+- Adding or removing a native package (e.g. `react-native-keyboard-controller`)
+- Changing `app.json` native config (icons, permissions, scheme)
+- Bumping `version` in `package.json` — this changes the `runtimeVersion` and requires a new build before updates can be pushed to that version
+
+## Channels
+| Profile | Channel | Use for |
+|---|---|---|
+| `preview` | `preview` | Internal testers |
+| `production` | `production` | Play Store / App Store users |
+| `development` | `development` | Dev client builds |

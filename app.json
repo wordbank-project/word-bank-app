@@ -3,6 +3,14 @@
     "name": "word-bank",
     "slug": "word-bank",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f48edafb-5402-4acf-8ffb-b3f5bf6c26df",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "wordbank",
