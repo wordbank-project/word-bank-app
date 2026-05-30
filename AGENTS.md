@@ -29,9 +29,9 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v55.0.0/ before 
 |---|---|
 | `npm run update:preview` | Push JS/UI changes to preview testers without a full rebuild |
 
-# Development Workflow (without Expo Go)
+# Development Workflow (without Expo Go app)
 
-## Why not Expo Go?
+## Why not Expo Go app?
 
 This project uses **SDK 55**. Expo Go on the Play Store only supported SDK 54 at the time of development — it did not update in time for Android 16 devices. Additionally, `react-native-keyboard-controller` is a native library that requires a custom build and cannot run inside Expo Go regardless of SDK version.
 
@@ -61,7 +61,7 @@ Just run `npm run dev-client`, open the dev client app on your phone and scan th
 ## Troubleshooting
 
 **"No development build installed" error:**
-The dev client APK is not installed on the emulator/device. Install it:
+The dev client APK is not installed on the emulator/device. Install it, after wiping the data in Android Studio fron the emulator:
 ```bash
 npx eas build:run --platform android --profile development
 ```

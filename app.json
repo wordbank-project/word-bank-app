@@ -19,7 +19,8 @@
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.jensrot.wordbank",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Pick a cover image for your custom book."
       }
     },
     "android": {
@@ -38,6 +39,7 @@
     },
     "plugins": [
       "expo-router",
+      "expo-image-picker",
       [
         "expo-splash-screen",
         {

@@ -15,7 +15,9 @@ export default function FloatingActionButton() {
     const prevShowScrollTop = useRef(showScrollTop);
 
     useEffect(() => {
-        if (prevShowScrollTop.current === showScrollTop) return;
+        if (prevShowScrollTop.current === showScrollTop) {
+            return;
+        }
         prevShowScrollTop.current = showScrollTop;
         Animated.sequence([
             Animated.timing(opacity, { toValue: 0, duration: 100, useNativeDriver: true }),

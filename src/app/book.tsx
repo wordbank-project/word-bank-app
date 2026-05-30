@@ -1,9 +1,10 @@
+import CoverImage from "@/components/CoverImage";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import CoverImage from "@/components/CoverImage";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
 
-import { Stack, useLocalSearchParams } from "expo-router";
+import * as ImagePicker from 'expo-image-picker';
+import { Stack, router, useLocalSearchParams, useNavigation } from "expo-router";
 
 import { useColorScheme } from "@/context/theme-context";
 
@@ -31,9 +32,11 @@ export default function BookDetail() {
         cover_i: string;
     }>();
 
-    const coverUri = cover_i
-        ? `https://covers.openlibrary.org/b/id/${cover_i}-M.jpg`
-        : null;
+    const isCustomBook = key?.startsWith('custom_');
+
+    const [coverUri, setCoverUri] = useState<string | null>(
+        cover_i ? (cover_i.includes('://') ? cover_i : `https://covers.openlibrary.org/b/id/${cover_i}-M.jpg`) : null
+    );
 
     const [words, setWordsState] = useState<WordEntry[]>([]);
     const [input, setInput] = useState("");
@@ -42,8 +45,35 @@ export default function BookDetail() {
     const [editingWord, setEditingWord] = useState<string | null>(null);
     const [draft, setDraft] = useState<EditDraft>({ sentence: '', notes: '' });
 
+    const [editingMeta, setEditingMeta] = useState(false);
+    const [metaTitle, setMetaTitle] = useState(title ?? '');
+    const [metaAuthor, setMetaAuthor] = useState(author ?? '');
+    const [metaYear, setMetaYear] = useState(year ?? '');
+
+    const [wordAdded, setWordAdded] = useState(false);
+
     const notesRef = useRef<TextInput>(null);
     const sentenceRef = useRef<TextInput>(null);
+    const navigatedAwayRef = useRef<boolean>(false);
+
+    const navigation = useNavigation();
+
+    // If the a word is added we go to the saved-books.tsx page
+    // If a word is not added we go to the index.tsx page as before
+    useEffect(() => {
+        const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+            // Track the flag here
+            if (!wordAdded || navigatedAwayRef.current) {
+                return;
+            }
+            e.preventDefault();
+            // Set the flag to true to avoid multiple navigations
+            navigatedAwayRef.current = true;
+            // Navigate to the saved-books.tsx page instead of going back
+            router.navigate('/(tabs)/saved-books');
+        });
+        return unsubscribe;
+    }, [navigation, wordAdded]);
 
     useEffect(() => {
         if (editingWord) {
@@ -55,9 +85,48 @@ export default function BookDetail() {
         if (key) getWords(key).then(setWordsState);
     }, [key]);
 
+    async function handlePickCover() {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [2, 3],
+            quality: 0.8,
+        });
+        if (!result.canceled) {
+            const uri = result.assets[0].uri;
+            setCoverUri(uri);
+            await upsertBook({
+                key: key!,
+                title: metaTitle || (title ?? ''),
+                author: metaAuthor || (author ?? ''),
+                year: metaYear || (year ?? ''),
+                cover_i: uri,
+                wordCount: words.length,
+            });
+        }
+    }
+
+    async function handleSaveMeta() {
+        const trimmedTitle = metaTitle.trim();
+        if (!trimmedTitle) {
+            return;
+        }
+        await upsertBook({
+            key: key!,
+            title: trimmedTitle,
+            author: metaAuthor.trim(),
+            year: metaYear.trim(),
+            cover_i: cover_i ?? '',
+            wordCount: words.length,
+        });
+        setEditingMeta(false);
+    }
+
     async function handleAddWord() {
         const word = input.trim().toLowerCase();
-        if (!word) return;
+        if (!word) {
+            return;
+        }
         if (words.some((w) => w.word === word)) {
             setError("Word already added.");
             return;
@@ -79,6 +148,8 @@ export default function BookDetail() {
                 definition: meaning.definitions[0].definition,
             };
             await persistWords([newEntry, ...words]);
+            // Flag to true which means we go back to the saved-books.tsx page.
+            setWordAdded(true);
             setInput("");
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to fetch definition.");
@@ -133,7 +204,7 @@ export default function BookDetail() {
 
     return (
         <React.Fragment>
-            <Stack.Screen options={{ title: title ?? "Book Detail", headerShown: true, headerBackVisible: true }} />
+            <Stack.Screen options={{ title: metaTitle || (title ?? "Book Detail"), headerShown: true, headerBackVisible: true }} />
 
             <View style={styles.container}>
                 {!editingWord && (
@@ -173,116 +244,174 @@ export default function BookDetail() {
                     bottomOffset={230}
                 >
                     <View style={styles.header}>
-                        <CoverImage uri={coverUri} style={styles.cover} />
+                        {isCustomBook ? (
+                            <Pressable onPress={handlePickCover}>
+                                <CoverImage uri={coverUri} style={styles.cover} />
+                            </Pressable>
+                        ) : (
+                            <CoverImage uri={coverUri} style={styles.cover} />
+                        )}
                         <View style={styles.headerInfo}>
-                            <Text style={styles.bookTitle} numberOfLines={3}>{title}</Text>
-                            {author ? <Text style={styles.bookAuthor}>{author}</Text> : null}
-                            {year ? <Text style={styles.bookYear}>{year}</Text> : null}
+                            {editingMeta ? (
+                                <>
+                                    <TextInput
+                                        style={styles.metaInput}
+                                        value={metaTitle}
+                                        onChangeText={setMetaTitle}
+                                        placeholder="Title"
+                                        placeholderTextColor={placeholderColor}
+                                        returnKeyType="next"
+                                    />
+                                    <TextInput
+                                        style={styles.metaInput}
+                                        value={metaAuthor}
+                                        onChangeText={setMetaAuthor}
+                                        placeholder="Author (optional)"
+                                        placeholderTextColor={placeholderColor}
+                                        returnKeyType="next"
+                                    />
+                                    <TextInput
+                                        style={styles.metaInput}
+                                        value={metaYear}
+                                        onChangeText={setMetaYear}
+                                        placeholder="Year (optional)"
+                                        placeholderTextColor={placeholderColor}
+                                        keyboardType="number-pad"
+                                        maxLength={4}
+                                        returnKeyType="done"
+                                        onSubmitEditing={handleSaveMeta}
+                                    />
+                                    <View style={styles.metaActions}>
+                                        <Pressable style={styles.metaSave} onPress={handleSaveMeta}>
+                                            <Text style={styles.metaSaveText}>Save</Text>
+                                        </Pressable>
+                                        <Pressable onPress={() => {
+                                            setMetaTitle(title ?? '');
+                                            setMetaAuthor(author ?? '');
+                                            setMetaYear(year ?? '');
+                                            setEditingMeta(false);
+                                        }}>
+                                            <Text style={styles.metaCancelText}>Cancel</Text>
+                                        </Pressable>
+                                    </View>
+                                </>
+                            ) : (
+                                <>
+                                    <Text style={styles.bookTitle} numberOfLines={3}>{metaTitle || title}</Text>
+                                    {(metaAuthor || author) ? <Text style={styles.bookAuthor}>{metaAuthor || author}</Text> : null}
+                                    {(metaYear || year) ? <Text style={styles.bookYear}>{metaYear || year}</Text> : null}
+                                    {isCustomBook && (
+                                        <Pressable onPress={() => setEditingMeta(true)} hitSlop={8} style={styles.editMetaButton}>
+                                            <Text style={styles.editMetaText}>Edit details</Text>
+                                        </Pressable>
+                                    )}
+                                </>
+                            )}
                         </View>
                     </View>
 
                     <View style={styles.list}>
-                    {words.length === 0 ? (
-                        <Text style={styles.empty}>No words yet. Add one above.</Text>
-                    ) : (
-                        words.map((item) => {
-                            const isEditing = editingWord === item.word;
-                            return (
-                                <View key={item.word} style={styles.card}>
-                                    <View style={styles.cardHeader}>
-                                        <Text style={styles.word}>{item.word}</Text>
-                                        {item.phonetic ? (
-                                            <Text style={styles.phonetic}>{item.phonetic}</Text>
-                                        ) : null}
-                                        <Pressable
-                                            style={styles.editButton}
-                                            hitSlop={8}
-                                            onPress={() => {
-                                                if (isEditing) {
-                                                    setEditingWord(null);
-                                                } else {
-                                                    setEditingWord(item.word);
-                                                    setDraft({ sentence: item.sentence ?? '', notes: item.notes ?? '' });
-                                                }
-                                            }}
-                                        >
-                                            <Text style={styles.editText}>{isEditing ? 'Cancel' : 'Edit'}</Text>
-                                        </Pressable>
-                                        {!isEditing && (
+                        {words.length === 0 ? (
+                            <Text style={styles.empty}>No words yet. Add one above.</Text>
+                        ) : (
+                            words.map((item) => {
+                                const isEditing = editingWord === item.word;
+                                return (
+                                    <View key={item.word} style={styles.card}>
+                                        <View style={styles.cardHeader}>
+                                            <Text style={styles.word}>{item.word}</Text>
+                                            {item.phonetic ? (
+                                                <Text style={styles.phonetic}>{item.phonetic}</Text>
+                                            ) : null}
                                             <Pressable
+                                                style={styles.editButton}
                                                 hitSlop={8}
-                                                onPress={() => handleDeleteWord(item.word)}
-                                            >
-                                                <Text style={styles.deleteText}>Remove</Text>
-                                            </Pressable>
-                                        )}
-                                    </View>
-
-                                    <Text style={styles.partOfSpeech}>{item.partOfSpeech}</Text>
-                                    <Text style={styles.definition}>{item.definition}</Text>
-
-                                    {!isEditing && item.sentence ? (
-                                        <View style={styles.metaBlock}>
-                                            <Text style={styles.metaLabel}>Sentence</Text>
-                                            <Text style={styles.metaValue}>{item.sentence}</Text>
-                                        </View>
-                                    ) : null}
-
-                                    {!isEditing && item.notes ? (
-                                        <View style={styles.metaBlock}>
-                                            <Text style={styles.metaLabel}>Notes</Text>
-                                            <Text style={styles.metaValue}>{item.notes}</Text>
-                                        </View>
-                                    ) : null}
-
-                                    {isEditing ? (
-                                        <View style={styles.editForm}>
-                                            <View style={styles.labelRow}>
-                                                <Text style={styles.metaLabel}>Sentence</Text>
-                                                <Text style={styles.charCount}>{draft.sentence.length} / {SENTENCE_MAX}</Text>
-                                            </View>
-                                            <TextInput
-                                                style={styles.editInput}
-                                                placeholder={`e.g. 'I encountered "${item.word}" while reading...'`}
-                                                placeholderTextColor={placeholderColor}
-                                                value={draft.sentence}
-                                                onChangeText={(t) => setDraft({ ...draft, sentence: t })}
-                                                multiline
-                                                autoCorrect
-                                                ref={sentenceRef}
-                                                maxLength={SENTENCE_MAX}
-                                                returnKeyType="next"
-                                                submitBehavior="submit"
-                                                onSubmitEditing={() => {
-                                                    Keyboard.dismiss();
-                                                    setTimeout(() => notesRef.current?.focus(), 100);
+                                                onPress={() => {
+                                                    if (isEditing) {
+                                                        setEditingWord(null);
+                                                    } else {
+                                                        setEditingWord(item.word);
+                                                        setDraft({ sentence: item.sentence ?? '', notes: item.notes ?? '' });
+                                                    }
                                                 }}
-                                            />
-                                            <Text style={styles.metaLabel}>Notes</Text>
-                                            <TextInput
-                                                ref={notesRef}
-                                                style={styles.editInput}
-                                                placeholder="e.g. Similar to 'optimistic', used in formal writing"
-                                                placeholderTextColor={placeholderColor}
-                                                value={draft.notes}
-                                                onChangeText={(t) => setDraft({ ...draft, notes: t })}
-                                                multiline
-                                                autoCorrect
-                                                returnKeyType="done"
-                                                onSubmitEditing={Keyboard.dismiss}
-                                            />
-                                            <Pressable
-                                                style={styles.saveButton}
-                                                onPress={() => { Keyboard.dismiss(); handleSaveEdit(item.word); }}
                                             >
-                                                <Text style={styles.saveButtonText}>Save</Text>
+                                                <Text style={styles.editText}>{isEditing ? 'Cancel' : 'Edit'}</Text>
                                             </Pressable>
+                                            {!isEditing && (
+                                                <Pressable
+                                                    hitSlop={8}
+                                                    onPress={() => handleDeleteWord(item.word)}
+                                                >
+                                                    <Text style={styles.deleteText}>Remove</Text>
+                                                </Pressable>
+                                            )}
                                         </View>
-                                    ) : null}
-                                </View>
-                            );
-                        })
-                    )}
+
+                                        <Text style={styles.partOfSpeech}>{item.partOfSpeech}</Text>
+                                        <Text style={styles.definition}>{item.definition}</Text>
+
+                                        {!isEditing && item.sentence ? (
+                                            <View style={styles.metaBlock}>
+                                                <Text style={styles.metaLabel}>Sentence</Text>
+                                                <Text style={styles.metaValue}>{item.sentence}</Text>
+                                            </View>
+                                        ) : null}
+
+                                        {!isEditing && item.notes ? (
+                                            <View style={styles.metaBlock}>
+                                                <Text style={styles.metaLabel}>Notes</Text>
+                                                <Text style={styles.metaValue}>{item.notes}</Text>
+                                            </View>
+                                        ) : null}
+
+                                        {isEditing ? (
+                                            <View style={styles.editForm}>
+                                                <View style={styles.labelRow}>
+                                                    <Text style={styles.metaLabel}>Sentence</Text>
+                                                    <Text style={styles.charCount}>{draft.sentence.length} / {SENTENCE_MAX}</Text>
+                                                </View>
+                                                <TextInput
+                                                    style={styles.editInput}
+                                                    placeholder={`e.g. 'I encountered "${item.word}" while reading...'`}
+                                                    placeholderTextColor={placeholderColor}
+                                                    value={draft.sentence}
+                                                    onChangeText={(t) => setDraft({ ...draft, sentence: t })}
+                                                    multiline
+                                                    autoCorrect
+                                                    ref={sentenceRef}
+                                                    maxLength={SENTENCE_MAX}
+                                                    returnKeyType="next"
+                                                    submitBehavior="submit"
+                                                    onSubmitEditing={() => {
+                                                        Keyboard.dismiss();
+                                                        setTimeout(() => notesRef.current?.focus(), 100);
+                                                    }}
+                                                />
+                                                <Text style={styles.metaLabel}>Notes</Text>
+                                                <TextInput
+                                                    ref={notesRef}
+                                                    style={styles.editInput}
+                                                    placeholder="e.g. Similar to 'optimistic', used in formal writing"
+                                                    placeholderTextColor={placeholderColor}
+                                                    value={draft.notes}
+                                                    onChangeText={(t) => setDraft({ ...draft, notes: t })}
+                                                    multiline
+                                                    autoCorrect
+                                                    returnKeyType="done"
+                                                    onSubmitEditing={Keyboard.dismiss}
+                                                />
+                                                <Pressable
+                                                    style={styles.saveButton}
+                                                    onPress={() => { Keyboard.dismiss(); handleSaveEdit(item.word); }}
+                                                >
+                                                    <Text style={styles.saveButtonText}>Save</Text>
+                                                </Pressable>
+                                            </View>
+                                        ) : null}
+                                    </View>
+                                );
+                            })
+                        )}
                     </View>
                 </KeyboardAwareScrollView>
             </View>
@@ -334,6 +463,47 @@ function buildStyles(C: typeof Colors.light) {
         bookYear: {
             fontSize: 14,
             color: C.textMuted,
+        },
+        editMetaButton: {
+            alignSelf: 'flex-start',
+            marginTop: 2,
+        },
+        editMetaText: {
+            fontSize: 13,
+            color: ACCENT,
+            fontWeight: '500',
+        },
+        metaInput: {
+            borderWidth: 1,
+            borderColor: C.borderInput,
+            borderRadius: 6,
+            paddingHorizontal: 8,
+            paddingVertical: 6,
+            fontSize: 14,
+            color: C.text,
+            backgroundColor: C.backgroundInput,
+        },
+        metaActions: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            marginTop: 2,
+        },
+        metaSave: {
+            backgroundColor: ACCENT,
+            borderRadius: 6,
+            paddingHorizontal: 14,
+            paddingVertical: 6,
+        },
+        metaSaveText: {
+            color: '#fff',
+            fontSize: 13,
+            fontWeight: '600',
+        },
+        metaCancelText: {
+            fontSize: 13,
+            color: C.textMuted,
+            fontWeight: '500',
         },
         addRow: {
             flexDirection: "row",

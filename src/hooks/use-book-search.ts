@@ -30,7 +30,9 @@ export function useBookSearch(): BookSearchState {
 
     async function search(query: string) {
         const trimmed = query.trim();
-        if (!trimmed) return;
+        if (!trimmed) {
+            return;
+        }
 
         abortRef.current?.abort();
         abortRef.current = new AbortController();
@@ -55,7 +57,9 @@ export function useBookSearch(): BookSearchState {
             totalRef.current = data.numFound ?? 0;
             offsetRef.current = results.length;
         } catch (e) {
-            if (e instanceof Error && e.name === 'AbortError') return;
+            if (e instanceof Error && e.name === 'AbortError') {
+                return;
+            }
             setBooks([]);
         } finally {
             setLoading(false);
@@ -75,7 +79,9 @@ export function useBookSearch(): BookSearchState {
             setBooks((prev) => [...prev, ...results]);
             offsetRef.current += results.length;
         } catch (e) {
-            if (e instanceof Error && e.name === 'AbortError') return;
+            if (e instanceof Error && e.name === 'AbortError') {
+                return;
+            }
             setLoadMoreError(true);
         } finally {
             setLoadingMore(false);
@@ -83,12 +89,16 @@ export function useBookSearch(): BookSearchState {
     }
 
     function loadMore() {
-        if (loadingMore || loading || loadMoreError || offsetRef.current >= totalRef.current) return;
+        if (loadingMore || loading || loadMoreError || offsetRef.current >= totalRef.current) {
+            return;
+        }
         fetchNextPage();
     }
 
     function retryLoadMore() {
-        if (loadingMore || loading || offsetRef.current >= totalRef.current) return;
+        if (loadingMore || loading || offsetRef.current >= totalRef.current) {
+            return;
+        }
         fetchNextPage();
     }
 

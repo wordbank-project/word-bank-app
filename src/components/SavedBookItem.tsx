@@ -15,7 +15,7 @@ export default function SavedBookItem({ item, onPress, onRemove }: SavedBookItem
     const styles = useColorScheme() === 'dark' ? darkStyles : lightStyles;
 
     const coverUri = item.cover_i
-        ? `https://covers.openlibrary.org/b/id/${item.cover_i}-S.jpg`
+        ? (item.cover_i.includes('://') ? item.cover_i : `https://covers.openlibrary.org/b/id/${item.cover_i}-S.jpg`)
         : null;
 
     return (
@@ -33,6 +33,9 @@ export default function SavedBookItem({ item, onPress, onRemove }: SavedBookItem
                     ) : null}
                     {item.year ? (
                         <Text style={styles.year}>{item.year}</Text>
+                    ) : null}
+                    {item.key.startsWith('custom_') ? (
+                        <Text style={styles.personalTag}>Personal</Text>
                     ) : null}
                 </View>
                 <View style={styles.badge}>
@@ -88,6 +91,18 @@ function buildStyles(C: typeof Colors.light) {
         year: {
             fontSize: 12,
             color: C.textMuted,
+        },
+        personalTag: {
+            alignSelf: 'flex-start',
+            fontSize: 11,
+            fontWeight: '600',
+            color: ACCENT,
+            borderWidth: 1,
+            borderColor: ACCENT,
+            borderRadius: 4,
+            paddingHorizontal: 5,
+            paddingVertical: 1,
+            marginTop: 2,
         },
         badge: {
             alignItems: 'center',
