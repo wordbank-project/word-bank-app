@@ -1,6 +1,8 @@
+import { useRef, useState } from "react";
+
 import { useColorScheme } from "@/context/theme-context";
 import { ACCENT, Colors } from "@/styles/global";
-import { useState } from "react";
+
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 const RANDOM_TITLES = [
@@ -35,11 +37,29 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
 
     const [query, setQuery] = useState<string>("");
 
+    // flag to track if the current query is a random title (to avoid triggering randomization on every search press)
+    const isRandom = useRef<boolean>(false);
+
+    function pickRandom(current: string): string {
+        const others = RANDOM_TITLES.filter((t) => t !== current);
+        return others[Math.floor(Math.random() * others.length)];
+    }
+
     function handleSearch(): void {
         Keyboard.dismiss();
-        const searchQuery = query.trim() || RANDOM_TITLES[Math.floor(Math.random() * RANDOM_TITLES.length)];
-        setQuery(searchQuery);
-        onSearch(searchQuery);
+        if (!query.trim() || isRandom.current) {
+            const next = pickRandom(query);
+            isRandom.current = true;
+            setQuery(next);
+            onSearch(next);
+        } else {
+            onSearch(query.trim());
+        }
+    }
+
+    function handleChangeText(text: string): void {
+        isRandom.current = false;
+        setQuery(text);
     }
 
     return (
@@ -49,7 +69,7 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
                 style={styles.input}
                 placeholderTextColor={placeholderColor}
                 value={query}
-                onChangeText={setQuery}
+                onChangeText={handleChangeText}
                 onSubmitEditing={handleSearch}
                 returnKeyType="search"
                 autoCorrect={false}
