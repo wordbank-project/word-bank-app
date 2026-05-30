@@ -1,6 +1,9 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { useColorScheme } from "@/context/theme-context";
+
+import { useRandomSuggestion } from "@/hooks/use-random-suggestion";
+
 import { ACCENT, Colors } from "@/styles/global";
 
 import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
@@ -36,29 +39,22 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
         : Colors.light.textPlaceholder;
 
     const [query, setQuery] = useState<string>("");
-
-    // flag to track if the current query is a random title (to avoid triggering randomization on every search press)
-    const isRandom = useRef<boolean>(false);
-
-    function pickRandom(current: string): string {
-        const others = RANDOM_TITLES.filter((t) => t !== current);
-        return others[Math.floor(Math.random() * others.length)];
-    }
+    const { isRandom, pickNextWord, onManualChange } = useRandomSuggestion(RANDOM_TITLES);
 
     function handleSearch(): void {
         Keyboard.dismiss();
         if (!query.trim() || isRandom.current) {
-            const next = pickRandom(query);
+            const nextWord = pickNextWord(query);
             isRandom.current = true;
-            setQuery(next);
-            onSearch(next);
+            setQuery(nextWord);
+            onSearch(nextWord);
         } else {
             onSearch(query.trim());
         }
     }
 
     function handleChangeText(text: string): void {
-        isRandom.current = false;
+        onManualChange();
         setQuery(text);
     }
 

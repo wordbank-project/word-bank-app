@@ -13,9 +13,29 @@ import type { EditDraft, WordEntry } from "@/models/word-entry";
 import { removeBook, upsertBook } from "@/storage/books-storage";
 import { getWords, setWords } from "@/storage/words-storage";
 
+import { useRandomSuggestion } from "@/hooks/use-random-suggestion";
+
 import { ACCENT, Colors, ERROR } from "@/styles/global";
 
 const SENTENCE_MAX = 300;
+
+const RANDOM_WORDS = [
+    "serendipity",
+    "ephemeral",
+    "melancholy",
+    "resilience",
+    "eloquent",
+    "ambiguous",
+    "tenacious",
+    "vivid",
+    "profound",
+    "meticulous",
+    "candid",
+    "eloquence",
+    "perseverance",
+    "whimsical",
+    "diligent",
+];
 
 export default function BookDetail() {
     const scheme = useColorScheme();
@@ -51,6 +71,7 @@ export default function BookDetail() {
     const [metaYear, setMetaYear] = useState(year ?? '');
 
     const [wordAdded, setWordAdded] = useState(false);
+    const { isRandom: isRandomWord, pickNextWord, onManualChange: onManualWordChange } = useRandomSuggestion(RANDOM_WORDS);
 
     const notesRef = useRef<TextInput>(null);
     const sentenceRef = useRef<TextInput>(null);
@@ -122,10 +143,19 @@ export default function BookDetail() {
         setEditingMeta(false);
     }
 
+    function handleChangeInput(text: string) {
+        onManualWordChange();
+        setInput(text);
+    }
+
     async function handleAddWord() {
-        const word = input.trim().toLowerCase();
-        if (!word) {
-            return;
+        const wasRandom = isRandomWord.current;
+        let word = input.trim().toLowerCase();
+        if (!word || wasRandom) {
+            const nextWord = pickNextWord(input);
+            isRandomWord.current = true;
+            setInput(nextWord);
+            word = nextWord;
         }
         if (words.some((w) => w.word === word)) {
             setError("Word already added.");
@@ -141,7 +171,6 @@ export default function BookDetail() {
                 throw new Error("Word not found in dictionary.");
             }
 
-            // Only close keyboard on pressing add button when a word is found
             Keyboard.dismiss();
 
             const data = await res.json();
@@ -154,9 +183,14 @@ export default function BookDetail() {
                 definition: meaning.definitions[0].definition,
             };
             await persistWords([newEntry, ...words]);
-            // Flag to true which means we go back to the saved-books.tsx page.
             setWordAdded(true);
             setInput("");
+
+            // Goes to the edit screen of the newly added word to encourage users to add sentence and notes 
+            setDraft({ sentence: '', notes: '' });
+
+            // Set the editing word to the newly added word to open the edit form
+            setEditingWord(newEntry.word);
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to fetch definition.");
         } finally {
@@ -220,7 +254,7 @@ export default function BookDetail() {
                             placeholder="Add a word..."
                             placeholderTextColor={placeholderColor}
                             value={input}
-                            onChangeText={(t) => { setInput(t); setError(""); }}
+                            onChangeText={(t) => { handleChangeInput(t); setError(""); }}
                             onSubmitEditing={handleAddWord}
                             returnKeyType="done"
                             autoCapitalize="none"
