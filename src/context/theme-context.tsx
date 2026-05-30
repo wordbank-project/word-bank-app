@@ -23,7 +23,7 @@ const ThemeContext = createContext<ThemeContextType>({
 const THEME_STORAGE_KEY = "app_theme";
 
 export function AppThemeProvider({ children }: { children: ReactNode }) {
-    const system = useSystemColorScheme() ?? "light";
+    const system: ColorScheme = useSystemColorScheme() === 'dark' ? 'dark' : 'light';
     const [colorScheme, setColorScheme] = useState<ColorScheme>(system);
     useEffect(() => {
         AsyncStorage.getItem(THEME_STORAGE_KEY).then((saved) => {
@@ -31,7 +31,7 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
-    function toggleTheme() {
+    function toggleTheme(): void {
         const next: ColorScheme = colorScheme === "light" ? "dark" : "light";
         setColorScheme(next);
         AsyncStorage.setItem(THEME_STORAGE_KEY, next);

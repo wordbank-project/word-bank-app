@@ -21,7 +21,7 @@ export default function CustomBookScreen() {
     const [coverUri, setCoverUri] = useState<string | null>(null);
     const [titleError, setTitleError] = useState('');
 
-    async function handlePickImage() {
+    async function handlePickImage(): Promise<void> {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
@@ -33,7 +33,7 @@ export default function CustomBookScreen() {
         }
     }
 
-    async function handleCreate() {
+    async function handleCreate(): Promise<void> {
         const trimmed = title.trim();
         if (!trimmed) {
             setTitleError('Please enter a book title.');

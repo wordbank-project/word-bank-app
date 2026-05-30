@@ -25,7 +25,7 @@ export default function FloatingActionButton() {
         ]).start();
     }, [showScrollTop]);
 
-    function handlePress() {
+    function handlePress(): void {
         if (showScrollTop && scrollToTop) {
             scrollToTop();
         } else {

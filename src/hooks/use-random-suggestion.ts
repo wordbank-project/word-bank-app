@@ -9,7 +9,7 @@ export function useRandomSuggestion(items: string[]) {
         return others[Math.floor(Math.random() * others.length)];
     }
 
-    function onManualChange() {
+    function onManualChange(): void {
         isRandom.current = false;
     }
 

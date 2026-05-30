@@ -18,7 +18,7 @@ export function ScrollProvider({ children }: { children: React.ReactNode }) {
     const [scrollY, setScrollY] = useState(0);
     const [scrollToTop, setScrollToTopFn] = useState<(() => void) | null>(null);
 
-    function setScrollToTop(fn: (() => void) | null) {
+    function setScrollToTop(fn: (() => void) | null): void {
         setScrollToTopFn(() => fn);
     }
 

@@ -28,7 +28,7 @@ export function useBookSearch(): BookSearchState {
     const activeQueryRef = useRef('');
     const abortRef = useRef<AbortController | null>(null);
 
-    async function search(query: string) {
+    async function search(query: string): Promise<void> {
         const trimmed = query.trim();
         if (!trimmed) {
             return;
@@ -66,7 +66,7 @@ export function useBookSearch(): BookSearchState {
         }
     }
 
-    async function fetchNextPage() {
+    async function fetchNextPage(): Promise<void> {
         setLoadingMore(true);
         setLoadMoreError(false);
         try {
@@ -88,14 +88,14 @@ export function useBookSearch(): BookSearchState {
         }
     }
 
-    function loadMore() {
+    function loadMore(): void {
         if (loadingMore || loading || loadMoreError || offsetRef.current >= totalRef.current) {
             return;
         }
         fetchNextPage();
     }
 
-    function retryLoadMore() {
+    function retryLoadMore(): void {
         if (loadingMore || loading || offsetRef.current >= totalRef.current) {
             return;
         }

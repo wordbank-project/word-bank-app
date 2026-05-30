@@ -106,7 +106,7 @@ export default function BookDetail() {
         if (key) getWords(key).then(setWordsState);
     }, [key]);
 
-    async function handlePickCover() {
+    async function handlePickCover(): Promise<void> {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
@@ -127,7 +127,7 @@ export default function BookDetail() {
         }
     }
 
-    async function handleSaveMeta() {
+    async function handleSaveMeta(): Promise<void> {
         const trimmedTitle = metaTitle.trim();
         if (!trimmedTitle) {
             return;
@@ -143,12 +143,12 @@ export default function BookDetail() {
         setEditingMeta(false);
     }
 
-    function handleChangeInput(text: string) {
+    function handleChangeInput(text: string): void {
         onManualWordChange();
         setInput(text);
     }
 
-    async function handleAddWord() {
+    async function handleAddWord(): Promise<void> {
         const wasRandom = isRandomWord.current;
         let word = input.trim().toLowerCase();
         if (!word || wasRandom) {
@@ -198,7 +198,7 @@ export default function BookDetail() {
         }
     }
 
-    function handleDeleteWord(word: string) {
+    function handleDeleteWord(word: string): void {
         Alert.alert(
             "Remove word",
             `Remove "${word}" from this book?`,
@@ -215,7 +215,7 @@ export default function BookDetail() {
         );
     }
 
-    async function handleSaveEdit(word: string) {
+    async function handleSaveEdit(word: string): Promise<void> {
         const updated = words.map((w) =>
             w.word === word
                 ? { ...w, sentence: draft.sentence.trim() || undefined, notes: draft.notes.trim() || undefined }
@@ -225,7 +225,7 @@ export default function BookDetail() {
         setEditingWord(null);
     }
 
-    async function persistWords(updated: WordEntry[]) {
+    async function persistWords(updated: WordEntry[]): Promise<void> {
         setWordsState(updated);
         await setWords(key!, updated);
         if (updated.length > 0) {

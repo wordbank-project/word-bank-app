@@ -46,7 +46,7 @@ export default function WordInput({
     const sentenceRef = useRef<TextInput>(null);
     const notesRef = useRef<TextInput>(null);
 
-    function handleSubmit() {
+    function handleSubmit(): void {
         Keyboard.dismiss();
         onSubmit();
     }

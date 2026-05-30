@@ -31,7 +31,7 @@ export default function SavedBooksScreen() {
         }, [])
     );
 
-    function handleRemove(bookKey: string) {
+    function handleRemove(bookKey: string): void {
         const book = books.find(b => b.key === bookKey);
         Alert.alert(
             'Remove book',
