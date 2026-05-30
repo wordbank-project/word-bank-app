@@ -58,6 +58,29 @@ npm run dev-client
 
 Just run `npm run dev-client`, open the dev client app on your phone and scan the QR code. No rebuild needed unless you add a new native package.
 
+## Troubleshooting
+
+**"No development build installed" error:**
+The dev client APK is not installed on the emulator/device. Install it:
+```bash
+npx eas build:run --platform android --profile development
+```
+
+**Changes not appearing on device:**
+Metro is serving a cached bundle. The `--clear` flag is already included in `npm run dev-client` and `npm run dev-client:android` to prevent this.
+
+**"Port 8081 is already in use":**
+A previous Metro server is still running. Kill it:
+```bash
+kill $(lsof -t -i:8081)
+```
+
+**App not connecting after opening emulator:**
+Manually open the dev client app on the emulator, then enter the URL shown in the terminal (e.g. `http://192.168.0.177:8081`). Or force open via ADB:
+```bash
+adb shell am start -a android.intent.action.VIEW -d "exp+word-bank://expo-development-client/?url=http%3A%2F%2F192.168.0.177%3A8081"
+```
+
 ## Build times
 
 EAS builds typically take **10–20 minutes** for Android. The first build is slower as EAS sets up the environment fresh — subsequent builds are faster due to caching.

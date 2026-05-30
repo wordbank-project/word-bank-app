@@ -135,22 +135,7 @@ export default function BookDetail() {
         <React.Fragment>
             <Stack.Screen options={{ title: title ?? "Book Detail", headerShown: true, headerBackVisible: true }} />
 
-            <KeyboardAwareScrollView
-                style={styles.container}
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-                // Adjust the space between the keyboard and the selected input to ensure the input is not covered by the keyboard.
-                bottomOffset={230}
-            >
-                <View style={styles.header}>
-                    <CoverImage uri={coverUri} style={styles.cover} />
-                    <View style={styles.headerInfo}>
-                        <Text style={styles.bookTitle} numberOfLines={3}>{title}</Text>
-                        {author ? <Text style={styles.bookAuthor}>{author}</Text> : null}
-                        {year ? <Text style={styles.bookYear}>{year}</Text> : null}
-                    </View>
-                </View>
-
+            <View style={styles.container}>
                 {!editingWord && (
                     <View style={styles.addRow}>
                         <TextInput
@@ -180,7 +165,23 @@ export default function BookDetail() {
 
                 {error ? <Text style={styles.error}>{error}</Text> : null}
 
-                <View style={styles.list}>
+                <KeyboardAwareScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    // Adjust the space between the keyboard and the selected input to ensure the input is not covered by the keyboard.
+                    bottomOffset={230}
+                >
+                    <View style={styles.header}>
+                        <CoverImage uri={coverUri} style={styles.cover} />
+                        <View style={styles.headerInfo}>
+                            <Text style={styles.bookTitle} numberOfLines={3}>{title}</Text>
+                            {author ? <Text style={styles.bookAuthor}>{author}</Text> : null}
+                            {year ? <Text style={styles.bookYear}>{year}</Text> : null}
+                        </View>
+                    </View>
+
+                    <View style={styles.list}>
                     {words.length === 0 ? (
                         <Text style={styles.empty}>No words yet. Add one above.</Text>
                     ) : (
@@ -282,8 +283,9 @@ export default function BookDetail() {
                             );
                         })
                     )}
-                </View>
-            </KeyboardAwareScrollView>
+                    </View>
+                </KeyboardAwareScrollView>
+            </View>
 
             {editingWord ? <KeyboardToolbar /> : null}
         </React.Fragment>

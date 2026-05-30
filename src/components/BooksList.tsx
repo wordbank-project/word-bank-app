@@ -1,12 +1,18 @@
+import React, { useEffect } from "react";
+
 import { useColorScheme } from "@/context/theme-context";
-import { Book } from "@/models/book";
+import { useFlatListScroll } from "@/hooks/use-scroll-registration";
+
 import { ACCENT, Colors } from "@/styles/global";
-import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import Reanimated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
+
+import { Book } from "@/models/book";
+
 import BookItem from "./BookItem";
 
-const SKELETON_TITLE_WIDTHS  = ['72%', '58%', '80%', '65%', '75%', '50%', '68%', '78%'] as const;
+const SKELETON_TITLE_WIDTHS = ['72%', '58%', '80%', '65%', '75%', '50%', '68%', '78%'] as const;
 const SKELETON_AUTHOR_WIDTHS = ['45%', '38%', '52%', '42%', '48%', '35%', '44%', '50%'] as const;
 
 function BookSkeletons({ styles }: { styles: ReturnType<typeof buildStyles> }) {
@@ -32,8 +38,6 @@ function BookSkeletons({ styles }: { styles: ReturnType<typeof buildStyles> }) {
     );
 }
 
-const SCROLL_THRESHOLD = 300;
-
 type BooksListProps = {
     books: Book[];
     loading?: boolean;
@@ -57,19 +61,7 @@ export default function BooksList({
 }: BooksListProps) {
     const scheme = useColorScheme();
     const styles = scheme === 'dark' ? darkStyles : lightStyles;
-
-    // Scroll-to-top button logic
-    const flatListRef = useRef<FlatList | null>(null);
-    const [showScrollTop, setShowScrollTop] = useState<boolean>(false);
-    const opacity = useRef<Animated.Value>(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        Animated.timing(opacity, {
-            toValue: showScrollTop ? 1 : 0,
-            duration: 200,
-            useNativeDriver: true,
-        }).start();
-    }, [showScrollTop]);
+    const { ref: flatListRef, onScroll, scrollEventThrottle } = useFlatListScroll();
 
     return (
         <View style={styles.container}>
@@ -83,10 +75,8 @@ export default function BooksList({
                 ListHeaderComponent={header}
                 onEndReached={onLoadMore}
                 onEndReachedThreshold={0.4}
-                scrollEventThrottle={16}
-                onScroll={(e) => {
-                    setShowScrollTop(e.nativeEvent.contentOffset.y > SCROLL_THRESHOLD);
-                }}
+                scrollEventThrottle={scrollEventThrottle}
+                onScroll={onScroll}
                 ListEmptyComponent={
                     loading ? (
                         <BookSkeletons styles={styles} />
@@ -107,18 +97,6 @@ export default function BooksList({
                     ) : null
                 }
             />
-
-            <Animated.View
-                style={[styles.scrollTopButton, { opacity }]}
-                pointerEvents={showScrollTop ? 'auto' : 'none'}
-            >
-                <Pressable
-                    style={styles.scrollTopPressable}
-                    onPress={() => flatListRef.current?.scrollToOffset({ offset: 0, animated: true })}
-                >
-                    <Text style={styles.scrollTopIcon}>↑</Text>
-                </Pressable>
-            </Animated.View>
         </View>
     );
 }
@@ -185,30 +163,6 @@ function buildStyles(C: typeof Colors.light) {
             color: '#fff',
             fontWeight: '600',
             fontSize: 14,
-        },
-        scrollTopButton: {
-            position: 'absolute',
-            bottom: 24,
-            right: 16,
-        },
-        scrollTopPressable: {
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            backgroundColor: ACCENT,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 4,
-        },
-        scrollTopIcon: {
-            color: '#fff',
-            fontSize: 20,
-            fontWeight: '700',
-            lineHeight: 24,
         },
     });
 }

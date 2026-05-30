@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 
 import { useColorScheme } from "@/context/theme-context";
+import { useFlatListScroll } from "@/hooks/use-scroll-registration";
 
 import type { SavedBook } from "@/models/saved-book";
 
@@ -19,6 +20,7 @@ export default function SavedBooksScreen() {
 
     const [books, setBooks] = useState<SavedBook[]>([]);
     const [booksLoading, setBooksLoading] = useState<boolean>(true);
+    const { ref: flatListRef, onScroll, scrollEventThrottle } = useFlatListScroll<SavedBook>();
 
     useFocusEffect(
         useCallback(() => {
@@ -57,9 +59,12 @@ export default function SavedBooksScreen() {
             ) : null}
 
             <FlatList
+                ref={flatListRef}
                 data={books}
                 keyExtractor={(item) => item.key}
                 contentContainerStyle={styles.list}
+                scrollEventThrottle={scrollEventThrottle}
+                onScroll={onScroll}
                 ListEmptyComponent={
                     booksLoading ? null : (
                         <View style={styles.emptyContainer}>
