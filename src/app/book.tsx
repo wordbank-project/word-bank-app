@@ -1,21 +1,30 @@
-import CoverImage from "@/components/CoverImage";
 import React, { useEffect, useRef, useState } from "react";
+
+import { usePreventRemove } from "@react-navigation/native";
 import { ActivityIndicator, Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
 
 import * as ImagePicker from 'expo-image-picker';
-import { Stack, router, useLocalSearchParams, useNavigation } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 
 import { useColorScheme } from "@/context/theme-context";
 
+import type { Language } from "@/models/language";
+import { LANGUAGES } from "@/models/language";
 import type { EditDraft, WordEntry } from "@/models/word-entry";
 
 import { removeBook, upsertBook } from "@/storage/books-storage";
+import { getLanguageCode, setLanguageCode } from "@/storage/language-storage";
 import { getWords, setWords } from "@/storage/words-storage";
+
+import { fetchDefinition } from "@/utils/words-api";
 
 import { useRandomSuggestion } from "@/hooks/use-random-suggestion";
 
 import { ACCENT, Colors, ERROR } from "@/styles/global";
+
+import CoverImage from "@/components/CoverImage";
+import LanguageModal from "@/components/LanguageModal";
 
 const SENTENCE_MAX = 300;
 
@@ -71,30 +80,32 @@ export default function BookDetail() {
     const [metaYear, setMetaYear] = useState(year ?? '');
 
     const [wordAdded, setWordAdded] = useState(false);
+    const [language, setLanguage] = useState<Language>(LANGUAGES[0]); // defaults to the first language in array
+
     const { isRandom: isRandomWord, pickNextWord, onManualChange: onManualWordChange } = useRandomSuggestion(RANDOM_WORDS);
 
     const notesRef = useRef<TextInput>(null);
     const sentenceRef = useRef<TextInput>(null);
-    const navigatedAwayRef = useRef<boolean>(false);
 
-    const navigation = useNavigation();
-
-    // If the a word is added we go to the saved-books.tsx page
-    // If a word is not added we go to the index.tsx page as before
+    // On mount, restore the dictionary language the user picked last time (saved in AsyncStorage).
     useEffect(() => {
-        const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-            // Track the flag here
-            if (!wordAdded || navigatedAwayRef.current) {
+        // If there is a saved language in AsyncStorage, use it. Otherwise, keep the default language.
+        getLanguageCode().then((code) => {
+            if (!code) {
                 return;
             }
-            e.preventDefault();
-            // Set the flag to true to avoid multiple navigations
-            navigatedAwayRef.current = true;
-            // Navigate to the saved-books.tsx page instead of going back
-            router.navigate('/(tabs)/saved-books');
+            const saved = LANGUAGES.find(language => language.code === code);
+            if (saved) {
+                setLanguage(saved);
+            }
         });
-        return unsubscribe;
-    }, [navigation, wordAdded]);
+    }, []);
+
+    // Once a word has been added, intercept "back" (button, swipe, header) and send the
+    // user to the saved-books page instead of back to the search screen. No-op until wordAdded is true.
+    usePreventRemove(wordAdded, () => {
+        router.navigate('/(tabs)/saved-books');
+    });
 
     useEffect(() => {
         if (editingWord) {
@@ -143,6 +154,11 @@ export default function BookDetail() {
         setEditingMeta(false);
     }
 
+    function handleSelectLanguage(language: Language): void {
+        setLanguage(language);
+        setLanguageCode(language.code);
+    }
+
     function handleChangeInput(text: string): void {
         onManualWordChange();
         setInput(text);
@@ -164,24 +180,11 @@ export default function BookDetail() {
         setLoading(true);
         setError("");
         try {
-            const res = await fetch(
-                `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`
-            );
-            if (!res.ok) {
-                throw new Error("Word not found in dictionary.");
-            }
+            const newEntry = await fetchDefinition(word, language.code);
 
+            // Only close the keyboard on pressing add button when a word is found
+            // When it shows an error the keyboard stays open so the user can easily edit the input and try again
             Keyboard.dismiss();
-
-            const data = await res.json();
-            const entry = data[0];
-            const meaning = entry.meanings[0];
-            const newEntry: WordEntry = {
-                word: entry.word,
-                phonetic: entry.phonetic,
-                partOfSpeech: meaning.partOfSpeech,
-                definition: meaning.definitions[0].definition,
-            };
             await persistWords([newEntry, ...words]);
             setWordAdded(true);
             setInput("");
@@ -244,7 +247,17 @@ export default function BookDetail() {
 
     return (
         <React.Fragment>
-            <Stack.Screen options={{ title: metaTitle || (title ?? "Book Detail"), headerShown: true, headerBackVisible: true }} />
+            <Stack.Screen
+                options={{
+                    title: metaTitle || (title ?? "Book Detail"),
+                    headerShown: true,
+                    headerBackVisible: true,
+                    // iOS: disable the long-press back menu so it can't bypass the saved-books redirect Is related to the usePreventRemove hook 
+                    // that redirects back to saved-books once a word has been added.
+                    // This ensures users don't accidentally lose their changes by navigating back to the search screen.
+                    headerBackButtonMenuEnabled: false
+                }}
+            />
 
             <View style={styles.container}>
                 {!editingWord && (
@@ -275,6 +288,8 @@ export default function BookDetail() {
                 )}
 
                 {error ? <Text style={styles.error}>{error}</Text> : null}
+
+                <LanguageModal selected={language} onSelect={handleSelectLanguage} />
 
                 <KeyboardAwareScrollView
                     style={{ flex: 1 }}
@@ -412,7 +427,7 @@ export default function BookDetail() {
                                                 </View>
                                                 <TextInput
                                                     style={styles.editInput}
-                                                    placeholder={`e.g. 'I encountered "${item.word}" while reading...'`}
+                                                    placeholder={item.exampleSentence ?? `e.g. 'I encountered "${item.word}" while reading...'`}
                                                     placeholderTextColor={placeholderColor}
                                                     value={draft.sentence}
                                                     onChangeText={(t) => setDraft({ ...draft, sentence: t })}

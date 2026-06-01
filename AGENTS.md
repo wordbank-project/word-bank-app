@@ -253,6 +253,179 @@ The app checks for updates on every launch (`checkAutomatically: "ON_LOAD"` in `
 | `development` | `development` | Dev client builds |
 | `preview` | `preview` | Internal testers |
 
+# Dictionary API (wiktapi.dev)
+
+Word definitions come from a **self-hosted [wiktapi.dev](https://github.com/TheAlexLichter/wiktapi.dev) instance** — a multilingual REST API built on kaikki.org's pre-processed Wiktionary data, backed by a local SQLite database. The app no longer calls Wikimedia/dictionaryapi.dev directly.
+
+**Why self-hosted:** Wikimedia's API enforces a [User-Agent policy](https://meta.wikimedia.org/wiki/User-Agent_policy) and rejects Android's default `okhttp` UA with a 403 — so Dutch lookups failed only on Android. Self-hosting removes the runtime dependency on Wikimedia entirely, gives structured JSON (definitions + part of speech + IPA) instead of fragile text scraping, and supports 100+ languages from one endpoint.
+
+## Repo location
+
+The API lives in a sibling repo (not part of this app):
+```
+~/programming/word-bank/word-bank-app/wiktapi.dev
+```
+Toolchain: Node ≥ 24.13.1, pnpm 10.30.0 (via corepack). The README uses a `vp` (vite-plus) CLI; the `pnpm --filter` commands below are the equivalents and need no extra install.
+
+## Run the API locally
+
+```bash
+cd ~/programming/word-bank/word-bank-app/wiktapi.dev
+
+# 1. Install deps (compiles the native better-sqlite3 module)
+pnpm install
+
+# 2. Download a Wiktionary edition's data from kaikki.org.
+#    Start with nl (small). English is ~2.3 GB compressed — add it later.
+pnpm --filter @wiktapi/api run download -- --editions nl
+
+# 3. Import into SQLite → packages/api/data/wiktionary.db
+pnpm --filter @wiktapi/api run import -- --edition nl --fresh
+
+# 4. Start the dev server (http://localhost:3000)
+pnpm --filter @wiktapi/api run dev
+```
+
+Add more languages by repeating steps 2–3 with `--editions <code>` / `--edition <code>` (e.g. `en`).
+
+**Verify + inspect the schema:**
+```bash
+curl "http://localhost:3000/v1/nl/word/hond?lang=nl"
+```
+Interactive explorer at `/_scalar`, raw OpenAPI at `/_openapi.json`.
+
+## Endpoint shape
+
+```
+GET /v1/{edition}/word/{word}?lang={code}
+```
+
+| Axis | Meaning |
+|---|---|
+| `{edition}` | Which Wiktionary the data comes from → **the language definitions are written in** |
+| `?lang=` | Filters to entries for a specific language |
+
+The app uses matching edition + lang (e.g. `/v1/nl/word/hond?lang=nl`) so Dutch words get **Dutch-language** definitions. Using the `en` edition instead would return English glosses of the Dutch word.
+
+## App integration
+
+All lookups go through a single entry point — see [src/utils/words-api.ts](src/utils/words-api.ts):
+
+```ts
+fetchDefinition(word, lang)  // → { word, phonetic?, partOfSpeech, definition }
+```
+
+It routes by language:
+- **English** (`lang === 'en'`) → the free public **`api.dictionaryapi.dev`** (`fetchEnglish`). No key or User-Agent needed, and it means the self-hosted server never has to import the ~2.3 GB English edition.
+- **Everything else** → the self-hosted wiktapi.dev instance (`fetchSelfHosted`).
+
+For the self-hosted path:
+- `EDITION_BY_LANG` maps a language code to its edition (currently `nl`; English is intentionally absent). Add an entry here when you import a new edition into the DB. Unmapped codes use the language code itself as the edition (and 404 gracefully if that edition isn't imported).
+- The base URL is `process.env.EXPO_PUBLIC_DICT_API_URL`, with a platform-aware local fallback when unset.
+
+## Pointing the app at the server
+
+The URL the app must hit depends on where it runs (the fallbacks handle simulators/emulators automatically):
+
+| App runs on | URL | Setup needed |
+|---|---|---|
+| iOS simulator / web | `http://localhost:3000` | none (default) |
+| Android emulator | `http://10.0.2.2:3000` | none (default) |
+| **Physical phone** | `http://<your-Mac-LAN-IP>:3000` | set env var (below) |
+| Preview / production | deployed HTTPS URL | set in `eas.json` per profile |
+
+**Physical device:** create `.env.local` (gitignored) in this app's root:
+```
+EXPO_PUBLIC_DICT_API_URL=http://192.168.0.177:3000
+```
+`EXPO_PUBLIC_*` vars are inlined at bundle time, so **restart Metro with `--clear`** after changing it (`npm run dev-client:physical` already includes `--clear`). Update the IP if your Mac's LAN address changes.
+
+⚠️ **Gotcha:** the Nitro dev server binds to `localhost` by default, so a physical device can't reach it. Start it bound to all interfaces, and keep both devices on the same Wi-Fi:
+```bash
+HOST=0.0.0.0 pnpm --filter @wiktapi/api run dev
+```
+Cleartext HTTP is fine for dev-client (debug) builds; production must use HTTPS (iOS ATS / Android block cleartext in release).
+
+## Production hosting
+
+The published app can't reach a `localhost`/LAN URL, so the API must be deployed to a public **HTTPS** URL and set via `EXPO_PUBLIC_DICT_API_URL` in `eas.json` (`env` per profile). The repo ships a `Dockerfile` + `docker-compose.yml` (`restart: unless-stopped`), and the runtime image expects the DB mounted at `/data/wiktionary.db`. Build the `wiktionary.db` on a fast machine and copy it to the host rather than downloading/importing on constrained hardware (e.g. a Raspberry Pi). For a home host behind NAT, Cloudflare Tunnel gives free HTTPS without port-forwarding.
+
+## Hosting on a Raspberry Pi (Still TODO)
+
+The Dockerfile targets `node:22` (arm64 is published) and compiles `better-sqlite3`, so it builds natively on a Pi. **Golden rule:** build `wiktionary.db` on your Mac and copy the file over — never run the multi-GB download/import on the Pi.
+
+**0. Prerequisites** — 64-bit Raspberry Pi OS, Pi 4/5, DB ideally on a **USB SSD** (not the SD card). Install Docker:
+```bash
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER     # then log out/in
+```
+
+**1. Copy the database from the Mac** (run on the Mac):
+```bash
+ssh pi@raspberrypi.local 'mkdir -p ~/wiktapi-data'
+scp ~/programming/word-bank/word-bank-app/wiktapi.dev/packages/api/data/wiktionary.db \
+    pi@raspberrypi.local:~/wiktapi-data/
+```
+
+**2. Build the image on the Pi:**
+```bash
+git clone <your-wiktapi-repo> ~/wiktapi.dev && cd ~/wiktapi.dev
+docker build --target runtime -t wiktapi-api .
+```
+If the Pi is RAM-constrained, build on the Mac for arm64 and transfer instead:
+```bash
+docker buildx build --platform linux/arm64 --target runtime -t wiktapi-api . --load
+docker save wiktapi-api | ssh pi@raspberrypi.local docker load
+```
+
+**3. Run it, mounting the DB** (image expects it at `/data/wiktionary.db`):
+```bash
+docker run -d --name wiktapi --restart unless-stopped \
+  -p 3000:3000 -v ~/wiktapi-data:/data wiktapi-api
+
+curl "http://localhost:3000/v1/nl/word/hond?lang=nl"   # verify
+```
+Now reachable on the LAN at `http://<pi-ip>:3000`.
+
+**4. Expose over HTTPS (Cloudflare Tunnel)** — no port-forwarding, hides the home IP, and the app requires HTTPS in production:
+```bash
+# install cloudflared (arm64), then:
+cloudflared tunnel login
+cloudflared tunnel create wiktapi
+cloudflared tunnel route dns wiktapi dict.yourdomain.com
+# point ingress at http://localhost:3000 in ~/.cloudflared/config.yml
+cloudflared service install      # run as a service, survives reboot
+```
+Then set `EXPO_PUBLIC_DICT_API_URL=https://dict.yourdomain.com` in `eas.json` for the preview/production profiles.
+
+**Keeping it fresh:** monthly (or quarterly — definitions change rarely), rebuild `wiktionary.db` on the Mac, `scp` it over, then `docker restart wiktapi`.
+
+**Caveat:** fine for yourself + preview testers; home power/internet is the uptime weak link for a real launch. The same image moves to a $4–6/mo VPS with zero code changes — just keep the env URL pointed at wherever it lives.
+
+## Alternative dictionary APIs considered
+
+Kept for reference if we ever move off the self-hosted wiktapi.dev. The key distinction is **dictionary** (definition + part of speech + IPA, matching our `WordEntry` model) vs **translation** (word → word only, no POS/phonetic — would require reshaping the model).
+
+### Free
+| Option | Type | Languages | Notes |
+|---|---|---|---|
+| **wiktapi.dev (self-host)** — current | Dictionary | 100+ | Free to use, you pay infra. Structured JSON: definitions + POS + IPA. |
+| **Wiktionary REST API** | Dictionary | 100+ | `en.wiktionary.org/api/rest_v1`. Closest zero-infra equivalent, but Wikimedia-hosted (needs `User-Agent` header, rate limits, glosses in English). |
+| **dictionaryapi.dev** | Dictionary | ~13 only | Free, no key, but **no Dutch** (en, es, fr, de, it, ru, ja, ko, ar, tr, hi, pt-BR). Was the original English source. |
+| **MyMemory** | Translation | All pairs | Free ~50k chars/day (more with email). No POS/IPA. |
+| **LibreTranslate** | Translation | ~30 | Open-source, self-hostable or public instances. |
+| **Merriam-Webster API** | Dictionary | en + es | Free with key, limited daily calls. Not multilingual. |
+
+### Paid (most have a free tier)
+| Option | Type | Languages | Notes |
+|---|---|---|---|
+| **Lexicala API** (K Dictionaries) | Dictionary | 25+ incl. Dutch | Product-grade multilingual dictionary (definitions, POS, IPA, examples). Free trial, cleanest commercial licensing. |
+| **Oxford Dictionaries API** | Dictionary | ~10 incl. Dutch | Monolingual definitions + phonetics. Had a free prototype tier; since restructured/limited. |
+| **DeepL API** | Translation | ~30 incl. Dutch | Free 500k chars/mo then paid. Highest-quality translations, needs key. |
+| **Google Cloud Translation** | Translation | 100+ | Paid ($300 free credit). Broadest coverage, translations only. |
+
+The dictionary options (wiktapi.dev / Wiktionary REST / Lexicala) drop in without reshaping `WordEntry`; the translation options would mean dropping or repurposing `definition` / `partOfSpeech` / `phonetic`.
+
 # Git Commit Conventions
 
 This project uses **Conventional Commits**. Always prefix commit messages with a type:

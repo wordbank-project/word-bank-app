@@ -3,7 +3,8 @@ export type WordEntry = {
     phonetic?: string;
     partOfSpeech: string;
     definition: string;
-    sentence?: string;
+    sentence?: string;        // the user's own example sentence
+    exampleSentence?: string; // a sample sentence from the dictionary, used as a placeholder text
     notes?: string;
 };
 
