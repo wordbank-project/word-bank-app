@@ -1,3 +1,5 @@
+const { version } = require('./package.json');
+
 const IS_DEV = process.env.APP_VARIANT === 'development';
 const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
 
@@ -12,7 +14,7 @@ module.exports = {
     expo: {
         name: appName,
         slug: "word-bank",
-        version: "1.0.0",
+        version,
         runtimeVersion: {
             policy: "appVersion"
         },
