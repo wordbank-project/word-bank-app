@@ -8,6 +8,8 @@ import { ACCENT, Colors } from "@/styles/global";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import Reanimated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
+import { Link } from "expo-router";
+
 import { Book } from "@/models/book";
 
 import BookItem from "./BookItem";
@@ -19,7 +21,7 @@ function BookSkeletons({ styles }: { styles: ReturnType<typeof buildStyles> }) {
     const opacity = useSharedValue(1);
     useEffect(() => {
         opacity.value = withRepeat(withTiming(0.35, { duration: 750 }), -1, true);
-    }, []);
+    }, [opacity]);
     const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
 
     return (
@@ -47,6 +49,8 @@ type BooksListProps = {
     onLoadMore?: () => void;
     onRetryLoadMore?: () => void;
     header?: React.ReactElement;
+    /** Shown when the list is empty and not loading (e.g. an initial "search for a book" prompt). */
+    listEmptyComponent?: React.ReactElement;
 };
 
 export default function BooksList({
@@ -58,6 +62,7 @@ export default function BooksList({
     onLoadMore,
     onRetryLoadMore,
     header,
+    listEmptyComponent,
 }: BooksListProps) {
     const scheme = useColorScheme();
     const styles = scheme === 'dark' ? darkStyles : lightStyles;
@@ -81,8 +86,12 @@ export default function BooksList({
                     loading ? (
                         <BookSkeletons styles={styles} />
                     ) : searched && books.length === 0 ? (
-                        <Text style={styles.empty}>No books found.</Text>
-                    ) : null
+                        <Link href="/custom-book" style={styles.emptySubtitle}>
+                            Book not found. Add it?
+                        </Link>
+                    ) : (
+                        listEmptyComponent ?? null
+                    )
                 }
                 ListFooterComponent={
                     loadingMore ? (
@@ -140,6 +149,12 @@ function buildStyles(C: typeof Colors.light) {
             textAlign: 'center',
             color: C.textMuted,
             fontSize: 15,
+        },
+        emptySubtitle: {
+            fontSize: 14,
+            color: ACCENT,
+            textAlign: 'center',
+            lineHeight: 21,
         },
         footerLoader: {
             paddingVertical: 16,
