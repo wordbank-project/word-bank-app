@@ -1,8 +1,11 @@
 import { useState } from "react";
 
+import { useIsFocused } from "@react-navigation/native";
+
 import { useColorScheme } from "@/context/theme-context";
 
 import { useRandomSuggestion } from "@/hooks/use-random-suggestion";
+import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
 import { ACCENT, Colors } from "@/styles/global";
 
@@ -42,6 +45,11 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
     const [query, setQuery] = useState<string>("");
     const { isRandom, pickNextWord, onManualChange } = useRandomSuggestion(RANDOM_TITLES);
 
+    // Animated placeholder that types out example titles while the field is empty
+    // and this tab is focused (pauses when navigated away from).
+    const isFocused = useIsFocused();
+    const typedPlaceholder = useTypewriterPlaceholder(RANDOM_TITLES, isFocused && !query);
+
     function handleSearch(): void {
         Keyboard.dismiss();
         if (!query.trim() || isRandom.current) {
@@ -62,7 +70,7 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
     return (
         <View style={styles.container}>
             <TextInput
-                placeholder="Search a book, author..."
+                placeholder={typedPlaceholder || "Search a book, author..."}
                 style={styles.input}
                 placeholderTextColor={placeholderColor}
                 value={query}

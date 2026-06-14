@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-import { usePreventRemove } from "@react-navigation/native";
+import { useIsFocused, usePreventRemove } from "@react-navigation/native";
 
 import { ActivityIndicator, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
@@ -25,6 +25,7 @@ import { showActionSheet } from "@/utils/show-action-sheet";
 import { fetchDefinition } from "@/utils/words-api";
 
 import { useRandomSuggestion } from "@/hooks/use-random-suggestion";
+import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
 import { ACCENT, Colors, ERROR } from "@/styles/global";
 
@@ -91,6 +92,11 @@ export default function BookDetail() {
     const [language, setLanguage] = useState<Language>(LANGUAGES[0]); // defaults to the first language in array
 
     const { isRandom: isRandomWord, pickNextWord, onManualChange: onManualWordChange } = useRandomSuggestion(RANDOM_WORDS);
+
+    // Animated placeholder that types out example words while the add-word field is
+    // empty, the screen is focused, and we're not editing an existing word.
+    const isFocused = useIsFocused();
+    const typedWordPlaceholder = useTypewriterPlaceholder(RANDOM_WORDS, isFocused && !input && !editingWord);
 
     const notesRef = useRef<TextInput>(null);
     const sentenceRef = useRef<TextInput>(null);
@@ -303,7 +309,7 @@ export default function BookDetail() {
                     <View style={styles.addRow}>
                         <TextInput
                             style={styles.input}
-                            placeholder="Add a word..."
+                            placeholder={typedWordPlaceholder || "Add a word..."}
                             placeholderTextColor={placeholderColor}
                             value={input}
                             onChangeText={(t) => { handleChangeInput(t); setError(""); }}
