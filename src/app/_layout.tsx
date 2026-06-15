@@ -1,4 +1,5 @@
 import { AppThemeProvider, useTheme } from '@/context/theme-context';
+import { useNotificationObserver } from '@/hooks/use-notification-observer';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -7,6 +8,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 function ThemedStack() {
     const { colorScheme } = useTheme();
+    useNotificationObserver();
+
     return (
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
             <Stack screenOptions={{ headerShown: false }}>

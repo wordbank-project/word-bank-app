@@ -85,6 +85,10 @@ export default function TabLayout() {
                         name="about"
                         options={{ href: null, title: "About" }}
                     />
+                    <Tabs.Screen
+                        name="notifications-settings"
+                        options={{ href: null, title: "Notifications" }}
+                    />
                 </Tabs>
                 <FloatingActionButton />
             </View>

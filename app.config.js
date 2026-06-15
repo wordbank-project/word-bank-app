@@ -68,6 +68,12 @@ module.exports = {
                         imageWidth: 76
                     }
                 }
+            ],
+            [
+                "expo-notifications",
+                {
+                    color: "#208AEF"
+                }
             ]
         ],
         experiments: {

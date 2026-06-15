@@ -66,6 +66,10 @@ export default function MoreScreen() {
             scrollEventThrottle={scrollEventThrottle}
             onScroll={onScroll}
         >
+            <Section title="Settings">
+                <Row label="Notifications" href="/notifications-settings" chevron first />
+            </Section>
+
             <Section title="Your data">
                 <Row label="Export Books" chevron first />
                 <Row label="Import Books" chevron />

@@ -14,16 +14,18 @@ A **book** the user is tracking lives on the **read list** (`ReadListBook`, keye
 
 ```
 app/                         # expo-router routes (file = route)
-  _layout.tsx                # Root: SafeAreaProvider > AppThemeProvider > KeyboardProvider > Stack
+  _layout.tsx                # Root: SafeAreaProvider > AppThemeProvider > KeyboardProvider > Stack; runs useNotificationObserver (deep-links notification taps to /review)
   book.tsx                   # /book — book detail (add/edit words, status, cover, meta). NOT a tab
+  review.tsx                 # /review — daily SRS review session (Got it / Again). Stack route, opened by tapping the notification. NOT a tab
   (tabs)/
-    _layout.tsx              # Tab bar (ScrollProvider + FloatingActionButton); hides custom-book & about
+    _layout.tsx              # Tab bar (ScrollProvider + FloatingActionButton); hides custom-book, about & notifications-settings
     index.tsx                # "Search" tab — search OpenLibrary, browse results
     read-list.tsx            # "Read List" tab — saved books, filter by status
     words-list.tsx           # "Words List" tab — all words across books, searchable
     more.tsx                 # "More" tab — settings/about menu (card rows)
     about.tsx                # /about — reached from More (href: null, not a visible tab)
     custom-book.tsx          # /custom-book — create a manual book (href: null; opened via the FAB)
+    notifications-settings.tsx # /notifications-settings — daily-review toggle, words/day, time (href: null; reached from More → Settings)
 components/                  # presentational + small stateful UI
 hooks/                       # reusable hooks
 context/                     # React context providers
@@ -36,8 +38,9 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 ## Routing
 
 - `app/_layout.tsx` wraps everything in theme, keyboard, and safe-area providers; the root Stack hides headers and renders the `(tabs)` group.
-- `app/(tabs)/_layout.tsx` defines the four visible tabs (Search / Read List / Words List / More) plus the per-tab header (with `ThemeToggle`). `custom-book` and `about` are registered with `href: null` so they're routable but not shown as tabs. The whole tab area is wrapped in `ScrollProvider` and overlaid with one shared `FloatingActionButton`.
+- `app/(tabs)/_layout.tsx` defines the four visible tabs (Search / Read List / Words List / More) plus the per-tab header (with `ThemeToggle`). `custom-book`, `about`, and `notifications-settings` are registered with `href: null` so they're routable but not shown as tabs. The whole tab area is wrapped in `ScrollProvider` and overlaid with one shared `FloatingActionButton`.
 - `book.tsx` is a stack route opened via `openBook(...)` ([utils/open-book.ts](src/utils/open-book.ts)), passing `key/title/author/year/cover_i` as params.
+- `review.tsx` is a stack route reached by `router.push('/review')` — fired from `useNotificationObserver` when a daily-review notification is tapped (or via any manual link). See [Daily word review](#daily-word-review-srs--notifications).
 
 ## Screens (`app/`)
 
@@ -49,6 +52,8 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 | `words-list.tsx` | Flatten all words across books, live word-text search, tap to open the book | `WordListItem`, `getReadList` + `getWords` |
 | `custom-book.tsx` | Create a manual book (title/author/year/cover/status) then open it | `CoverImage`, `ReadStatusSelector`, `upsertReadListBook` |
 | `more.tsx` / `about.tsx` | Settings-style card menu + app info (version/license from package.json) | `useScrollViewScroll` |
+| `review.tsx` | Daily SRS session: shows due words one card at a time (reveal → Got it / Again), persists each grade, then offers "Get more words" | `getReviewQueue`, `gradeAndPersist`, `getNotificationSettings` |
+| `notifications-settings.tsx` | Toggle daily reminders (requests OS permission), set words/day + reminder time; persists + re-syncs the OS schedule | `notifications-storage`, `ensureNotificationPermission`, `syncNotifications` |
 
 ## Components (`src/components/`)
 
@@ -77,6 +82,7 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 | `usePulse` | Reanimated opacity-pulse style for loading skeletons |
 | `useThemedStyles(light, dark)` | Picks the light/dark `StyleSheet` for the current theme |
 | `useTypewriterPlaceholder(words, active)` | Types out one example word/title then stops; returns `{ text, word }` so a screen can show `text` as the placeholder and accept `word` on Enter. Pauses when `active` is false (field non-empty or screen blurred) |
+| `useNotificationObserver()` | Runs once in the root layout: sets the foreground notification handler and routes a tapped daily-review notification to `/review` (handles both warm taps and cold start). Requires `expo-notifications` |
 
 ## Context (`src/context/`)
 
@@ -92,6 +98,8 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 | `words-storage.ts` | `words_<bookKey>` | `getWords`, `setWords`, `removeWords`, `getWordCounts` (batched `multiGet`) |
 | `language-storage.ts` | `dictionary_language` | `getLanguageCode`, `setLanguageCode` |
 | `theme-storage.ts` | `app_theme` | `getTheme`, `setTheme` (light/dark choice) |
+| `srs-storage.ts` | `srs_<bookKey>` | `getSrs`, `setSrs`, `getSrsMaps` (batched `multiGet`), `gradeAndPersist`, `resetSrs`. One `{ word: SrsState }` map per book, parallel to `words_<bookKey>`, keyed by the word string |
+| `notifications-storage.ts` | `notification_settings` | `getNotificationSettings`, `setNotificationSettings`, `DEFAULT_NOTIFICATION_SETTINGS` (`{ enabled, wordsPerDay, timeMinutes }`) |
 
 `upsertReadListBook` takes `Omit<ReadListBook, 'addedAt'>` — `addedAt` is owned by storage (stamped on insert, preserved on update).
 
@@ -101,6 +109,7 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 - `read-list-book.ts` — `ReadListBook`, `ReadStatus` (`'want' | 'reading' | 'read'`), plus `READ_STATUS_LABELS` / `READ_STATUS_ORDER`.
 - `word-entry.ts` — `WordEntry` (word, phonetic, partOfSpeech, definition, sentence, exampleSentence, notes) and `EditDraft`.
 - `language.ts` — `Language` + the full `LANGUAGES` list used by the dictionary picker.
+- `srs.ts` — `SrsState` (`box`, `dueAt`, `reps`, `lastReviewedAt`) and `SrsGrade` (`'got' | 'again'`) for the spaced-repetition scheduler.
 
 ## Utils (`src/utils/`)
 
@@ -110,6 +119,9 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 - `open-book.ts` — `openBook(params)`: the single place that navigates to `/book`.
 - `pick-cover-image.ts` — `pickCoverImage()`: camera-or-library prompt (uses `expo-image-picker`).
 - `show-action-sheet.ts` — `showActionSheet()`: native sheet on iOS, `Alert` on Android.
+- `srs.ts` — pure Leitner engine. `gradeWord(state, grade, now)` → next `SrsState`; `INTERVALS_DAYS = [1, 3, 7, 16, 35]` (a box's interval). `now` is injected so it's deterministic to test.
+- `review-queue.ts` — `getReviewQueue(wordsPerDay)`: flattens all words across books (reuses the `words-list` loader) joined with each book's SRS map (batched `multiGet`); returns all due words (oldest-due first) + new words up to the daily cap. `getMoreNewWords(count, excludeKeys)` backs the review screen's "Get more words".
+- `notifications.ts` — wraps `expo-notifications`: `setupNotificationHandler()` (foreground behavior), `ensureNotificationPermission()` (perm + Android channel), `syncNotifications(settings)` (cancel-all then schedule one `DAILY` trigger if enabled). See [Daily word review](#daily-word-review-srs--notifications).
 
 ## Styling / theming convention
 
@@ -514,6 +526,65 @@ This is a **native config change**, so it ships only via a new build — **not**
 npm run build:dev    # or build:apk:local:dev
 npm run build:apk    # or build:apk:local:preview
 ```
+
+# Daily word review (SRS + notifications)
+
+An Anki-style spaced-repetition loop. The user opts in from **More → Settings →
+Notifications**; once a day at a chosen time a local notification nudges them; tapping it
+opens an in-app **Review** screen that picks the words due that day. Each word is graded
+**Got it / Again** and rescheduled.
+
+## The flow end-to-end
+
+1. **Settings** ([notifications-settings.tsx](src/app/(tabs)/notifications-settings.tsx)) —
+   toggle reminders (requests OS permission on enable), set **words per day** and
+   **reminder time**. Every change persists via `notifications-storage` and calls
+   `syncNotifications(settings)` to reconcile the OS schedule.
+2. **Schedule** ([utils/notifications.ts](src/utils/notifications.ts)) — `syncNotifications`
+   cancels all scheduled notifications, then (if enabled) schedules **one repeating
+   `DAILY` trigger** at `hour:minute` (derived from `timeMinutes`). The body is a generic
+   nudge ("Time to review your words 📚") — it carries `data.screen = 'review'`.
+3. **Tap → deep link** ([use-notification-observer.ts](src/hooks/use-notification-observer.ts),
+   run once in `app/_layout.tsx`) — routes a tapped review notification to `/review`,
+   handling both warm taps (`addNotificationResponseReceivedListener`) and cold start
+   (`getLastNotificationResponseAsync`).
+4. **Review** ([review.tsx](src/app/review.tsx)) — `getReviewQueue(wordsPerDay)` builds the
+   session at open time (so the nudge never goes stale): **all due words first**
+   (oldest-due), then new words up to the daily cap. Reveal → **Got it / Again** →
+   `gradeAndPersist` → next. When the queue empties, "Get more words" pulls more new words.
+
+## Why a generic nudge (not the word in the notification)
+
+A local notification can't recompute "today's words" at fire time (no reliable background
+execution, esp. iOS), and the app has no backend for push. So the notification is just a
+nudge and the **word selection happens in-app on tap** — fully local, never stale. (The
+alternative — pre-scheduling N days with the word baked into each body — was rejected as
+stale-prone and more complex.)
+
+## SRS model (Leitner)
+
+State lives in `srs_<bookKey>` (a `{ word: SrsState }` map, parallel to `words_<bookKey>`,
+keyed by the word string so it survives reorder/removal — see
+[srs-storage.ts](src/storage/srs-storage.ts)). The engine is pure
+([utils/srs.ts](src/utils/srs.ts)): `INTERVALS_DAYS = [1, 3, 7, 16, 35]`; **Got it**
+promotes a word to the next box (longer interval), **Again** resets it to box 0. Word
+identity is `{ bookKey, word }` (the same `word` can exist in multiple books). To extend to
+full SM-2 later, swap `gradeWord` and widen `SrsState` — storage/queue/UI stay the same.
+
+## expo-notifications requires install + a rebuild
+
+`expo-notifications` is a **native** dependency, so it can't hot-reload or ship via OTA —
+install it and rebuild the dev client once:
+```bash
+npx expo install expo-notifications   # adds the JS dep + types
+npm run android                        # or: npm run ios — rebuilds & installs the .dev client
+```
+[app.config.js](app.config.js) registers the `["expo-notifications", { color }]` plugin
+(adds Android `POST_NOTIFICATIONS` + the iOS permission). The API is pinned to **SDK 55**
+shapes: `setNotificationHandler` returns `shouldShowBanner`/`shouldShowList` (not the
+deprecated `shouldShowAlert`); the trigger is `SchedulableTriggerInputTypes.DAILY` with
+`{ hour, minute }`. Until installed, `utils/notifications.ts` and
+`use-notification-observer.ts` won't typecheck (missing module) — everything else does.
 
 # OTA Updates (EAS Update)
 
