@@ -17,4 +17,6 @@ export type ReadListBook = {
     cover_i: string;
     status: ReadStatus;
     addedAt: number;
+    review?: string;   // user's overall review of the book (optional)
+    notes?: string;    // general notes about the book (optional)
 };

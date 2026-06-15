@@ -87,6 +87,14 @@ export default function BookDetail() {
 
     const [wordAdded, setWordAdded] = useState<boolean>(false);
 
+    // Book-level review and general notes (saved on the read-list entry).
+    const [review, setReview] = useState<string>('');
+    const [notes, setNotes] = useState<string>('');
+    const [editingReview, setEditingReview] = useState<boolean>(false);
+    const [editingNotes, setEditingNotes] = useState<boolean>(false);
+    const [reviewDraft, setReviewDraft] = useState<string>('');
+    const [notesDraft, setNotesDraft] = useState<string>('');
+
     const [inReadList, setInReadList] = useState<boolean>(false);
     const [readStatus, setReadStatus] = useState<ReadStatus>('want'); // Initial value is: "Want to read"
 
@@ -102,6 +110,9 @@ export default function BookDetail() {
 
     const notesRef = useRef<TextInput>(null);
     const sentenceRef = useRef<TextInput>(null);
+    const reviewInputRef = useRef<TextInput>(null);
+    // Ensures the "Have Read" → write-a-review nudge only fires once per visit.
+    const hasPromptedReview = useRef<boolean>(false);
 
     // On mount, restore the dictionary language the user picked last time (saved in AsyncStorage).
     useEffect(() => {
@@ -146,6 +157,8 @@ export default function BookDetail() {
             setInReadList(!!entry);
             if (entry) {
                 setReadStatus(entry.status);
+                setReview(entry.review ?? '');
+                setNotes(entry.notes ?? '');
             }
         });
     }, [key]);
@@ -160,6 +173,8 @@ export default function BookDetail() {
             year: metaYear || (year ?? ''),
             cover_i: coverUri ?? '',
             status: readStatus,
+            review: review || undefined,
+            notes: notes || undefined,
             ...overrides,
         };
     }
@@ -175,10 +190,27 @@ export default function BookDetail() {
         }
     }
 
+    // When a user marks a book as "Have Read" and they haven't written a review yet, 
+    // we prompt them to do so.
+    // This means going to the edit review form
+    function maybePromptForReviewCheck(status: ReadStatus): void {
+        if (status !== 'read' || review || hasPromptedReview.current) {
+            return;
+        }
+        // Only once per visit
+        hasPromptedReview.current = true;
+
+        setReviewDraft('');
+        setEditingReview(true);
+
+        setTimeout(() => reviewInputRef.current?.focus(), 100);
+    }
+
     // Selecting a status saves immediately — the footer button is just an optional shortcut that also navigates to the read list.
     async function handleChangeReadStatus(status: ReadStatus): Promise<void> {
         setReadStatus(status);
         await persistToReadList(status);
+        maybePromptForReviewCheck(status);
     }
 
     async function saveToReadList(): Promise<void> {
@@ -206,6 +238,26 @@ export default function BookDetail() {
             year: metaYear.trim(),
         }));
         setEditingMeta(false);
+    }
+
+    async function handleSaveReview(): Promise<void> {
+        Keyboard.dismiss();
+
+        const trimmedReview = reviewDraft.trim();
+        setReview(trimmedReview);
+        await upsertReadListBook(buildReadListEntry({ review: trimmedReview || undefined }));
+        setInReadList(true);
+        setEditingReview(false);
+    }
+
+    async function handleSaveNotes(): Promise<void> {
+        Keyboard.dismiss();
+
+        const trimmedNotes = notesDraft.trim();
+        setNotes(trimmedNotes);
+        await upsertReadListBook(buildReadListEntry({ notes: trimmedNotes || undefined }));
+        setInReadList(true);
+        setEditingNotes(false);
     }
 
     function handleSelectLanguage(language: Language): void {
@@ -518,6 +570,101 @@ export default function BookDetail() {
                             })
                         )}
                     </View>
+
+                    <View style={styles.bookNotesSection}>
+                        <View style={styles.card}>
+                            <View style={styles.labelRow}>
+                                <Text style={styles.metaLabel}>My Review</Text>
+                                <Pressable
+                                    style={styles.editButton}
+                                    hitSlop={8}
+                                    onPress={() => {
+                                        if (editingReview) {
+                                            setEditingReview(false);
+                                        } else {
+                                            setReviewDraft(review);
+                                            setEditingReview(true);
+                                        }
+                                    }}
+                                >
+                                    <Text style={styles.editText}>{editingReview ? 'Cancel' : 'Edit'}</Text>
+                                </Pressable>
+                            </View>
+                            {editingReview ? (
+                                <>
+                                    <TextInput
+                                        ref={reviewInputRef}
+                                        style={styles.editInput}
+                                        placeholder="What did you think of this book?"
+                                        placeholderTextColor={placeholderColor}
+                                        value={reviewDraft}
+                                        onChangeText={setReviewDraft}
+                                        multiline
+                                        autoCorrect
+                                        textAlignVertical="top"
+                                    />
+                                    <Pressable
+                                        style={styles.saveButton}
+                                        onPress={handleSaveReview}
+                                    >
+                                        <Text style={styles.saveButtonText}>Save</Text>
+                                    </Pressable>
+                                </>
+                            ) : review ? (
+                                <Text style={styles.metaValue}>{review}</Text>
+                            ) : (
+                                <Pressable onPress={() => { setReviewDraft(''); setEditingReview(true); }}>
+                                    <Text style={styles.bookNotesPlaceholder}>Add a review…</Text>
+                                </Pressable>
+                            )}
+                        </View>
+
+                        <View style={styles.card}>
+                            <View style={styles.labelRow}>
+                                <Text style={styles.metaLabel}>Notes</Text>
+                                <Pressable
+                                    style={styles.editButton}
+                                    hitSlop={8}
+                                    onPress={() => {
+                                        if (editingNotes) {
+                                            setEditingNotes(false);
+                                        } else {
+                                            setNotesDraft(notes);
+                                            setEditingNotes(true);
+                                        }
+                                    }}
+                                >
+                                    <Text style={styles.editText}>{editingNotes ? 'Cancel' : 'Edit'}</Text>
+                                </Pressable>
+                            </View>
+                            {editingNotes ? (
+                                <>
+                                    <TextInput
+                                        style={styles.editInput}
+                                        placeholder="General notes about this book…"
+                                        placeholderTextColor={placeholderColor}
+                                        value={notesDraft}
+                                        onChangeText={setNotesDraft}
+                                        multiline
+                                        autoCorrect
+                                        textAlignVertical="top"
+                                    />
+                                    <Pressable
+                                        style={styles.saveButton}
+                                        onPress={handleSaveNotes}
+                                    >
+                                        <Text style={styles.saveButtonText}>Save</Text>
+                                    </Pressable>
+                                </>
+                            ) : notes ? (
+                                <Text style={styles.metaValue}>{notes}</Text>
+                            ) : (
+                                <Pressable onPress={() => { setNotesDraft(''); setEditingNotes(true); }}>
+                                    <Text style={styles.bookNotesPlaceholder}>Add notes…</Text>
+                                </Pressable>
+                            )}
+                        </View>
+                    </View>
                 </KeyboardAwareScrollView>
 
                 {!editingWord && (
@@ -681,6 +828,14 @@ function buildStyles(C: typeof Colors.light) {
             fontSize: 13,
             paddingHorizontal: 12,
             paddingBottom: 4,
+        },
+        bookNotesSection: {
+            padding: 12,
+            gap: 10,
+        },
+        bookNotesPlaceholder: {
+            fontSize: 14,
+            color: C.textMuted,
         },
         list: {
             padding: 12,
