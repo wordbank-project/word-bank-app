@@ -6,6 +6,7 @@ import { openBook } from "@/utils/open-book";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import CoverImage from "./CoverImage";
+import CoverPlaceholder from "./CoverPlaceholder";
 
 export default function BookItem({ book }: { book: Book }) {
     const styles = useThemedStyles(lightStyles, darkStyles);
@@ -24,7 +25,7 @@ export default function BookItem({ book }: { book: Book }) {
                 })
             }
         >
-            <CoverImage uri={coverUri(cover_i, 'S')} style={styles.cover} />
+            <CoverImage uri={coverUri(cover_i, 'S')} style={styles.cover} placeholder={<CoverPlaceholder size={20} />} />
             <View style={styles.bookInfo}>
                 <Text style={styles.title} numberOfLines={2}>{title}</Text>
                 {author_name && (
@@ -53,9 +54,6 @@ function buildStyles(C: typeof Colors.light) {
             width: 48,
             height: 64,
             borderRadius: 4,
-        },
-        coverPlaceholder: {
-            backgroundColor: C.coverPlaceholder,
         },
         bookInfo: {
             flex: 1,

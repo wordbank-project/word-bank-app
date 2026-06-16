@@ -111,6 +111,10 @@ export default function BookDetail() {
     const notesRef = useRef<TextInput>(null);
     const sentenceRef = useRef<TextInput>(null);
     const reviewInputRef = useRef<TextInput>(null);
+    // Scroll-to-notes: the scroll view ref + the Book Notes section's y offset
+    // (captured on layout), so the "Jump to notes" link can scroll straight there.
+    const scrollRef = useRef<React.ComponentRef<typeof KeyboardAwareScrollView>>(null);
+    const bookNotesY = useRef<number>(0);
     // Ensures the "Have Read" → write-a-review nudge only fires once per visit.
     const hasPromptedReview = useRef<boolean>(false);
 
@@ -392,6 +396,7 @@ export default function BookDetail() {
                 <LanguageModal selected={language} onSelect={handleSelectLanguage} />
 
                 <KeyboardAwareScrollView
+                    ref={scrollRef}
                     style={{ flex: 1 }}
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
@@ -463,12 +468,22 @@ export default function BookDetail() {
                                             <Text style={styles.editMetaText}>Edit details</Text>
                                         </Pressable>
                                     )}
+                                    {words.length > 0 && (
+                                        <Pressable
+                                            onPress={() => scrollRef.current?.scrollTo({ y: bookNotesY.current, animated: true })}
+                                            hitSlop={8}
+                                            style={styles.jumpToNotesButton}
+                                        >
+                                            <Text style={styles.jumpToNotesText}>Jump to notes ↓</Text>
+                                        </Pressable>
+                                    )}
                                 </>
                             )}
                         </View>
                     </View>
 
                     <View style={styles.list}>
+                        <Text style={styles.sectionLabel}>Words</Text>
                         {words.length === 0 ? (
                             <Text style={styles.empty}>No words added yet. Add one above. It will be saved to your <Text style={styles.wordBankText}>word bank</Text> per book.</Text>
                         ) : (
@@ -571,7 +586,11 @@ export default function BookDetail() {
                         )}
                     </View>
 
-                    <View style={styles.bookNotesSection}>
+                    <View
+                        style={styles.bookNotesSection}
+                        onLayout={(e) => { bookNotesY.current = e.nativeEvent.layout.y; }}
+                    >
+                        <Text style={styles.sectionLabel}>Book Notes</Text>
                         <View style={styles.card}>
                             <View style={styles.labelRow}>
                                 <Text style={styles.metaLabel}>My Review</Text>
@@ -753,6 +772,21 @@ function buildStyles(C: typeof Colors.light) {
             color: ACCENT,
             fontWeight: '500',
         },
+        jumpToNotesButton: {
+            alignSelf: 'flex-start',
+            marginTop: 8,
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: ACCENT,
+            backgroundColor: C.backgroundCard,
+        },
+        jumpToNotesText: {
+            fontSize: 12,
+            color: ACCENT,
+            fontWeight: '600',
+        },
         metaInput: {
             borderWidth: 1,
             borderColor: C.borderInput,
@@ -841,8 +875,16 @@ function buildStyles(C: typeof Colors.light) {
             padding: 12,
             gap: 10,
         },
+        sectionLabel: {
+            fontSize: 13,
+            fontWeight: '600',
+            color: C.textMuted,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+            marginLeft: 2,
+        },
         empty: {
-            marginTop: 32,
+            marginVertical: 32,
             textAlign: "center",
             fontSize: 15,
             color: C.textMuted,

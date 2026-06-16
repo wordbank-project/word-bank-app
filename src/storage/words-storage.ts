@@ -16,6 +16,14 @@ export async function setWords(bookKey: string, words: WordEntry[]): Promise<voi
     await setJSON(wordKey(bookKey), words);
 }
 
+// Removes the word collections for the given books in a single storage call.
+export async function removeWords(bookKeys: string[]): Promise<void> {
+    if (bookKeys.length === 0) {
+        return;
+    }
+    await AsyncStorage.multiRemove(bookKeys.map(wordKey));
+}
+
 // Counts words for many books at once. Uses multiGet so it's a single storage
 // read instead of one per book — keeps the Read List fast as it grows.
 export async function getWordCounts(bookKeys: string[]): Promise<Record<string, number>> {
