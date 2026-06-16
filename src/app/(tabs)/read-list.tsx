@@ -40,10 +40,16 @@ export default function ReadListScreen() {
     // Connects this list to the scroll-to-top button shared across tabs.
     const { ref: flatListRef, onScroll, scrollEventThrottle } = useFlatListScroll<ReadListBook>();
 
-    // The books actually shown: everything, or only those matching the selected status.
-    const filteredList = filter === 'all'
+    // The books actually shown: apply the status filter, then order by word count
+    // (most words first). Copy before sorting so we don't mutate the readList state
+    // array; the sort is stable, so books with the same count keep their existing
+    // (newest-added) order.
+    const filteredList = (filter === 'all'
         ? readList
-        : readList.filter((book) => book.status === filter);
+        : readList.filter((book) => book.status === filter)
+    )
+        .slice()
+        .sort((a, b) => (wordCounts[b.key] ?? 0) - (wordCounts[a.key] ?? 0));
 
     // Reload the books every time the tab comes into focus, so changes made
     // elsewhere (e.g. adding a book or words) show up here.
