@@ -413,7 +413,7 @@ export default function BookDetail() {
                         )}
                         <View style={styles.headerInfo}>
                             {editingMeta ? (
-                                <>
+                                <React.Fragment>
                                     <TextInput
                                         style={styles.metaInput}
                                         value={metaTitle}
@@ -454,9 +454,9 @@ export default function BookDetail() {
                                             <Text style={styles.metaCancelText}>Cancel</Text>
                                         </Pressable>
                                     </View>
-                                </>
+                                </React.Fragment>
                             ) : (
-                                <>
+                                <React.Fragment>
                                     <Text style={styles.bookTitle} numberOfLines={3}>{metaTitle || title}</Text>
                                     {(metaAuthor || author) ? <Text style={styles.bookAuthor}>{metaAuthor || author}</Text> : null}
                                     {(metaYear || year) ? <Text style={styles.bookYear}>{metaYear || year}</Text> : null}
@@ -477,7 +477,7 @@ export default function BookDetail() {
                                             <Text style={styles.jumpToNotesText}>Jump to notes ↓</Text>
                                         </Pressable>
                                     )}
-                                </>
+                                </React.Fragment>
                             )}
                         </View>
                     </View>
@@ -610,7 +610,7 @@ export default function BookDetail() {
                                 </Pressable>
                             </View>
                             {editingReview ? (
-                                <>
+                                <React.Fragment>
                                     <TextInput
                                         ref={reviewInputRef}
                                         style={styles.editInput}
@@ -628,7 +628,7 @@ export default function BookDetail() {
                                     >
                                         <Text style={styles.saveButtonText}>Save</Text>
                                     </Pressable>
-                                </>
+                                </React.Fragment>
                             ) : review ? (
                                 <Text style={styles.metaValue}>{review}</Text>
                             ) : (
@@ -657,7 +657,7 @@ export default function BookDetail() {
                                 </Pressable>
                             </View>
                             {editingNotes ? (
-                                <>
+                                <React.Fragment>
                                     <TextInput
                                         style={styles.editInput}
                                         placeholder="General notes about this book…"
@@ -674,7 +674,7 @@ export default function BookDetail() {
                                     >
                                         <Text style={styles.saveButtonText}>Save</Text>
                                     </Pressable>
-                                </>
+                                </React.Fragment>
                             ) : notes ? (
                                 <Text style={styles.metaValue}>{notes}</Text>
                             ) : (

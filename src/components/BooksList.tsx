@@ -23,7 +23,7 @@ function BookSkeletons({ styles }: { styles: ReturnType<typeof buildStyles> }) {
     const animStyle = usePulse();
 
     return (
-        <>
+        <React.Fragment>
             {SKELETON_TITLE_WIDTHS.map((titleW, i) => (
                 <Reanimated.View key={i} style={[styles.bookRow, animStyle]}>
                     <View style={[styles.cover, styles.skeletonBox]} />
@@ -34,7 +34,7 @@ function BookSkeletons({ styles }: { styles: ReturnType<typeof buildStyles> }) {
                     </View>
                 </Reanimated.View>
             ))}
-        </>
+        </React.Fragment>
     );
 }
 
