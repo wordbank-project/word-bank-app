@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { ActivityIndicator, FlatList, Keyboard, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Link, useFocusEffect, useIsFocused } from "expo-router";
 
@@ -19,6 +19,28 @@ import SearchButton from "@/components/SearchButton";
 
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
+// The part-of-speech filter pills: everything, or only nouns / adjectives.
+type PosFilter = 'all' | 'noun' | 'adjective';
+
+const POS_FILTERS: { value: PosFilter; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'noun', label: 'Nouns' },
+    { value: 'adjective', label: 'Adjectives' },
+];
+
+// Whether a word's part of speech matches the selected filter. Matches across both
+// dictionaries (dictionaryapi.dev says "adjective"; wiktapi/kaikki says "adj").
+function matchesPos(partOfSpeech: string, filter: PosFilter): boolean {
+    const pos = partOfSpeech.toLowerCase();
+    if (filter === 'noun') {
+        return pos === 'noun';
+    }
+    if (filter === 'adjective') {
+        return pos === 'adjective' || pos === 'adj';
+    }
+    return true;
+}
+
 export default function WordsListScreen() {
     const scheme = useColorScheme();
     const styles = scheme === 'dark' ? darkStyles : lightStyles;
@@ -27,6 +49,7 @@ export default function WordsListScreen() {
     const [allWords, setAllWords] = useState<WordWithBook[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [search, setSearch] = useState<string>('');
+    const [posFilter, setPosFilter] = useState<PosFilter>('all');
 
     const isFocused = useIsFocused();
 
@@ -66,14 +89,21 @@ export default function WordsListScreen() {
     // Types out one of your saved words while the search box is empty; Enter accepts it.
     const { text: typedPlaceholder, word } = useTypewriterPlaceholder(wordSuggestions, isFocused && !search);
 
-    // Keep only the words that match what's typed in the search box.
+    // Keep only the words that match the part-of-speech filter and the search box.
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();
-        if (!query) {
-            return allWords;
-        }
-        return allWords.filter((w) => w.word.toLowerCase().includes(query));
-    }, [allWords, search]);
+        return allWords.filter((w) =>
+            matchesPos(w.partOfSpeech, posFilter)
+            && (!query || w.word.toLowerCase().includes(query))
+        );
+    }, [allWords, search, posFilter]);
+
+    // How many saved words fall under each filter, shown on the pills themselves.
+    const posCounts = useMemo<Record<PosFilter, number>>(() => ({
+        all: allWords.length,
+        noun: allWords.filter((w) => matchesPos(w.partOfSpeech, 'noun')).length,
+        adjective: allWords.filter((w) => matchesPos(w.partOfSpeech, 'adjective')).length,
+    }), [allWords]);
 
     // Filter to the typed word, or accept the placeholder suggestion when empty.
     function handleSearch(): void {
@@ -119,6 +149,31 @@ export default function WordsListScreen() {
                 <SearchButton onPress={handleSearch} />
             </View>
 
+            {/* Part-of-speech filter pills: All / Nouns / Adjectives. */}
+            <View style={styles.filterRow}>
+                {POS_FILTERS.map(({ value, label }) => {
+                    const selected = posFilter === value;
+                    return (
+                        <Pressable
+                            key={value}
+                            onPress={() => setPosFilter(value)}
+                            style={[styles.filterPill, selected && styles.filterPillSelected]}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected }}
+                        >
+                            <Text
+                                style={[styles.filterText, selected && styles.filterTextSelected]}
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                                minimumFontScale={0.7}
+                            >
+                                {label} {posCounts[value]}
+                            </Text>
+                        </Pressable>
+                    );
+                })}
+            </View>
+
             <FlatList
                 ref={flatListRef}
                 data={filtered}
@@ -137,7 +192,7 @@ export default function WordsListScreen() {
                         </View>
                     ) : (
                         <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyTitle}>No words match &ldquo;{search}&rdquo;</Text>
+                            <Text style={styles.emptyTitle}>No words are matched</Text>
                         </View>
                     )
                 }
@@ -162,6 +217,35 @@ function buildStyles(C: typeof Colors.light) {
         },
         searchInput: {
             marginBottom: 8,
+        },
+        filterRow: {
+            flexDirection: 'row',
+            gap: 8,
+            paddingHorizontal: 16,
+            paddingBottom: 8,
+        },
+        filterPill: {
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingVertical: 7,
+            paddingHorizontal: 4,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: C.borderInput,
+            backgroundColor: C.backgroundInput,
+        },
+        filterPillSelected: {
+            borderColor: ACCENT,
+            backgroundColor: ACCENT,
+        },
+        filterText: {
+            fontSize: 12,
+            fontWeight: '600',
+            color: C.textMuted,
+        },
+        filterTextSelected: {
+            color: '#fff',
         },
         search: {
             height: 40,
