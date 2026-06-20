@@ -3,8 +3,9 @@ import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { clearAllBookData } from "@/storage/read-list-storage";
 import { Colors, ERROR } from "@/styles/global";
 import { showActionSheet } from "@/utils/show-action-sheet";
+import { alertDialog } from "@/utils/alert-dialog";
 import { Link, router, type Href } from "expo-router";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { version, license } from "../../../package.json";
 
@@ -113,7 +114,7 @@ function handleChooseSource(source: BookSource): void {
             text: `${p.name === source.active ? '✓ ' : ''}${p.name}${p.pro ? '  (Pro)' : ''}`,
             onPress: () => {
                 if (p.pro) {
-                    Alert.alert('Word Bank Pro', `${p.name} will be available in a future Pro version.`);
+                    alertDialog('Word Bank Pro', `${p.name} will be available in a future Pro version.`);
                 }
             },
         })),

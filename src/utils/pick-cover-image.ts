@@ -1,6 +1,7 @@
-import { showActionSheet } from '@/utils/show-action-sheet';
+import { alertDialog } from '@/utils/alert-dialog';
+import { showActionSheet, type ActionSheetButton } from '@/utils/show-action-sheet';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert } from 'react-native';
+import { Platform } from 'react-native';
 
 const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
     mediaTypes: ['images'],
@@ -12,7 +13,7 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
 async function takePhoto(): Promise<string | null> {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-        Alert.alert(
+        alertDialog(
             'Camera permission needed',
             'Enable camera access in Settings to take a photo.',
         );
@@ -36,10 +37,14 @@ export function pickCoverImage(hasExisting = false): Promise<string | null> {
     const title = hasExisting ? 'Change cover image' : 'Add cover image';
 
     return new Promise((resolve) => {
-        showActionSheet(title, undefined, [
-            { text: 'Take Photo', onPress: () => resolve(takePhoto()) },
+        const buttons: ActionSheetButton[] = [
+            // Camera capture isn't reliable on web — only offer it on native.
+            ...(Platform.OS !== 'web'
+                ? [{ text: 'Take Photo', onPress: () => resolve(takePhoto()) }]
+                : []),
             { text: 'Choose from Library', onPress: () => resolve(pickFromLibrary()) },
             { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },
-        ]);
+        ];
+        showActionSheet(title, undefined, buttons);
     });
 }
