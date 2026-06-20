@@ -1,4 +1,6 @@
+import ActionSheetBridge from '@/components/ActionSheetBridge';
 import { AppThemeProvider, useTheme } from '@/context/theme-context';
+import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -20,11 +22,14 @@ function ThemedStack() {
 export default function RootLayout() {
     return (
         <SafeAreaProvider>
-            <KeyboardProvider>
-                <AppThemeProvider>
-                    <ThemedStack />
-                </AppThemeProvider>
-            </KeyboardProvider>
+            <ActionSheetProvider>
+                <KeyboardProvider>
+                    <AppThemeProvider>
+                        <ActionSheetBridge />
+                        <ThemedStack />
+                    </AppThemeProvider>
+                </KeyboardProvider>
+            </ActionSheetProvider>
         </SafeAreaProvider>
     );
 }

@@ -53,7 +53,7 @@ export default function FloatingActionButton() {
             return;
         }
 
-        showActionSheet('Add a book', undefined, [...actions, { text: 'Cancel', style: 'cancel' }]);
+        showActionSheet('What would you like to do?', undefined, [...actions, { text: 'Cancel', style: 'cancel' }]);
     }
 
     return (

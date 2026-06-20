@@ -25,6 +25,7 @@
     "update:preview": "eas update --branch preview --auto"
   },
   "dependencies": {
+    "@expo/react-native-action-sheet": "^4.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.15.5",
     "@react-navigation/elements": "^2.9.10",
