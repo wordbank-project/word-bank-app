@@ -771,7 +771,7 @@ function buildStyles(C: typeof Colors.light) {
             backgroundColor: C.background,
         },
         scrollContent: {
-            paddingBottom: 400,
+            paddingBottom: 24,
         },
         header: {
             flexDirection: "row",

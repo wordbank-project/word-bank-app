@@ -169,7 +169,6 @@ function buildStyles(C: typeof Colors.light) {
         scrollContent: {
             padding: 20,
             gap: 24,
-            paddingBottom: 400,
         },
         coverRow: {
             alignItems: 'center',
