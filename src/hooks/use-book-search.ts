@@ -3,6 +3,8 @@ import { useRef, useState } from 'react';
 
 const PAGE_SIZE = 20;
 const API_URL = 'https://openlibrary.org/search.json';
+// Only the fields the UI uses — keeps the OpenLibrary response small and fast.
+const SEARCH_FIELDS = 'key,title,author_name,first_publish_year,cover_i';
 
 export type BookSearchState = {
     books: Book[];
@@ -48,7 +50,7 @@ export function useBookSearch(): BookSearchState {
 
         try {
             const res = await fetch(
-                `${API_URL}?q=${encodeURIComponent(trimmed)}&limit=${PAGE_SIZE}&offset=0`,
+                `${API_URL}?q=${encodeURIComponent(trimmed)}&fields=${SEARCH_FIELDS}&limit=${PAGE_SIZE}&offset=0`,
                 { signal: abortRef.current.signal }
             );
             const data = await res.json();
@@ -71,7 +73,7 @@ export function useBookSearch(): BookSearchState {
         setLoadMoreError(false);
         try {
             const res = await fetch(
-                `${API_URL}?q=${encodeURIComponent(activeQueryRef.current)}&limit=${PAGE_SIZE}&offset=${offsetRef.current}`,
+                `${API_URL}?q=${encodeURIComponent(activeQueryRef.current)}&fields=${SEARCH_FIELDS}&limit=${PAGE_SIZE}&offset=${offsetRef.current}`,
                 { signal: abortRef.current?.signal }
             );
             const data = await res.json();
