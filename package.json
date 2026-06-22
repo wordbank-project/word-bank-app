@@ -1,5 +1,5 @@
 {
-  "name": "word-bank",
+  "name": "word-bank-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "license": "MIT",
@@ -13,6 +13,7 @@
     "dev-client:android": "APP_VARIANT=development expo start --dev-client --android --clear",
     "dev-client:ios": "APP_VARIANT=development expo start --dev-client --ios --clear",
     "lint": "expo lint",
+    "gen:icons": "node scripts/gen-app-icons.mjs",
     "build:all": "npx eas build --platform all --profile development",
     "build:android": "npx eas build --platform android --profile development",
     "build:ios": "npx eas build --platform ios --profile development",
@@ -65,6 +66,7 @@
     "eslint": "^9.0.0",
     "eslint-config-expo": "~55.0.1",
     "postcss": "^8.5.15",
+    "sharp": "^0.35.2",
     "tailwindcss": "^4.3.1",
     "typescript": "~5.9.2"
   },

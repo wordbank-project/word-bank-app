@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- App launcher icon (iOS + base). Full-bleed accent square, opaque (OS masks
+       corners). White open book = the brand mark, kept in sync with the site
+       favicon.svg / logo.svg. Book drawn in 220 space, scaled 1024/220. -->
+  <rect width="1024" height="1024" fill="#208AEF"/>
+  <g transform="scale(4.654545)">
+    <rect x="36" y="28" width="132" height="164" rx="22" fill="none" stroke="#fff" stroke-width="10"/>
+    <rect x="166" y="72" width="18" height="54" rx="5" fill="#fff"/>
+    <rect x="166" y="136" width="18" height="36" rx="5" fill="#fff"/>
+    <path d="M72 82 C86 72 108 72 122 84 L122 152 C108 142 86 142 72 150Z" fill="#fff"/>
+    <path d="M122 84 C136 72 158 72 172 82 L172 150 C158 142 136 142 122 152Z" fill="#EAF5FF"/>
+    <path d="M122 84V152" stroke="#208AEF" stroke-width="2.5"/>
+    <path d="M72 150C86 140 108 140 122 152 M122 152C136 140 158 140 172 150" fill="none" stroke="#208AEF" stroke-width="2.5"/>
+  </g>
+</svg>

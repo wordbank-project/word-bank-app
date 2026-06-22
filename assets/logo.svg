@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 260">
+  <defs>
+    <style>
+      .word{font:700 74px 'Inter',Arial,sans-serif;fill:#0F172A}
+      .bank{font:700 74px 'Inter',Arial,sans-serif;fill:#208AEF}
+    </style>
+  </defs>
+
+  <!-- Icon -->
+  <g transform="translate(20,20)">
+    <rect x="0" y="0" width="220" height="220" rx="42" fill="#208AEF"/>
+    <rect x="36" y="28" width="132" height="164" rx="22"
+          fill="none" stroke="#FFF" stroke-width="10"/>
+    <rect x="166" y="72" width="18" height="54" rx="5" fill="#FFF"/>
+    <rect x="166" y="136" width="18" height="36" rx="5" fill="#FFF"/>
+
+    <path d="M72 82
+             C86 72 108 72 122 84
+             L122 152
+             C108 142 86 142 72 150Z"
+          fill="#FFF"/>
+    <path d="M122 84
+             C136 72 158 72 172 82
+             L172 150
+             C158 142 136 142 122 152Z"
+          fill="#EAF5FF"/>
+    <path d="M122 84V152" stroke="#208AEF" stroke-width="2.5"/>
+    <path d="M72 150C86 140 108 140 122 152
+             M122 152C136 140 158 140 172 150"
+          fill="none" stroke="#208AEF" stroke-width="2.5"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="280" y="112" class="word">Word</text>
+  <text x="280" y="190" class="bank">Bank</text>
+</svg>

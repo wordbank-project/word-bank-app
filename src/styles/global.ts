@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-export const ACCENT = '#0a7ea4';
+export const ACCENT = '#208AEF';
 
 export const Colors = {
     light: {

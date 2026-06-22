@@ -24,11 +24,11 @@ module.exports = {
             checkAutomatically: "ON_LOAD"
         },
         orientation: "portrait",
-        icon: "./assets/images/icon.png",
+        icon: "./assets/icon.png",
         scheme: "wordbank",
         userInterfaceStyle: "automatic",
         ios: {
-            icon: "./assets/expo.icon",
+            icon: "./assets/icon.png",
             bundleIdentifier: packageName,
             infoPlist: {
                 ITSAppUsesNonExemptEncryption: false,
@@ -38,9 +38,8 @@ module.exports = {
         },
         android: {
             adaptiveIcon: {
-                backgroundColor: "#E6F4FE",
-                foregroundImage: "./assets/images/android-icon-foreground.png",
-                backgroundImage: "./assets/images/android-icon-background.png",
+                backgroundColor: "#208AEF",
+                foregroundImage: "./assets/adaptive-icon-foreground.png",
                 monochromeImage: "./assets/images/android-icon-monochrome.png"
             },
             predictiveBackGestureEnabled: false,
@@ -48,7 +47,7 @@ module.exports = {
         },
         web: {
             output: "static",
-            favicon: "./assets/images/favicon.png"
+            favicon: "./assets/favicon.png"
         },
         plugins: [
             "expo-router",
@@ -62,10 +61,13 @@ module.exports = {
             [
                 "expo-splash-screen",
                 {
+                    image: "./assets/splash.png",
+                    imageWidth: 260,
+                    resizeMode: "contain",
                     backgroundColor: "#208AEF",
-                    android: {
-                        image: "./assets/images/splash-icon.png",
-                        imageWidth: 76
+                    dark: {
+                        image: "./assets/splash-dark.png",
+                        backgroundColor: "#0e1419"
                     }
                 }
             ]

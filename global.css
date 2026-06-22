@@ -8,7 +8,8 @@
    Light values here; the dark block below redefines the CSS vars so utilities
    like bg-background / text-fg flip when the color scheme is dark. */
 @theme {
-    --color-accent: #0a7ea4;
+    --color-accent: #208aef;
+    --color-accent-strong: #1572cc;
     --color-error: #e05252;
     --color-background: #ffffff;
     --color-card: #f5f8fa;
