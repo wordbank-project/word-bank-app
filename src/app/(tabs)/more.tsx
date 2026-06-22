@@ -165,7 +165,7 @@ export default function MoreScreen() {
 
             <Section title="About">
                 <Row label="About" href="/about" chevron first />
-                <Row label="Source code" href="https://github.com/word-bank/word-bank" chevron />
+                <Row label="Source code" href="https://github.com/wordbank-project/word-bank" chevron />
                 <Row label="Version" value={version} />
                 <Row label="License" value={license} />
             </Section>
