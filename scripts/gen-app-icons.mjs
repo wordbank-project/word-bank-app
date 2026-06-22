@@ -6,7 +6,7 @@
 //   assets/icon.png                         1024² opaque  — iOS + base launcher icon
 //   assets/adaptive-icon-foreground.png     1024² alpha   — Android adaptive foreground
 //   assets/images/android-icon-monochrome.png 1024² alpha — Android 13+ themed icon
-//   assets/splash.png / assets/splash-dark.png  alpha     — splash (mark + wordmark)
+//   assets/splash.png                       alpha         — splash (mark + wordmark)
 //
 // Icons/splash are native assets — changing them needs a rebuild, not an OTA.
 import sharp from 'sharp';
@@ -31,12 +31,10 @@ await render('adaptive-foreground.svg').resize(1024, 1024)
 await render('monochrome.svg').resize(1024, 1024)
     .png().toFile(`${root}assets/images/android-icon-monochrome.png`);
 
-// Splash image (mark + wordmark) — transparent; reused for light + dark since
-// white reads on both the accent and near-black backgrounds. Width-driven; height
+// Splash image (mark + wordmark) — transparent white art on the brand-blue
+// splash background (no dark variant; see app.config.js). Width-driven; height
 // follows the 560×400 viewBox aspect.
-for (const out of ['assets/splash.png', 'assets/splash-dark.png']) {
-    await render('splash.svg').resize({ width: 1024 })
-        .png().toFile(`${root}${out}`);
-}
+await render('splash.svg').resize({ width: 1024 })
+    .png().toFile(`${root}assets/splash.png`);
 
-console.log('Generated icon.png, adaptive-icon-foreground.png, android-icon-monochrome.png, splash.png, splash-dark.png');
+console.log('Generated icon.png, adaptive-icon-foreground.png, android-icon-monochrome.png, splash.png');

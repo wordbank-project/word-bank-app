@@ -61,14 +61,14 @@ module.exports = {
             [
                 "expo-splash-screen",
                 {
+                    // No `dark` variant on purpose: the native splash follows the
+                    // OS appearance (it renders before JS), so a dark variant would
+                    // show the dark splash on a system-dark phone even when the app
+                    // theme is light. Always show the brand blue splash instead.
                     image: "./assets/splash.png",
                     imageWidth: 260,
                     resizeMode: "contain",
-                    backgroundColor: "#208AEF",
-                    dark: {
-                        image: "./assets/splash-dark.png",
-                        backgroundColor: "#0e1419"
-                    }
+                    backgroundColor: "#208AEF"
                 }
             ]
         ],
