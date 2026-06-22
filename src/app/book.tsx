@@ -22,8 +22,10 @@ import { getWords, setWords } from "@/storage/words-storage";
 import { coverUri as coverImageUri } from "@/utils/cover-uri";
 import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
+import { fetchTrendingWords } from "@/utils/trending-words";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { fetchDefinition } from "@/utils/words-api";
+import { postWordToFeed } from "@/utils/words-feed-api";
 
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
@@ -101,11 +103,23 @@ export default function BookDetail() {
 
     const [language, setLanguage] = useState<Language>(LANGUAGES[0]); // defaults to the first language in array
 
+    // Placeholder word suggestions: start with the curated list, then replace with
+    // live trending words from the feed server when available (falls back to the
+    // curated list on any failure, so the field is never empty / works offline).
+    const [suggestionWords, setSuggestionWords] = useState<string[]>(RANDOM_WORDS);
+    useEffect(() => {
+        fetchTrendingWords().then((words) => {
+            if (words.length > 0) {
+                setSuggestionWords(words);
+            }
+        });
+    }, []);
+
     // Types out one example word while the add-word field is empty, the screen is
     // focused, and we're not editing. `suggestedWord` is added on Enter when empty.
     const isFocused = useIsFocused();
     const { text: typedWordPlaceholder, word: suggestedWord } = useTypewriterPlaceholder(
-        RANDOM_WORDS,
+        suggestionWords,
         isFocused && !input && !editingWord,
     );
 
@@ -323,6 +337,8 @@ export default function BookDetail() {
             // Added timestamp for sorting by "Recently added" in the Words List. 
             // This is not part of the dictionary data, so it's added here.
             await persistWords([{ ...newEntry, addedAt: Date.now() }, ...words]);
+            // Fire-and-forget: contribute the word to the public floating-words feed (word only).
+            postWordToFeed(newEntry.word);
             setWordAdded(true);
             setInput("");
 
@@ -397,8 +413,7 @@ export default function BookDetail() {
                     <View className="flex-row gap-2 p-3 pb-1">
                         <ClearableTextInput
                             containerClassName="flex-1"
-                            className="h-11 rounded-lg border border-border-input bg-input px-3 text-base text-fg"
-                            style={{ textAlignVertical: 'center', includeFontPadding: false }}
+                            className="h-15 rounded-lg border border-border-input bg-input px-3 text-base text-fg"
                             placeholder={typedWordPlaceholder || "Add a word..."}
                             placeholderTextColor={placeholderColor}
                             value={input}
