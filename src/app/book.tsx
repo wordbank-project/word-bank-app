@@ -133,6 +133,13 @@ export default function BookDetail() {
     // (captured on layout), so the "Jump to notes" link can scroll straight there.
     const scrollRef = useRef<React.ComponentRef<typeof KeyboardAwareScrollView>>(null);
     const bookNotesY = useRef<number>(0);
+    // Offsets (captured on layout) so opening an editor can scroll that card's input
+    // up above the keyboard immediately. onLayout is parent-relative, so a card's
+    // scroll-content y = its container's y + the card's local y. `bookNotesY` (the
+    // Notes section) is already a direct child of the scroll view → content coords.
+    const wordsContainerY = useRef<number>(0);   // words list container, in content coords
+    const cardYs = useRef<Record<string, number>>({}); // each word card, relative to the list
+    const reviewY = useRef<number>(0);           // review card, relative to the Notes section
     // Ensures the "Have Read" → write-a-review nudge only fires once per visit.
     const hasPromptedReview = useRef<boolean>(false);
 
@@ -226,6 +233,7 @@ export default function BookDetail() {
 
         setReviewDraft('');
         setEditingReview(true);
+        scrollCardIntoView(bookNotesY.current + reviewY.current);
 
         setTimeout(() => reviewInputRef.current?.focus(), 100);
     }
@@ -376,12 +384,26 @@ export default function BookDetail() {
         );
     }
 
+    // Scroll a card near the top of the viewport so its inputs sit above the
+    // keyboard immediately on select (the card's own top y is stable as its form
+    // expands below it; KeyboardAwareScrollView's bottomOffset fine-tunes the gap).
+    function scrollCardIntoView(y: number): void {
+        const top = Math.max(y - 16, 0);
+        // Immediate: mid-list cards (word sentence/notes) snap to the top right away.
+        requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: top, animated: true }));
+        // Follow-up: bottom-anchored cards (Book Notes / Review) can't reach `top`
+        // until the keyboard's dynamic inset extends the scroll range — re-scroll
+        // once it's shown. Idempotent (no-op) for cards already at `top`.
+        setTimeout(() => scrollRef.current?.scrollTo({ y: top, animated: true }), 350);
+    }
+
     // Open a word's inline edit form, seeding the draft from its current values.
     // `field` decides which input gets focus (tapping the Sentence vs Notes text).
     function openWordEdit(item: WordEntry, field: 'sentence' | 'notes' = 'sentence'): void {
         focusFieldRef.current = field;
         setEditingWord(item.word);
         setDraft({ sentence: item.sentence ?? '', notes: item.notes ?? '' });
+        scrollCardIntoView(wordsContainerY.current + (cardYs.current[item.word] ?? 0));
     }
 
     async function handleSaveEdit(word: string): Promise<void> {
@@ -426,7 +448,7 @@ export default function BookDetail() {
                     <View className="flex-row gap-2 p-3 pb-1">
                         <ClearableTextInput
                             containerClassName="flex-1"
-                            className="h-15 rounded-lg border border-border-input bg-input px-3 text-base text-fg"
+                            className="rounded-lg border border-border-input bg-input px-3 py-3 text-base text-fg"
                             placeholder={typedWordPlaceholder || "Add a word..."}
                             placeholderTextColor={placeholderColor}
                             value={input}
@@ -541,7 +563,10 @@ export default function BookDetail() {
                         </View>
                     </View>
 
-                    <View className="gap-2.5 p-3">
+                    <View
+                        className="gap-2.5 p-3"
+                        onLayout={(e) => { wordsContainerY.current = e.nativeEvent.layout.y; }}
+                    >
                         <Text className="ml-0.5 text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Words</Text>
                         {words.length === 0 ? (
                             <Text className="my-8 text-center text-[15px] text-muted">No words added yet. Add one above. It will be saved to your <Text className="italic text-muted">word bank</Text> per book.</Text>
@@ -549,7 +574,11 @@ export default function BookDetail() {
                             words.map((item) => {
                                 const isEditing = editingWord === item.word;
                                 return (
-                                    <View key={item.word} className="gap-1 rounded-[10px] bg-card p-3.5">
+                                    <View
+                                        key={item.word}
+                                        className="gap-1 rounded-[10px] bg-card p-3.5"
+                                        onLayout={(e) => { cardYs.current[item.word] = e.nativeEvent.layout.y; }}
+                                    >
                                         <View className="flex-row items-center gap-2">
                                             <Text className="text-[17px] font-bold text-fg">{item.word}</Text>
                                             {item.phonetic ? (
@@ -668,6 +697,7 @@ export default function BookDetail() {
                                         } else {
                                             setBookNotesDraft(bookNotes);
                                             setEditingBookNotes(true);
+                                            scrollCardIntoView(bookNotesY.current);
                                         }
                                     }}
                                 >
@@ -685,6 +715,7 @@ export default function BookDetail() {
                                         onChangeText={setBookNotesDraft}
                                         multiline
                                         autoCorrect
+                                        autoFocus
                                     />
                                     <Pressable
                                         className="mt-1 items-center rounded-lg bg-accent py-2.5"
@@ -694,17 +725,20 @@ export default function BookDetail() {
                                     </Pressable>
                                 </React.Fragment>
                             ) : bookNotes ? (
-                                <Pressable onPress={() => { setBookNotesDraft(bookNotes); setEditingBookNotes(true); }}>
+                                <Pressable onPress={() => { setBookNotesDraft(bookNotes); setEditingBookNotes(true); scrollCardIntoView(bookNotesY.current); }}>
                                     <Text className="text-sm leading-5 text-meta">{bookNotes}</Text>
                                 </Pressable>
                             ) : (
-                                <Pressable onPress={() => { setBookNotesDraft(''); setEditingBookNotes(true); }}>
+                                <Pressable onPress={() => { setBookNotesDraft(''); setEditingBookNotes(true); scrollCardIntoView(bookNotesY.current); }}>
                                     <Text className="text-sm text-muted">Add book notes…</Text>
                                 </Pressable>
                             )}
                         </View>
 
-                        <View className="gap-1 rounded-[10px] bg-card p-3.5">
+                        <View
+                            className="gap-1 rounded-[10px] bg-card p-3.5"
+                            onLayout={(e) => { reviewY.current = e.nativeEvent.layout.y; }}
+                        >
                             <View className="flex-row items-center justify-between">
                                 <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">My Review</Text>
                                 <Pressable
@@ -716,6 +750,7 @@ export default function BookDetail() {
                                         } else {
                                             setReviewDraft(review);
                                             setEditingReview(true);
+                                            scrollCardIntoView(bookNotesY.current + reviewY.current);
                                         }
                                     }}
                                 >
@@ -734,6 +769,7 @@ export default function BookDetail() {
                                         onChangeText={setReviewDraft}
                                         multiline
                                         autoCorrect
+                                        autoFocus
                                     />
                                     <Pressable
                                         className="mt-1 items-center rounded-lg bg-accent py-2.5"
@@ -743,11 +779,11 @@ export default function BookDetail() {
                                     </Pressable>
                                 </React.Fragment>
                             ) : review ? (
-                                <Pressable onPress={() => { setReviewDraft(review); setEditingReview(true); }}>
+                                <Pressable onPress={() => { setReviewDraft(review); setEditingReview(true); scrollCardIntoView(bookNotesY.current + reviewY.current); }}>
                                     <Text className="text-sm leading-5 text-meta">{review}</Text>
                                 </Pressable>
                             ) : (
-                                <Pressable onPress={() => { setReviewDraft(''); setEditingReview(true); }}>
+                                <Pressable onPress={() => { setReviewDraft(''); setEditingReview(true); scrollCardIntoView(bookNotesY.current + reviewY.current); }}>
                                     <Text className="text-sm text-muted">Add a review of the book…</Text>
                                 </Pressable>
                             )}
@@ -755,7 +791,7 @@ export default function BookDetail() {
                     </View>
                 </KeyboardAwareScrollView>
 
-                {!editingWord && (
+                {!(editingWord || editingReview || editingBookNotes) && (
                     // paddingBottom comes from the safe-area inset so the footer clears the OS bar.
                     <View className="gap-3 border-t border-border bg-background px-4 pt-3" style={{ paddingBottom: Math.max(insets.bottom, 12) + 12 }}>
                         <ReadStatusSelector value={readStatus} onChange={handleChangeReadStatus} />
