@@ -27,9 +27,22 @@
     --color-remove-icon: #aaaaaa;
 }
 
-/* Manual choice wins: theme-context sets <html data-theme="dark"> on web (it also
-   out-specifies the @theme :root light defaults). On native, NativeWind drives the
-   media query via Appearance.setColorScheme, so this attribute path is web-only. */
+/* Dark tokens are needed in TWO places (a media-query token system can't share
+   one block across the OS query and the manual attribute):
+
+   1. `@media (prefers-color-scheme: dark) { :root }` — the OS/native path.
+      NativeWind applies this on native when the (manual or system) scheme is dark,
+      driven by Appearance.setColorScheme in theme-context. MUST stay a plain
+      `:root` — NativeWind's native runtime can't evaluate `[data-theme]`
+      attribute selectors, so scoping it (e.g. `:not([data-theme])`) silently
+      drops dark mode on native.
+   2. `:root[data-theme="dark"]` — web manual override (theme-context sets
+      <html data-theme> on web). Inert on native.
+
+   On web, the `[data-theme]` rules out-specify the `@media :root` rule
+   (specificity 0,2,0 > 0,1,0), so a manual choice always wins over the OS. */
+
+/* Web: manual dark. */
 :root[data-theme="dark"] {
     --color-background: #151718;
     --color-card: #1e2426;
@@ -47,10 +60,28 @@
     --color-remove-icon: #555555;
 }
 
-/* OS fallback — only when no explicit choice has been made, so a chosen light
-   theme beats a dark OS. */
+/* Web: manual light — force light even when the OS is dark (overrides the
+   @media :root dark rule below via higher specificity). Inert on native. */
+:root[data-theme="light"] {
+    --color-background: #ffffff;
+    --color-card: #f5f8fa;
+    --color-input: #f9f9f9;
+    --color-fg: #11181c;
+    --color-secondary: #555555;
+    --color-muted: #888888;
+    --color-body: #333333;
+    --color-meta: #444444;
+    --color-faded: #aaaaaa;
+    --color-border: #e0e0e0;
+    --color-border-input: #cccccc;
+    --color-border-edit: #ddddee;
+    --color-cover-placeholder: #dddddd;
+    --color-remove-icon: #aaaaaa;
+}
+
+/* OS + native dark (plain :root — see note above). */
 @media (prefers-color-scheme: dark) {
-    :root:not([data-theme]) {
+    :root {
         --color-background: #151718;
         --color-card: #1e2426;
         --color-input: #252b2d;
