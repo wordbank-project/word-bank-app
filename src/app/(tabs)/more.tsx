@@ -1,6 +1,7 @@
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { clearAllBookData } from "@/storage/read-list-storage";
 import { alertDialog } from "@/utils/alert-dialog";
+import { exportBooks, importBooks } from "@/utils/export-import-flow";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { Link, router, type Href } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -116,10 +117,6 @@ function handleChooseSource(source: BookSource): void {
     ]);
 }
 
-function handleComingSoon(feature: string): void {
-    alertDialog('Coming soon', `${feature} will be available in a later version.`);
-}
-
 function handleDeleteAll(): void {
     showActionSheet(
         "Delete all data",
@@ -151,8 +148,8 @@ export default function MoreScreen() {
             onScroll={onScroll}
         >
             <Section title="Your data">
-                <Row label="Export Books" chevron first onPress={() => handleComingSoon('Exporting your books')} />
-                <Row label="Import Books" chevron onPress={() => handleComingSoon('Importing books')} />
+                <Row label="Export Books" chevron first onPress={() => void exportBooks()} />
+                <Row label="Import Books" chevron onPress={() => void importBooks()} />
                 <Row label="Delete all data" danger onPress={handleDeleteAll} />
             </Section>
 
