@@ -4,6 +4,7 @@ import { useIsFocused } from "@react-navigation/native";
 
 import { useColorScheme } from "@/context/theme-context";
 
+import { useSuggestedTitles } from "@/hooks/use-suggestions";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
 import { Colors } from "@/styles/global";
@@ -12,25 +13,6 @@ import { Keyboard, View } from "react-native";
 
 import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
-
-// Extend with AI suggestions later
-const RANDOM_TITLES = [
-    "The Great Gatsby",
-    "To Kill a Mockingbird",
-    "1984",
-    "Pride and Prejudice",
-    "The Catcher in the Rye",
-    "Brave New World",
-    "The Hobbit",
-    "Crime and Punishment",
-    "Jane Eyre",
-    "Don Quixote",
-    "Anna Karenina",
-    "Moby Dick",
-    "War and Peace",
-    "The Odyssey",
-    "Hamlet",
-];
 
 type SearchBarProps = {
     onSearch: (query: string) => void;
@@ -45,8 +27,11 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
 
     // Types out one example title while the field is empty and the tab is focused.
     // `word` is the full suggestion, accepted on Enter when the field is empty.
+    // Titles come from the AI suggestions endpoint when reachable (per the
+    // dictionary language), with the built-in list as offline fallback.
+    const suggestedTitles = useSuggestedTitles();
     const isFocused = useIsFocused();
-    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(RANDOM_TITLES, isFocused && !query);
+    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(suggestedTitles, isFocused && !query);
 
     function handleSearch(): void {
         Keyboard.dismiss();

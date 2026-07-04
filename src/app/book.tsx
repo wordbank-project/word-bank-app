@@ -22,11 +22,11 @@ import { getWords, setWords } from "@/storage/words-storage";
 import { coverUri as coverImageUri } from "@/utils/cover-uri";
 import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
-import { fetchTrendingWords } from "@/utils/trending-words";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { fetchDefinition } from "@/utils/words-api";
 import { postWordToFeed } from "@/utils/words-feed-api";
 
+import { useSuggestedWords } from "@/hooks/use-suggestions";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
 import { Colors, Fonts } from "@/styles/global";
@@ -37,25 +37,6 @@ import CoverPlaceholder from "@/components/CoverPlaceholder";
 import DefinitionModal from "@/components/DefinitionModal";
 import LanguageModal from "@/components/LanguageModal";
 import ReadStatusSelector from "@/components/ReadStatusSelector";
-
-// Extend with AI suggestions later
-const RANDOM_WORDS = [
-    "serendipity",
-    "ephemeral",
-    "melancholy",
-    "resilience",
-    "eloquent",
-    "ambiguous",
-    "tenacious",
-    "vivid",
-    "profound",
-    "meticulous",
-    "candid",
-    "eloquence",
-    "perseverance",
-    "whimsical",
-    "diligent",
-];
 
 export default function BookDetail() {
     const insets = useSafeAreaInsets();
@@ -103,17 +84,10 @@ export default function BookDetail() {
 
     const [language, setLanguage] = useState<Language>(LANGUAGES[0]); // defaults to the first language in array
 
-    // Placeholder word suggestions: start with the curated list, then replace with
-    // live trending words from the feed server when available (falls back to the
-    // curated list on any failure, so the field is never empty / works offline).
-    const [suggestionWords, setSuggestionWords] = useState<string[]>(RANDOM_WORDS);
-    useEffect(() => {
-        fetchTrendingWords().then((words) => {
-            if (words.length > 0) {
-                setSuggestionWords(words);
-            }
-        });
-    }, []);
+    // Placeholder word suggestions: AI-generated (per dictionary language) when
+    // the feed server is reachable, else trending words, else the built-in list —
+    // so the field is never empty / works offline. See hooks/use-suggestions.ts.
+    const suggestionWords = useSuggestedWords();
 
     // Types out one example word while the add-word field is empty, the screen is
     // focused, and we're not editing. `suggestedWord` is added on Enter when empty.
