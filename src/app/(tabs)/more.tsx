@@ -1,6 +1,7 @@
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { clearAllBookData } from "@/storage/read-list-storage";
 import { alertDialog } from "@/utils/alert-dialog";
+import { exportAnkiDeck, exportGoodreadsCsv } from "@/utils/export-formats-flow";
 import { exportBooks, importBooks } from "@/utils/export-import-flow";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { Link, router, type Href } from "expo-router";
@@ -150,6 +151,8 @@ export default function MoreScreen() {
             <Section title="Your data">
                 <Row label="Export Books" chevron first onPress={() => void exportBooks()} />
                 <Row label="Import Books" chevron onPress={() => void importBooks()} />
+                <Row label="Export for Goodreads" chevron onPress={() => void exportGoodreadsCsv()} />
+                <Row label="Export words to Anki" chevron onPress={() => void exportAnkiDeck()} />
                 <Row label="Delete all data" danger onPress={handleDeleteAll} />
             </Section>
 

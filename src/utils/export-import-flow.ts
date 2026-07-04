@@ -1,7 +1,6 @@
 import * as DocumentPicker from "expo-document-picker";
-import { File, Paths } from "expo-file-system";
+import { File } from "expo-file-system";
 import { router } from "expo-router";
-import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
 
 import {
@@ -13,6 +12,7 @@ import {
     type WordBankExport,
 } from "@/storage/export-import";
 import { alertDialog } from "@/utils/alert-dialog";
+import { dateStamp, deliverTextFile } from "@/utils/deliver-text-file";
 import { showActionSheet } from "@/utils/show-action-sheet";
 
 // The imperative flows behind More → "Your data" → Export/Import Books.
@@ -21,16 +21,6 @@ import { showActionSheet } from "@/utils/show-action-sheet";
 
 function count(n: number, singular: string): string {
     return `${n} ${singular}${n === 1 ? "" : "s"}`;
-}
-
-// Web has no share sheet — trigger a plain browser download instead.
-function downloadOnWeb(json: string, filename: string): void {
-    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.click();
-    URL.revokeObjectURL(url);
 }
 
 // Snapshots the library to a JSON file and hands it to the OS share sheet
@@ -43,25 +33,12 @@ export async function exportBooks(): Promise<void> {
             return;
         }
 
-        const json = JSON.stringify(data, null, 2);
-        const filename = `word-bank-export-${new Date().toISOString().slice(0, 10)}.json`;
-
-        if (Platform.OS === "web") {
-            downloadOnWeb(json, filename);
-            return;
-        }
-
-        const file = new File(Paths.cache, filename);
-        file.write(json);
-        if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(file.uri, {
-                mimeType: "application/json",
-                dialogTitle: "Export Word Bank books",
-                UTI: "public.json",
-            });
-        } else {
-            alertDialog("Sharing unavailable", `Your export was saved to:\n${file.uri}`);
-        }
+        await deliverTextFile(
+            `word-bank-export-${dateStamp()}.json`,
+            JSON.stringify(data, null, 2),
+            "application/json",
+            "Export Word Bank books",
+        );
     } catch {
         alertDialog("Export failed", "Something went wrong while creating the backup. Please try again.");
     }
