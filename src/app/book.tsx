@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useIsFocused, usePreventRemove } from "@react-navigation/native";
 
 import { ActivityIndicator, Keyboard, Pressable, Text, TextInput, View } from "react-native";
+import Animated, { FadeOut, ZoomIn } from "react-native-reanimated";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -57,6 +58,38 @@ const RANDOM_WORDS = [
     "diligent",
 ];
 
+// Short-lived "✓ +1" pop above the add-word row after a successful add — the
+// juice that makes saving a word feel rewarding. `trigger` increments per add,
+// so back-to-back adds each replay the spring-in (keyed remount) and the pop
+// auto-hides via reanimated's exiting fade.
+function AddCelebration({ trigger }: { trigger: number }) {
+    const [visible, setVisible] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (trigger === 0) {
+            return;
+        }
+        setVisible(true);
+        const timeout = setTimeout(() => setVisible(false), 900);
+        return () => clearTimeout(timeout);
+    }, [trigger]);
+
+    if (!visible) {
+        return null;
+    }
+    return (
+        <Animated.View
+            key={trigger}
+            entering={ZoomIn.springify()}
+            exiting={FadeOut.duration(200)}
+            pointerEvents="none"
+            className="absolute -top-4 right-4 z-10 rounded-full bg-accent px-3 py-1"
+        >
+            <Text className="text-[13px] font-bold text-white">✓ +1</Text>
+        </Animated.View>
+    );
+}
+
 export default function BookDetail() {
     const insets = useSafeAreaInsets();
     // placeholderTextColor needs a color value (not a class), so keep it themed here.
@@ -89,6 +122,8 @@ export default function BookDetail() {
     const [metaYear, setMetaYear] = useState<string>(year ?? '');
 
     const [wordAdded, setWordAdded] = useState<boolean>(false);
+    // Increments on every successful add; drives the ✓ +1 celebration pop.
+    const [celebrateTick, setCelebrateTick] = useState<number>(0);
 
     // Book-level review and general notes (saved on the read-list entry).
     const [review, setReview] = useState<string>('');
@@ -358,6 +393,7 @@ export default function BookDetail() {
                 phonetic: newEntry.phonetic,
             });
             setWordAdded(true);
+            setCelebrateTick((t) => t + 1);
             setInput("");
 
             // Goes to the edit screen of the newly added word to encourage users to add sentence and notes 
@@ -451,6 +487,7 @@ export default function BookDetail() {
             <View className="flex-1 bg-background">
                 {!editingWord && (
                     <View className="flex-row gap-2 p-3 pb-1">
+                        <AddCelebration trigger={celebrateTick} />
                         <ClearableTextInput
                             containerClassName="flex-1"
                             className="rounded-lg border border-border-input bg-input px-3 py-3 text-base text-fg"

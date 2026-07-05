@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 
 import { ActivityIndicator, FlatList, Keyboard, Pressable, Text, View } from "react-native";
 
-import { Link, useFocusEffect, useIsFocused } from "expo-router";
+import { Link, router, useFocusEffect, useIsFocused } from "expo-router";
 
 import { useColorScheme } from "@/context/theme-context";
 import { useFlatListScroll } from "@/hooks/use-scroll-registration";
@@ -14,6 +14,7 @@ import { ACCENT, Colors } from "@/styles/global";
 import { openBook } from "@/utils/open-book";
 import { showActionSheet } from "@/utils/show-action-sheet";
 
+import StreakBar from "@/components/StreakBar";
 import WordListItem, { type WordWithBook } from "@/components/WordListItem";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
@@ -166,7 +167,10 @@ export default function WordsListScreen() {
 
     return (
         <View className="flex-1 bg-background">
-            <View className="px-4 pb-2 pt-3">
+            <View className="pt-3">
+                <StreakBar timestamps={allWords.map((w) => w.addedAt).filter((ts): ts is number => typeof ts === 'number')} />
+            </View>
+            <View className="px-4 pb-2">
                 <ClearableTextInput
                     containerClassName="mb-2"
                     className="rounded-lg border border-border-input bg-input px-3 py-3 text-[15px] text-fg"
@@ -207,8 +211,15 @@ export default function WordsListScreen() {
                 })}
             </View>
 
-            {/* Sort control */}
-            <View className="items-end px-4 pb-2">
+            {/* Review entry + sort control */}
+            <View className="flex-row items-center justify-between px-4 pb-2">
+                {allWords.length >= 3 ? (
+                    <Pressable onPress={() => router.push('/review')} hitSlop={8} className="py-0.5" accessibilityRole="button">
+                        <Text className="text-[13px] font-semibold text-accent">🃏 Review your words</Text>
+                    </Pressable>
+                ) : (
+                    <View />
+                )}
                 <Pressable onPress={handleChooseSort} hitSlop={8} className="py-0.5">
                     <Text className="text-[13px] font-semibold text-accent">Sort words: {SORT_LABELS[sortMode]} ▾</Text>
                 </Pressable>
