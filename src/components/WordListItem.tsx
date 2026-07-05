@@ -34,6 +34,12 @@ function WordListItem({ item, onPress }: WordListItemProps) {
             <Text className="text-xs italic capitalize text-accent">{item.partOfSpeech}</Text>
             <Text className="text-sm leading-5 text-body">{item.definition}</Text>
 
+            {item.sentence ? (
+                <Text className="mt-0.5 text-[13px] italic leading-5 text-muted" numberOfLines={2}>
+                    “{item.sentence}”
+                </Text>
+            ) : null}
+
             <Text className="mt-1.5 text-xs text-muted" numberOfLines={1}>
                 From “{item.bookTitle}”
             </Text>
