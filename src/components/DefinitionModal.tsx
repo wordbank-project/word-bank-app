@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { FlatList, Modal, Pressable, Text, TextInput, View } from "react-native";
-import { KeyboardAvoidingView, KeyboardProvider } from "react-native-keyboard-controller";
+import { FlatList, KeyboardAvoidingView, Modal, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColorScheme } from "@/context/theme-context";
 
 import type { WordDefinition } from "@/models/word-entry";
 
-import { ACCENT, Colors } from "@/styles/global";
+import { Colors } from "@/styles/global";
+import { posColor } from "@/utils/pos";
 
 type DefinitionModalProps = {
     visible: boolean;
@@ -23,17 +23,6 @@ type DefinitionModalProps = {
 type Row =
     | { type: 'header'; pos: string }
     | { type: 'item'; def: WordDefinition; index: number };
-
-// Distinct colors per part of speech so headers are easy to tell apart at a glance.
-// Mid-tone hues chosen to read on both light and dark sheets; unknown POS uses ACCENT.
-const POS_COLORS: Record<string, string> = {
-    noun: '#3b82f6',       // blue
-    verb: '#10b981',       // green
-    adjective: '#f59e0b',  // amber
-    adj: '#f59e0b',
-    adverb: '#8b5cf6',     // purple
-    adv: '#8b5cf6',
-};
 
 export default function DefinitionModal({ visible, onClose, word, definitions, selectedIndex, onSelect }: DefinitionModalProps) {
     const insets = useSafeAreaInsets();
@@ -82,66 +71,64 @@ export default function DefinitionModal({ visible, onClose, word, definitions, s
             animationType="slide"
             onRequestClose={onClose}
         >
-            <KeyboardProvider>
-                <KeyboardAvoidingView behavior="padding" className="flex-1">
-                    <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-                        <Pressable className="max-h-[70%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
-                            <FlatList
-                                data={rows}
-                                keyExtractor={(row, index) => (row.type === 'header' ? `h_${index}` : `d_${row.index}`)}
-                                keyboardShouldPersistTaps="handled"
-                                renderItem={({ item: row }) => {
-                                    if (row.type === 'header') {
-                                        return (
-                                            <Text
-                                                className="px-4 pb-1 pt-3.5 text-xs font-bold uppercase tracking-[0.5px]"
-                                                style={{ color: POS_COLORS[row.pos.toLowerCase()] ?? ACCENT }}
-                                            >
-                                                {row.pos}
-                                            </Text>
-                                        );
-                                    }
-                                    const active = row.index === selectedIndex;
+            <KeyboardAvoidingView behavior="padding" className="flex-1">
+                <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
+                    <Pressable className="max-h-[70%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
+                        <FlatList
+                            data={rows}
+                            keyExtractor={(row, index) => (row.type === 'header' ? `h_${index}` : `d_${row.index}`)}
+                            keyboardShouldPersistTaps="handled"
+                            renderItem={({ item: row }) => {
+                                if (row.type === 'header') {
                                     return (
-                                        <Pressable
-                                            className={`flex-row items-start gap-2 border-b border-border px-4 py-3 ${active ? "bg-card" : ""}`}
-                                            onPress={() => handleSelect(row.index)}
+                                        <Text
+                                            className="px-4 pb-1 pt-3.5 text-xs font-bold uppercase tracking-[0.5px]"
+                                            style={{ color: posColor(row.pos) }}
                                         >
-                                            <View className="flex-1 gap-0.5">
-                                                <Text className={`text-[15px] leading-5 ${active ? "font-semibold text-accent" : "text-fg"}`}>
-                                                    {row.def.definition}
-                                                </Text>
-                                                {row.def.exampleSentence ? (
-                                                    <Text className="text-[13px] italic leading-5 text-muted">“{row.def.exampleSentence}”</Text>
-                                                ) : null}
-                                            </View>
-                                            {active && <Text className="mt-0.5 text-sm font-bold text-accent">✓</Text>}
-                                        </Pressable>
+                                            {row.pos}
+                                        </Text>
                                     );
-                                }}
-                                ListEmptyComponent={
-                                    <Text className="p-6 text-center text-sm text-muted">No definitions match &quot;{search}&quot;</Text>
                                 }
-                            />
-                            <View className="flex-row items-center justify-between gap-3 px-4 pb-2 pt-4">
-                                <Text className="flex-1 text-base font-bold text-fg" numberOfLines={1}>Definitions for: {word}</Text>
-                                <Pressable onPress={onClose} hitSlop={12}>
-                                    <Text className="text-base text-muted">✕</Text>
-                                </Pressable>
-                            </View>
+                                const active = row.index === selectedIndex;
+                                return (
+                                    <Pressable
+                                        className={`flex-row items-start gap-2 border-b border-border px-4 py-3 ${active ? "bg-card" : ""}`}
+                                        onPress={() => handleSelect(row.index)}
+                                    >
+                                        <View className="flex-1 gap-0.5">
+                                            <Text className={`text-[15px] leading-5 ${active ? "font-semibold text-accent" : "text-fg"}`}>
+                                                {row.def.definition}
+                                            </Text>
+                                            {row.def.exampleSentence ? (
+                                                <Text className="text-[13px] italic leading-5 text-muted">“{row.def.exampleSentence}”</Text>
+                                            ) : null}
+                                        </View>
+                                        {active && <Text className="mt-0.5 text-sm font-bold text-accent">✓</Text>}
+                                    </Pressable>
+                                );
+                            }}
+                            ListEmptyComponent={
+                                <Text className="p-6 text-center text-sm text-muted">No definitions match &quot;{search}&quot;</Text>
+                            }
+                        />
+                        <View className="flex-row items-center justify-between gap-3 px-4 pb-2 pt-4">
+                            <Text className="flex-1 text-base font-bold text-fg" numberOfLines={1}>Definitions for: {word}</Text>
+                            <Pressable onPress={onClose} hitSlop={12}>
+                                <Text className="text-base text-muted">✕</Text>
+                            </Pressable>
+                        </View>
 
-                            <TextInput
-                                className="mx-4 rounded-lg border border-border-input bg-input px-3 py-3 text-[15px] text-fg"
-                                placeholder="Search definitions..."
-                                placeholderTextColor={placeholderColor}
-                                value={search}
-                                onChangeText={setSearch}
-                                autoCorrect={false}
-                            />
-                        </Pressable>
+                        <TextInput
+                            className="mx-4 rounded-lg border border-border-input bg-input px-3 py-3 text-[15px] text-fg"
+                            placeholder="Search definitions..."
+                            placeholderTextColor={placeholderColor}
+                            value={search}
+                            onChangeText={setSearch}
+                            autoCorrect={false}
+                        />
                     </Pressable>
-                </KeyboardAvoidingView>
-            </KeyboardProvider>
+                </Pressable>
+            </KeyboardAvoidingView>
         </Modal>
     );
 }

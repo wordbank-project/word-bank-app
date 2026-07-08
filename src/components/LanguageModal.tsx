@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Modal, Pressable, Text, TextInput, View } from "react-native";
-import { KeyboardAvoidingView, KeyboardProvider } from "react-native-keyboard-controller";
+import { FlatList, KeyboardAvoidingView, Modal, Pressable, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColorScheme } from "@/context/theme-context";
@@ -74,56 +73,54 @@ export default function LanguageModal({ selected, onSelect }: LanguageModalProps
                 animationType="slide"
                 onRequestClose={() => setVisible(false)}
             >
-                <KeyboardProvider>
-                    <KeyboardAvoidingView behavior="padding" className="flex-1">
-                        <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setVisible(false)}>
-                            <Pressable className="max-h-[70%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
-                                <FlatList
-                                    ref={listRef}
-                                    data={filteredLanguages}
-                                    keyExtractor={(item) => item.code}
-                                    keyboardShouldPersistTaps="handled"
-                                    onScrollToIndexFailed={() => { }}
-                                    renderItem={({ item }) => {
-                                        const active = item.code === selected.code;
-                                        return (
-                                            <Pressable
-                                                className={`flex-row items-center gap-2 border-b border-border px-4 py-3 ${active ? "bg-card" : ""}`}
-                                                onPress={() => handleSelect(item)}
-                                            >
-                                                <Text className={`flex-1 text-[15px] ${active ? "font-semibold text-accent" : "text-fg"}`}>
-                                                    {item.label}
-                                                </Text>
-                                                <Text className="text-xs text-muted" style={{ fontFamily: Fonts.mono }}>{item.code}</Text>
-                                                {active && <Text className="text-sm font-bold text-accent">✓</Text>}
-                                            </Pressable>
-                                        );
-                                    }}
-                                    ListEmptyComponent={
-                                        <Text className="p-6 text-center text-sm text-muted">No languages match &quot;{search}&quot;</Text>
-                                    }
-                                />
-                                <View className="flex-row items-center justify-between px-4 pb-2 pt-4">
-                                    <Text className="text-base font-bold text-fg">Dictionary language</Text>
-                                    <Pressable onPress={() => setVisible(false)} hitSlop={12}>
-                                        <Text className="text-base text-muted">✕</Text>
-                                    </Pressable>
-                                </View>
+                <KeyboardAvoidingView behavior="padding" className="flex-1">
+                    <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setVisible(false)}>
+                        <Pressable className="max-h-[70%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
+                            <FlatList
+                                ref={listRef}
+                                data={filteredLanguages}
+                                keyExtractor={(item) => item.code}
+                                keyboardShouldPersistTaps="handled"
+                                onScrollToIndexFailed={() => { }}
+                                renderItem={({ item }) => {
+                                    const active = item.code === selected.code;
+                                    return (
+                                        <Pressable
+                                            className={`flex-row items-center gap-2 border-b border-border px-4 py-3 ${active ? "bg-card" : ""}`}
+                                            onPress={() => handleSelect(item)}
+                                        >
+                                            <Text className={`flex-1 text-[15px] ${active ? "font-semibold text-accent" : "text-fg"}`}>
+                                                {item.label}
+                                            </Text>
+                                            <Text className="text-xs text-muted" style={{ fontFamily: Fonts.mono }}>{item.code}</Text>
+                                            {active && <Text className="text-sm font-bold text-accent">✓</Text>}
+                                        </Pressable>
+                                    );
+                                }}
+                                ListEmptyComponent={
+                                    <Text className="p-6 text-center text-sm text-muted">No languages match &quot;{search}&quot;</Text>
+                                }
+                            />
+                            <View className="flex-row items-center justify-between px-4 pb-2 pt-4">
+                                <Text className="text-base font-bold text-fg">Dictionary language</Text>
+                                <Pressable onPress={() => setVisible(false)} hitSlop={12}>
+                                    <Text className="text-base text-muted">✕</Text>
+                                </Pressable>
+                            </View>
 
-                                <TextInput
-                                    className="mx-4 rounded-lg border border-border-input bg-input px-3 py-3 text-[15px] text-fg"
-                                    placeholder="Search languages..."
-                                    placeholderTextColor={placeholderColor}
-                                    value={search}
-                                    onChangeText={setSearch}
-                                    autoFocus
-                                    autoCorrect={false}
-                                    autoCapitalize="none"
-                                />
-                            </Pressable>
+                            <TextInput
+                                className="mx-4 rounded-lg border border-border-input bg-input px-3 py-3 text-[15px] text-fg"
+                                placeholder="Search languages..."
+                                placeholderTextColor={placeholderColor}
+                                value={search}
+                                onChangeText={setSearch}
+                                autoFocus
+                                autoCorrect={false}
+                                autoCapitalize="none"
+                            />
                         </Pressable>
-                    </KeyboardAvoidingView>
-                </KeyboardProvider>
+                    </Pressable>
+                </KeyboardAvoidingView>
             </Modal>
         </React.Fragment>
     );
