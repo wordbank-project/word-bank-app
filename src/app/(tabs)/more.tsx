@@ -169,6 +169,7 @@ export default function MoreScreen() {
 
             <Section title="About">
                 <Row label="About" href="/about" chevron first />
+                <Row label="Support Word Bank ❤️" href="/support" chevron />
                 <Row label="Source code" href="https://github.com/wordbank-project/word-bank" chevron />
                 <Row label="Version" value={version} />
                 <Row label="License" value={license} />

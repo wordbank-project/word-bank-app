@@ -82,6 +82,10 @@ The community feed is disabled unless `EXPO_PUBLIC_WORDS_FEED_API_URL` is set at
 
 Issues and pull requests are welcome. Run `npm run lint` before submitting, and use [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`, `docs:` …) for commit messages — see [`AGENTS.md`](./AGENTS.md) for the architecture and dev/build flow.
 
+## Support
+
+Word Bank is free, open source, and ad-free. If it's useful to you, you can support development via [GitHub Sponsors](https://github.com/sponsors/jensrot) or [Liberapay](https://liberapay.com/jensrot).
+
 ## License
 
 [MIT](./LICENSE)

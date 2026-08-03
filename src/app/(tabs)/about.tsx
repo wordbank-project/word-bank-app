@@ -30,6 +30,9 @@ export default function AboutScreen() {
                 <Text className="text-[15px] leading-6 text-body">
                     Word Bank is an open-source project, and contributions are welcome! If you&apos;re interested in improving the app or adding new features, please check out the GitHub repository linked in the More tab.
                 </Text>
+                <Text className="text-[15px] leading-6 text-body">
+                    Supporting Word Bank helps keep the app fully free and allows us to continue improving it. If you find the app useful, please consider supporting us through the provided link in the More tab. Your support is greatly appreciated!
+                </Text>
             </View>
         </ScrollView>
     );
