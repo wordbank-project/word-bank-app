@@ -89,6 +89,10 @@ export default function TabLayout() {
                         name="support"
                         options={{ href: null, title: "Support" }}
                     />
+                    <Tabs.Screen
+                        name="analyze"
+                        options={{ href: null, title: "Analyze" }}
+                    />
                 </Tabs>
                 <FloatingActionButton />
             </View>

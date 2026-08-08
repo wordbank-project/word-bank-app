@@ -150,6 +150,10 @@ export default function MoreScreen() {
             scrollEventThrottle={scrollEventThrottle}
             onScroll={onScroll}
         >
+            <Section title="Tools">
+                <Row label="Analyze a sentence" chevron first href="/analyze" />
+            </Section>
+
             <Section title="Your data">
                 <Row label="Export Books" chevron first onPress={() => handleComingSoon('Exporting your books')} />
                 <Row label="Import Books" chevron onPress={() => handleComingSoon('Importing books')} />

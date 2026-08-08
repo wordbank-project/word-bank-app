@@ -1,4 +1,5 @@
 import type { ReadListBook, ReadStatus } from "@/models/read-list-book";
+import { clearAnalysisHistory } from "@/storage/analysis-storage";
 import { getJSON, setJSON } from "@/storage/storage";
 import { removeWords } from "@/storage/words-storage";
 
@@ -78,10 +79,13 @@ export async function setReadBookStatus(bookKey: string, status: ReadStatus): Pr
     return updatedReadBookStatus;
 }
 
-// Deletes all saved books and every book's words. Leaves settings (theme,
-// dictionary language) untouched.
+/** Delete all book data, including the read list, words, and analysis history. 
+* @returns {Promise<void>} test A promise that resolves when all data has been cleared.
+* 
+*/
 export async function clearAllBookData(): Promise<void> {
     const books = await getReadList();
     await removeWords(books.map((b) => b.key));
     await setReadList([]);
+    await clearAnalysisHistory();
 }
