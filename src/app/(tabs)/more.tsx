@@ -5,11 +5,10 @@ import { showActionSheet } from "@/utils/show-action-sheet";
 import { Link, router, type Href } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
-import { version, license } from "../../../package.json";
+import { license, version } from "../../../package.json";
 
-// The services that power the app. `pro` providers are placeholders for a future
-// paid version — selecting one shows an upsell rather than actually switching.
-type SourceProvider = { name: string; pro?: boolean };
+// The services that power the app. `future` providers are placeholders for a future
+type SourceProvider = { name: string; future?: boolean };
 type BookSource = {
     category: string;
     description: string;
@@ -22,13 +21,13 @@ const SOURCES: BookSource[] = [
         category: 'Books',
         description: 'Where Word Bank finds books and their covers.',
         active: 'Open Library',
-        providers: [{ name: 'Open Library' }, { name: 'Google Books', pro: true }],
+        providers: [{ name: 'Open Library' }, { name: 'Google Books', future: true }],
     },
     {
         category: 'Definitions',
         description: 'Where word meanings and example sentences come from.',
         active: 'Wiktionary & Free Dictionary',
-        providers: [{ name: 'Wiktionary & Free Dictionary' }, { name: 'Urban Dictionary', pro: true }],
+        providers: [{ name: 'Wiktionary & Free Dictionary' }, { name: 'Urban Dictionary', future: true }],
     },
 ];
 
@@ -79,7 +78,7 @@ function Row({ label, value, href, onPress, chevron, first, danger }: RowProps) 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
     return (
         <View className="gap-2">
-            <Text className="ml-1 text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">{title}</Text>
+            <Text className="ml-1 mb-2 text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">{title}</Text>
             <View className="overflow-hidden rounded-[10px] bg-card">{children}</View>
         </View>
     );
@@ -105,10 +104,10 @@ function SourceRow({ source, first, onPress }: { source: BookSource; first?: boo
 function handleChooseSource(source: BookSource): void {
     showActionSheet(source.category, 'Choose where this comes from', [
         ...source.providers.map((p) => ({
-            text: `${p.name === source.active ? '✓ ' : ''}${p.name}${p.pro ? '  (Pro)' : ''}`,
+            text: `${p.name === source.active ? '✓ ' : ''}${p.name}${p.future ? '  (Coming soon)' : ''}`,
             onPress: () => {
-                if (p.pro) {
-                    alertDialog('Word Bank Pro', `${p.name} will be available in a future Pro version.`);
+                if (p.future) {
+                    alertDialog('Coming soon', `${p.name} will be available in a future version.`);
                 }
             },
         })),
@@ -117,7 +116,7 @@ function handleChooseSource(source: BookSource): void {
 }
 
 function handleComingSoon(feature: string): void {
-    alertDialog('Coming soon', `${feature} will be available in a later version.`);
+    alertDialog('Coming soon', `${feature} will be available in a future version.`);
 }
 
 function handleDeleteAll(): void {
