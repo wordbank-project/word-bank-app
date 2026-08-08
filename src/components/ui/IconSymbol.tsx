@@ -22,6 +22,8 @@ const MAPPING = {
     'moon.fill': 'dark-mode',
     'sun.max.fill': 'light-mode',
     'books.vertical.fill': 'auto-stories',
+    'star.fill': 'star',
+    'star': 'star-border',
 } as IconMapping;
 
 /**
