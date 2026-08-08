@@ -1,3 +1,4 @@
+import { useBackTo } from "@/hooks/use-back-to";
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { Fonts } from "@/styles/global";
 import { ScrollView, Text, View } from "react-native";
@@ -6,6 +7,9 @@ import { version } from "../../../package.json";
 
 export default function AboutScreen() {
     const { ref: scrollRef, onScroll, scrollEventThrottle } = useScrollViewScroll();
+
+    // Opened from the More tab — back should go there, not to the first tab.
+    useBackTo("/more");
 
     return (
         <ScrollView
