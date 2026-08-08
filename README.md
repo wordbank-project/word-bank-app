@@ -41,7 +41,7 @@ Optional `.env.local` (gitignored) for pointing at your own backends:
 
 ```bash
 EXPO_PUBLIC_DICT_API_URL=http://192.168.x.x:3000        # dictionary API (wiktapi.dev)
-EXPO_PUBLIC_WORDS_FEED_API_URL=http://192.168.x.x:4000  # community word feed (opt-in)
+EXPO_PUBLIC_WORDS_FEED_API_URL=http://192.168.x.x:4000/v1  # word bank API
 ```
 
 The full build matrix — dev client vs standalone APK, local Gradle builds, EAS cloud builds, OTA updates, and the per-profile app variants — lives in [`AGENTS.md`](./AGENTS.md).
@@ -84,7 +84,7 @@ Issues and pull requests are welcome. Run `npm run lint` before submitting, and 
 
 ## Support
 
-Word Bank is free, open source, and ad-free. If it's useful to you, you can support development via [GitHub Sponsors](https://github.com/sponsors/jensrot) or [Liberapay](https://liberapay.com/jensrot).
+Word Bank is free, open source, and ad-free. If it's useful to you, you can support development via [GitHub Sponsors](https://github.com/sponsors/jensrot), [Liberapay](https://liberapay.com/jensrot), [Ko-fi](https://ko-fi.com/jensrot) or [Buy Me a Coffee](https://buymeacoffee.com/jensrot)
 
 ## License
 
