@@ -7,6 +7,7 @@ import { Pressable, Text, View } from "react-native";
 
 import CoverImage from "@/components/CoverImage";
 import CoverPlaceholder from "@/components/CoverPlaceholder";
+import StarRating from "@/components/StarRating";
 
 // Per-status badge styling (border/fill) and label color.
 const STATUS_BADGE: Record<ReadStatus, string> = {
@@ -54,6 +55,11 @@ export default function ReadListItem({ item, wordCount, onPress, onRemove, onCha
                             {READ_STATUS_LABELS[item.status]}
                         </Text>
                     </Pressable>
+                    {item.status === 'read' && item.rating ? (
+                        <View className="mt-1">
+                            <StarRating value={item.rating} size={12} />
+                        </View>
+                    ) : null}
                 </View>
                 <View className="min-w-11 items-center">
                     <Text className="text-xl font-bold text-accent">{wordCount}</Text>

@@ -37,6 +37,7 @@ import CoverPlaceholder from "@/components/CoverPlaceholder";
 import DefinitionModal from "@/components/DefinitionModal";
 import LanguageModal from "@/components/LanguageModal";
 import ReadStatusSelector from "@/components/ReadStatusSelector";
+import StarRating from "@/components/StarRating";
 
 // Extend with AI suggestions later
 const RANDOM_WORDS = [
@@ -762,7 +763,12 @@ export default function BookDetail() {
                                     <Text className="text-[13px] font-medium text-accent">{editingReview ? 'Cancel' : 'Edit'}</Text>
                                 </Pressable>
                             </View>
-                            {editingReview ? (
+                            <View className="flex-row items-center gap-2 pb-1">
+                                <StarRating value={rating} onChange={handleSetRating} size={28} />
+                                {rating === 0 && !loadingEntry && (
+                                    <Text className="text-[12px] text-muted">Tap to rate</Text>
+                                )}
+                            </View>
                                 <React.Fragment>
                                     <TextInput
                                         ref={reviewInputRef}
