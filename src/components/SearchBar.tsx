@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useIsFocused } from "@react-navigation/native";
 
@@ -64,7 +64,7 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
     // Types out one example title while the field is empty and the tab is focused.
     // `word` is the full suggestion, accepted on Enter when the field is empty.
     const isFocused = useIsFocused();
-    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(RANDOM_TITLES, isFocused && !query);
+    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(suggestionTitles, isFocused && !query);
 
     function handleSearch(): void {
         Keyboard.dismiss();
