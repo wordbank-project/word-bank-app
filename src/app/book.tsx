@@ -27,6 +27,7 @@ import { showActionSheet } from "@/utils/show-action-sheet";
 import { fetchDefinition } from "@/utils/words-api";
 import { postWordToFeed } from "@/utils/words-feed-api";
 
+import { useSavedLanguage } from "@/hooks/use-saved-language";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
 import { Colors, Fonts } from "@/styles/global";
@@ -102,19 +103,21 @@ export default function BookDetail() {
     const [inReadList, setInReadList] = useState<boolean>(false);
     const [readStatus, setReadStatus] = useState<ReadStatus>('want'); // Initial value is: "Want to read"
 
-    const [language, setLanguage] = useState<Language>(LANGUAGES[0]); // defaults to the first language in array
+    // Restores the saved dictionary language from AsyncStorage on mount; setLanguage persists too.
+    const { language, languageReady, setLanguage } = useSavedLanguage();
 
-    // Placeholder word suggestions: start with the curated list, then replace with
-    // live trending words from the feed server when available (falls back to the
-    // curated list on any failure, so the field is never empty / works offline).
+    // AI-generated example words for the current dictionary language, used as a placeholder in the add-word field.
     const [suggestionWords, setSuggestionWords] = useState<string[]>(RANDOM_WORDS);
     useEffect(() => {
-        fetchTrendingWords().then((words) => {
+        if (!languageReady) {
+            return;
+        }
+        fetchSuggestions(language.code).then(({ words }) => {
             if (words.length > 0) {
                 setSuggestionWords(words);
             }
         });
-    }, []);
+    }, [languageReady, language.code]);
 
     // Types out one example word while the add-word field is empty, the screen is
     // focused, and we're not editing. `suggestedWord` is added on Enter when empty.

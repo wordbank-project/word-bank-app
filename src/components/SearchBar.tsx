@@ -4,16 +4,18 @@ import { useIsFocused } from "@react-navigation/native";
 
 import { useColorScheme } from "@/context/theme-context";
 
+import { useSavedLanguage } from "@/hooks/use-saved-language";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
 import { Colors } from "@/styles/global";
+
+import { fetchSuggestions } from "@/utils/suggestions-api";
 
 import { Keyboard, View } from "react-native";
 
 import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
 
-// Extend with AI suggestions later
 const RANDOM_TITLES = [
     "The Great Gatsby",
     "To Kill a Mockingbird",
@@ -42,6 +44,22 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
     const placeholderColor = Colors[useColorScheme()].textPlaceholder;
 
     const [query, setQuery] = useState<string>("");
+
+    // Restores the saved dictionary language from AsyncStorage on mount.
+    const { language, languageReady } = useSavedLanguage();
+
+    // Live AI-generated book-title suggestions replace the static list once available.
+    const [suggestionTitles, setSuggestionTitles] = useState<string[]>(RANDOM_TITLES);
+    useEffect(() => {
+        if (!languageReady) {
+            return;
+        }
+        fetchSuggestions(language.code).then(({ titles }) => {
+            if (titles.length > 0) {
+                setSuggestionTitles(titles);
+            }
+        });
+    }, [languageReady, language.code]);
 
     // Types out one example title while the field is empty and the tab is focused.
     // `word` is the full suggestion, accepted on Enter when the field is empty.
@@ -73,7 +91,7 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
                 autoCorrect={false}
                 autoCapitalize="none"
             />
-            <SearchButton onPress={handleSearch} loading={loading} style={{ marginBottom: 16 }} />
+            <SearchButton onPress={handleSearch} loading={loading} suggestion={word} style={{ marginBottom: 16 }} />
         </View>
     );
 }

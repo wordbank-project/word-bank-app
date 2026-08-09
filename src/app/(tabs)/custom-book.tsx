@@ -3,6 +3,7 @@ import CoverImage from '@/components/CoverImage';
 import CoverPlaceholder from '@/components/CoverPlaceholder';
 import ReadStatusSelector from '@/components/ReadStatusSelector';
 import { useColorScheme } from '@/context/theme-context';
+import { useSavedLanguage } from '@/hooks/use-saved-language';
 import type { ReadStatus } from '@/models/read-list-book';
 import { upsertReadListBook } from '@/storage/read-list-storage';
 import { Colors } from '@/styles/global';
@@ -39,6 +40,22 @@ export default function CustomBookScreen() {
     const [coverUri, setCoverUri] = useState<string | null>(null);
     const [titleError, setTitleError] = useState<string>('');
     const [readStatus, setReadStatus] = useState<ReadStatus>('want');
+
+    // Restores the saved dictionary language from AsyncStorage on mount.
+    const { language, languageReady } = useSavedLanguage();
+
+    // Live AI-generated title suggestions replace the static list once available.
+    const [suggestionTitles, setSuggestionTitles] = useState<string[]>(RANDOM_TITLES);
+    useEffect(() => {
+        if (!languageReady) {
+            return;
+        }
+        fetchSuggestions(language.code).then(({ titles }) => {
+            if (titles.length > 0) {
+                setSuggestionTitles(titles);
+            }
+        });
+    }, [languageReady, language.code]);
 
     // Types out one example title while the field is empty and the tab is focused.
     // `word` is the full suggestion, accepted on Enter when the field is empty.

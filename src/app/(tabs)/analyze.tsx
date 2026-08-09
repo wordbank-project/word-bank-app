@@ -9,13 +9,13 @@ import { useIsFocused } from "expo-router";
 import { useColorScheme } from "@/context/theme-context";
 
 import { useBackTo } from "@/hooks/use-back-to";
+import { useSavedLanguage } from "@/hooks/use-saved-language";
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
 import type { AnalysisHistoryEntry, SentenceAnalysis } from "@/models/sentence-analysis";
 
 import { addAnalysis, getAnalysisHistory, removeAnalysis } from "@/storage/analysis-storage";
-import { getLanguageCode } from "@/storage/language-storage";
 
 import { MAX_SENTENCE_LENGTH, analyzeSentence } from "@/utils/analyze-api";
 import { showActionSheet } from "@/utils/show-action-sheet";
@@ -25,6 +25,7 @@ import { ACCENT, Colors } from "@/styles/global";
 
 import AnalysisResult from "@/components/AnalysisResult";
 import ClearableTextInput from "@/components/ClearableTextInput";
+import LanguageModal from "@/components/LanguageModal";
 import SearchButton from "@/components/SearchButton";
 
 const RANDOM_EXAMPLE_SENTENCES = [
@@ -67,17 +68,21 @@ export default function AnalyzeScreen() {
         };
     }, []);
 
+    // Restores the saved dictionary language from AsyncStorage on mount.
+    const { language, languageReady, setLanguage } = useSavedLanguage();
+
     // Get from the api the live AI-generated book-title suggestions, which replace the static list once available.
     const [suggestionSentences, setSuggestionSentences] = useState<string[]>(RANDOM_EXAMPLE_SENTENCES);
     useEffect(() => {
-        getLanguageCode().then((code: string | null) => {
-            fetchSuggestions(code ?? 'en').then(({ sentences }: { sentences: string[] }) => {
-                if (sentences.length > 0) {
-                    setSuggestionSentences(sentences);
-                }
-            });
+        if (!languageReady) {
+            return;
+        }
+        fetchSuggestions(language.code).then(({ sentences }: { sentences: string[] }) => {
+            if (sentences.length > 0) {
+                setSuggestionSentences(sentences);
+            }
         });
-    }, []);
+    }, [languageReady, language.code]);
 
     // Placeholder typewriter effect — shows one of the example sentences while the field is empty and the tab is focused.
     const isFocused = useIsFocused();
@@ -133,7 +138,7 @@ export default function AnalyzeScreen() {
         setError("");
         setAnalysis(null);
 
-        const lang = (await getLanguageCode()) ?? "en";
+        const lang = language.code;
         const result = await analyzeSentence(text, lang, controller.signal);
 
         // A newer submission (or unmount) superseded this one — drop the result.
@@ -157,7 +162,7 @@ export default function AnalyzeScreen() {
         setAnalyzed(text);
         setHistory(await addAnalysis(text, lang, result));
         return true;
-    }, [sentence]);
+    }, [sentence, language.code]);
 
     /** Shows a past result again — no network call, it's already stored.
      * @param {AnalysisHistoryEntry} entry the history entry to display
@@ -199,9 +204,12 @@ export default function AnalyzeScreen() {
                 onScroll={onScroll}
                 scrollEventThrottle={scrollEventThrottle}
             >
+                {/* Added it so we can change the dictionary that the analysis uses */}
+                <LanguageModal selected={language} onSelect={setLanguage} />
+
                 <View className="gap-1.5">
                     <Text className="text-[13px] mb-2 font-semibold uppercase tracking-[0.5px] text-muted">
-                        Sentence
+                        Sentence (Pick your language in the menu above)
                     </Text>
                     <ClearableTextInput
                         // p-3 (not px-3 py-3) so Android doesn't discard the padding — see AGENTS.md.
