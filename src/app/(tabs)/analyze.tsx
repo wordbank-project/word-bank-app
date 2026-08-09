@@ -71,7 +71,7 @@ export default function AnalyzeScreen() {
     // Restores the saved dictionary language from AsyncStorage on mount.
     const { language, languageReady, setLanguage } = useSavedLanguage();
 
-    // Get from the api the live AI-generated book-title suggestions, which replace the static list once available.
+    // Get from the api the live AI-generated example sentences, which replace the static list once available.
     const [suggestionSentences, setSuggestionSentences] = useState<string[]>(RANDOM_EXAMPLE_SENTENCES);
     useEffect(() => {
         if (!languageReady) {
