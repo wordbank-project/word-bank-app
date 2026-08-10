@@ -4,11 +4,11 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v55.0.0/ before 
 
 # Codebase Architecture
 
-Word Bank is an Expo (SDK 55) / React Native app using **expo-router** (file-based routing, typed routes), TypeScript, and AsyncStorage for all persistence. There is no backend in this repo — the only network calls are book search (OpenLibrary) and word definitions (the self-hosted [wiktapi.dev](#dictionary-api-wiktapidev) instance + dictionaryapi.dev for English).
+Word Bank is an Expo (SDK 55) / React Native app using **expo-router** (file-based routing, typed routes), TypeScript, and AsyncStorage for all persistence. There is no backend in this repo. Network calls are: book search (OpenLibrary), word definitions (the self-hosted [wiktapi.dev](#dictionary-api-wiktapidev) instance + dictionaryapi.dev for English), as-you-type word suggestions on the book screen (wiktapi `/search` for non-English; the free **api.datamuse.com** suggest API for English — prefixes only, comparable surface to the existing dictionaryapi.dev lookups), an optional per-word "Translate to" lookup on the book screen (`translate.googleapis.com` — the unofficial, keyless Google Translate endpoint; sends only the word text and the two language codes, tap-to-reveal so it's never called automatically), and — opt-in — the [community word feed](#community-word-feed-word-bank-server): the app contributes each saved word plus its public dictionary values to the `word-bank-server` feed and reads back AI-generated word/book-title suggestions for placeholders. The one call that sends text the user wrote is the **Analyze a sentence** screen (`POST /analyze`), which is user-initiated per sentence and disclosed on screen — everything else sends only public dictionary data.
 
 ## Mental model
 
-A **book** the user is tracking lives on the **read list** (`ReadListBook`, keyed by `key`) and carries a reading status (Want to read / Reading / Have Read). Each book has a separate **word collection** stored under `words_<key>`. The two are linked by the book `key`: adding words to a book automatically ensures the book is on the read list, and the read list shows each book's word count. The **Words List** tab flattens every book's words into one searchable view.
+A **book** the user is tracking lives on the **read list** (`ReadListBook`, keyed by `key`) and carries a reading status (Want to read / Currently reading / Have Read). Each book has a separate **word collection** stored under `words_<key>`. The two are linked by the book `key`: adding words to a book automatically ensures the book is on the read list, and the read list shows each book's word count. The **Words List** tab flattens every book's words into one searchable view.
 
 ## Source layout (`src/`)
 
@@ -30,7 +30,8 @@ context/                     # React context providers
 storage/                    # AsyncStorage wrappers (the data layer)
 models/                     # TypeScript types + constant data
 utils/                       # pure helpers + API clients
-styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/mono/etc.)
+global.css                   # NativeWind semantic theme tokens (light @theme + dark media-query overrides)
+styles/global.ts             # Colors (light/dark) for raw color-value props, ACCENT, Fonts (serif/mono/etc.)
 ```
 
 ## Routing
@@ -44,11 +45,12 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 | Screen | What it does | Key collaborators |
 |---|---|---|
 | `index.tsx` | Search books; renders results with infinite scroll | `useBookSearch`, `SearchBar`, `BooksList` |
-| `book.tsx` | Add words (with dictionary lookup), edit sentence/notes, set reading status, pick cover, edit title/author/year | `ReadStatusSelector`, `LanguageModal`, `CoverImage`, `words-storage`, `read-list-storage`, `words-api` |
-| `read-list.tsx` | List saved books, filter by status, change status / remove / open | `ReadListItem`, `read-list-storage`, `getWordCounts` |
-| `words-list.tsx` | Flatten all words across books, live word-text search, tap to open the book | `WordListItem`, `getReadList` + `getWords` |
-| `custom-book.tsx` | Create a manual book (title/author/year/cover/status) then open it | `CoverImage`, `ReadStatusSelector`, `upsertReadListBook` |
-| `more.tsx` / `about.tsx` | Settings-style card menu + app info (version/license from package.json) | `useScrollViewScroll` |
+| `book.tsx` | Add words (dictionary lookup + choose among multiple definitions), edit per-word sentence/notes, set reading status, pick cover, edit title/author/year, write a Book Notes + Review (both tap-to-edit) with a 0–5 star rating, jump-to-notes link. Keeps a growing multiline notes/review input above the keyboard (`keepInputAboveKeyboard`, native-only); placeholder suggestions come from AI-generated word suggestions; a successful add contributes the word to the community feed; a `LanguageModal` row picks the dictionary language (shared preference via `useSavedLanguage`) | `ReadStatusSelector`, `LanguageModal`, `DefinitionModal`, `StarRating`, `BookDetailSkeletons`, `CoverImage`, `words-storage`, `read-list-storage`, `words-api`, `words-feed-api`, `suggestions-api`, `pending-read-filter`, `useSavedLanguage` |
+| `read-list.tsx` | List saved books (ordered by word count), filter by status, change status / remove / open. The status filter auto-selects after a status change — in-place, or via the `filter` route param `book.tsx` sends on "Update read list" | `ReadListItem`, `read-list-storage`, `getWordCounts` |
+| `words-list.tsx` | Flatten all words across books, live word-text search, a **dynamic, colour-coded, multi-select part-of-speech filter** — one chip per POS actually present in the saved words (with counts; colours/labels shared with `DefinitionModal` via `utils/pos.ts`; hidden when ≤1 POS present), sort control (A–Z / Z–A / By book / Recently added, persisted via `words-list-storage`), tap to open the book. Each row also shows the word's saved sentence | `WordListItem`, `getReadList` + `getWords`, `utils/pos.ts`, `words-list-storage` |
+| `custom-book.tsx` | Create a manual book (title/author/year/cover/status) then open it. Title field types out an AI-generated example title (in the saved dictionary language) as a placeholder, accepted on empty submit | `CoverImage`, `ReadStatusSelector`, `upsertReadListBook`, `useSavedLanguage`, `useTypewriterPlaceholder`, `suggestions-api` |
+| `more.tsx` / `about.tsx` / `support.tsx` | Settings-style card menu: "Tools" (→ Analyze a sentence), "Your data" (export/import/**Delete all data**), "Sources" (book & dictionary providers in plain language; switching providers is a Pro-locked placeholder), "About" (About, **Support Word Bank ❤️**, source link, version/license), "Developer" (links to the actual APIs). `support.tsx` is its own donate/share screen (GitHub Sponsors/Liberapay/Ko-fi/Buy Me a Coffee links, "star on GitHub", native share sheet) — `href: null`, reached from More → About | `useScrollViewScroll`, `useBackTo`, `showActionSheet`, `clearAllBookData` |
+| `analyze.tsx` | **/analyze** — paste a sentence, AI explains what it means in plain language. A `LanguageModal` row picks the language both the AI response and the "Try one" example sentences use (shared dictionary-language preference via `useSavedLanguage`); the Sentence field types out one AI-generated example sentence as a placeholder, and pressing "Analyze" on an empty field accepts it (same click-to-accept pattern as `SearchBar`/Words List, via `SearchButton`'s `suggestion`/`loadingLabel` props). Reopening a "Recent" entry (or landing on a fresh result) scrolls to top and briefly flashes an accent outline around the result card. Keeps the last 20 analyses locally; long-press to remove. `href: null`, reached from More → Tools | `AnalysisResult`, `LanguageModal`, `SearchButton`, `analyze-api`, `analysis-storage`, `suggestions-api`, `useSavedLanguage`, `useTypewriterPlaceholder`, `useScrollViewScroll`, `useBackTo`, `showActionSheet` |
 
 ## Components (`src/components/`)
 
@@ -58,15 +60,23 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 | `BookItem` | One search-result row (cover + title/author/year); opens the book |
 | `CoverImage` | Cover with a pulsing skeleton, loading spinner, and graceful fallback on error |
 | `ReadListItem` | `React.memo` card for a saved book: cover, status badge, word count, remove |
-| `ReadStatusSelector` | Three-pill selector for Want / Reading / Have Read |
-| `WordListItem` | `React.memo` card on the Words List: word + definition + source-book label |
+| `ReadStatusSelector` | Three-pill selector for Want / Currently reading / Have Read |
+| `WordListItem` | `React.memo` card on the Words List: word + phonetic + part of speech + definition + the saved sentence (when present) + source-book label |
 | `ClearableTextInput` | `TextInput` wrapper with a ✕ button that appears while there's text and clears the field; reused by all search/add inputs |
-| `SearchButton` | The accent "Search" button shared by the Search and Words List screens |
-| `SearchBar` | Book search field with a random-title suggestion |
-| `LanguageModal` | Bottom-sheet dictionary-language picker with search |
-| `FloatingActionButton` | Context-aware: scrolls to top when scrolled, otherwise opens `custom-book` |
+| `SearchButton` | The accent action button shared by Search, Words List, and Analyze. `label`/`loadingLabel` customize the idle/loading text (defaults `"Search"`/`"Searching"`); `suggestion` (the live typewriter word/title/sentence) echoes what an empty-field press will actually submit, e.g. `Analyze "…"` |
+| `SearchBar` | Book search field; types out an AI-generated example title (in the saved dictionary language, via `useSavedLanguage`) as a placeholder, accepted on empty submit |
+| `LanguageModal` | Bottom-sheet dictionary-language picker with search; a self-contained trigger row (label + current selection) + the picker itself. Reused on `book.tsx` (dictionary language + "Translate to") and `analyze.tsx` |
+| `DefinitionModal` | Bottom-sheet picker to search and switch among a word's definitions, grouped under part-of-speech headers color-coded via the shared `utils/pos.ts` palette (same colours as the Words List filter) |
+| `FloatingActionButton` | Scrolls to top when scrolled; otherwise opens a context-aware "Add a book" action sheet (Search for a book / Add a custom book), omitting whichever option matches the current screen |
+| `CoverPlaceholder` | Book-glyph placeholder shown for a book with no cover image |
+| `StarRating` | 0–5 star rating row (`IconSymbol` `star`/`star.fill`); interactive (tap to set, tapping the current value clears it) when given `onChange`, otherwise a read-only display. Used for the book screen's review rating and its Read List display |
+| `BookDetailSkeletons` | Pulsing (`usePulse`) placeholder set for `book.tsx` while its data loads: `WordCardSkeletons`, `ReadStatusSkeleton`, `SaveButtonSkeleton`, `WordCountSkeleton`, `NoteCardSkeleton` — each mirrors the real content's layout so nothing flashes a default value before loading |
+| `AnalysisResult` | Purely presentational result card for `analyze.tsx`: the quoted sentence + the AI's plain-language "Meaning" |
+| `ActionSheetBridge` | Root-mounted (in `_layout.tsx`) bridge that backs the imperative `showActionSheet` helper, themed for dark mode |
 | `ThemeToggle` | Header light/dark switch |
 | `ui/IconSymbol(.ios)` | SF Symbols on iOS, Material-icon fallback elsewhere |
+
+> **Lists & performance:** the Read List and Words List render **local** data through `FlatList`, which already virtualizes (only visible rows render). They intentionally have **no infinite scroll** — that pattern exists only for the **remote, paginated** book search (`useBookSearch` → OpenLibrary `offset`/`limit`). If a local list ever feels slow, tune `FlatList` (`initialNumToRender`, `windowSize`, `removeClippedSubviews`, `getItemLayout`) rather than paginating.
 
 ## Hooks (`src/hooks/`)
 
@@ -75,8 +85,10 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 | `useBookSearch` | OpenLibrary search: paginated `loadMore`, abortable, `searched`/`loadingMore`/error flags |
 | `useFlatListScroll` / `useScrollViewScroll` | Register a scroll-to-top callback + report scroll position to `ScrollProvider` (drives the FAB). Both share one internal `useScrollRegistration` |
 | `usePulse` | Reanimated opacity-pulse style for loading skeletons |
-| `useThemedStyles(light, dark)` | Picks the light/dark `StyleSheet` for the current theme |
-| `useTypewriterPlaceholder(words, active)` | Types out one example word/title then stops; returns `{ text, word }` so a screen can show `text` as the placeholder and accept `word` on Enter. Pauses when `active` is false (field non-empty or screen blurred) |
+| `useTypewriterPlaceholder(words, active)` | Types out one example word/title/sentence then stops; returns `{ text, word }` so a screen can show `text` as the placeholder and accept `word` on Enter/empty-submit. Pauses when `active` is false (field non-empty or screen blurred) |
+| `useWordSuggestions(input, langCode, enabled)` | Debounced (250ms) as-you-type dictionary suggestions for the add-word input: min 2 chars, max 6, AbortController-per-request, `[]` on any failure. Backs the suggestion chip row on the book screen |
+| `useSavedLanguage()` | Restores the saved dictionary language from AsyncStorage on mount; returns `{ language, languageReady, setLanguage }` — `language` defaults to `LANGUAGES[0]` until `languageReady` flips true, and `setLanguage` updates state **and** persists via `setLanguageCode`. One restore per mount, shared by `book.tsx`, `analyze.tsx`, `custom-book.tsx`, and `SearchBar.tsx` — only `book.tsx` also calls the setter (via its `LanguageModal`), the rest are read-only |
+| `useBackTo(href)` | Routes the Android hardware/gesture back press to `href` while the screen is focused, instead of the default back behavior. No-op on iOS/web (no hardware back button). Used by screens reached from a fixed place (e.g. `analyze.tsx`/`support.tsx` → back to `/more`) so back doesn't depend on navigation history |
 
 ## Context (`src/context/`)
 
@@ -88,32 +100,117 @@ styles/global.ts             # Colors (light/dark), ACCENT, ERROR, Fonts (serif/
 | Module | Keys | Exports |
 |---|---|---|
 | `storage.ts` | — | `getJSON(key, fallback)` / `setJSON(key, value)` — shared parse/stringify helpers |
-| `read-list-storage.ts` | `read_list` | `getReadList`, `setReadList`, `upsertReadListBook`, `removeReadListBook`, `setReadBookStatus` |
+| `read-list-storage.ts` | `read_list` | `getReadList` (runs one-time migrations, see below), `setReadList`, `upsertReadListBook`, `removeReadListBook`, `setReadBookStatus`, `clearAllBookData` |
 | `words-storage.ts` | `words_<bookKey>` | `getWords`, `setWords`, `removeWords`, `getWordCounts` (batched `multiGet`) |
-| `language-storage.ts` | `dictionary_language` | `getLanguageCode`, `setLanguageCode` |
+| `language-storage.ts` | `dictionary_language`, `translation_language` | `getLanguageCode`/`setLanguageCode` (the dictionary language — see `useSavedLanguage`), `getTranslationLanguageCode`/`setTranslationLanguageCode` (the book screen's independent "Translate to" preference) |
+| `analysis-storage.ts` | `sentence_analyses` | `getAnalysisHistory`, `addAnalysis`, `removeAnalysis`, `clearAnalysisHistory` — the last 20 sentence analyses, newest first |
+| `words-list-storage.ts` | `words_list_sort` | `getSortMode`/`setSortMode` — the Words List's persisted sort choice (`SortMode`: `'az' \| 'za' \| 'book' \| 'recent'`, `SORT_MODES` lists them) |
 | `theme-storage.ts` | `app_theme` | `getTheme`, `setTheme` (light/dark choice) |
 
 `upsertReadListBook` takes `Omit<ReadListBook, 'addedAt'>` — `addedAt` is owned by storage (stamped on insert, preserved on update).
 
+`clearAllBookData` (used by More → "Delete all data") removes every book's `words_<key>` entry and empties `read_list`, leaving settings (theme, dictionary language) intact.
+
+### Data migrations
+
+`getReadList` rewrites data left over from older app versions, on load. Current migrations:
+- reading status value `reading` → `currently_reading`
+- book-level field `notes` → `bookNotes`
+
+The pass is **idempotent and self-erasing**: it only writes back when something actually changed, so after the first launch on a migrated build it's a cheap no-op.
+
+**Why it's needed:** installing a new APK with the **same package id** is an *update* — AsyncStorage is preserved — so books saved before a rename survive on the device and must be migrated. Without the migration those books aren't deleted, but a pre-rename `reading` book shows a blank/broken status badge and falls out of the "Currently reading" filter (until its status is re-picked), and notes saved under the old key stop displaying.
+
+**When it can be removed:** once every install has opened a migrated build at least once (or after a fresh package id / clean reinstall, which start with empty storage). It's then safe to delete in a later release; until you're sure, leaving it in costs almost nothing. For retiring future migrations cleanly, consider a stored `schema_version` so old steps can be dropped once the minimum version has moved past them.
+
 ## Models (`src/models/`)
 
 - `book.ts` — `Book` (OpenLibrary search result shape).
-- `read-list-book.ts` — `ReadListBook`, `ReadStatus` (`'want' | 'reading' | 'read'`), plus `READ_STATUS_LABELS` / `READ_STATUS_ORDER`.
-- `word-entry.ts` — `WordEntry` (word, phonetic, partOfSpeech, definition, sentence, exampleSentence, notes) and `EditDraft`.
+- `read-list-book.ts` — `ReadListBook` (incl. optional book-level `review?`, `bookNotes?` — the latter renamed from `notes` — and `rating?` — a 0–5 star rating, see `StarRating`), `ReadStatus` (`'want' | 'currently_reading' | 'read'`), plus `READ_STATUS_LABELS` / `READ_STATUS_ORDER`.
+- `word-entry.ts` — `WordEntry` (word, phonetic, the selected partOfSpeech/definition/exampleSentence, the full `definitions` list + `selectedDefinition` index, the user's sentence/notes, and optional `addedAt` timestamp for "Recently added" sorting), `WordDefinition` (one candidate meaning), and `EditDraft`.
 - `language.ts` — `Language` + the full `LANGUAGES` list used by the dictionary picker.
+- `sentence-analysis.ts` — `SentenceAnalysis` (currently just `{ meaning: string }` — the server only ever returns a plain-language meaning, see `analyze-api.ts`) and `AnalysisHistoryEntry` (`text`/`lang`/`analysis`/`createdAt`, as kept by `analysis-storage.ts`).
 
 ## Utils (`src/utils/`)
 
-- `words-api.ts` — `fetchDefinition(word, lang)`: routes English to dictionaryapi.dev, everything else to the self-hosted wiktapi.dev instance (see [Dictionary API](#dictionary-api-wiktapidev)).
+- `words-api.ts` — `fetchDefinition(word, lang)`: routes English to dictionaryapi.dev, everything else to the self-hosted wiktapi.dev instance (see [Dictionary API](#dictionary-api-wiktapidev)). Returns a `WordEntry` with **all** definitions flattened into `definitions[]` (deduped, capped at 50), the first selected by default. Also `fetchWordSuggestions(prefix, lang, limit?, signal?)` — as-you-type prefix suggestions (Datamuse for English, wiktapi `/search` otherwise; `[]`-on-failure, abortable) — and `suggestCorrections(failedWord, lang)` — "Did you mean?" candidates for a failed add: prefix-fetch ~50 words sharing the typo's first 3 chars, rank by Damerau-Levenshtein (`utils/edit-distance.ts`), keep distance ≤ 2, top 3. Known limits: typos in the first two chars find nothing; Datamuse's vocab contains some misspellings (a tapped one just fails validation into did-you-mean again).
+- `edit-distance.ts` — `damerauLevenshtein(a, b)`: pure edit-distance with adjacent transpositions (so "recieve" → "receive" is 1), used to rank did-you-mean candidates.
+- `translate-api.ts` — `translateWord(word, from, to, signal?)`: tap-to-reveal word translation via the unofficial `translate.googleapis.com` endpoint (free, no key). Returns `null` on any failure, including the endpoint's quirk of echoing back untranslatable input as its own "translation" — treated the same as "not found."
+- `pos.ts` — part-of-speech helpers shared by the Words List filter and `DefinitionModal` so colours/labels stay consistent: `POS_COLORS`, `normalizePos` (folds source variants — `adj`→`adjective`, `adv`→`adverb`, …), `posColor`, `posLabel`, `POS_ORDER`.
 - `dict-utils.ts` — `timedFetch` (8s timeout with friendly errors).
 - `cover-uri.ts` — `coverUri(coverI, size)`: local image as-is, otherwise an OpenLibrary cover URL.
 - `open-book.ts` — `openBook(params)`: the single place that navigates to `/book`.
 - `pick-cover-image.ts` — `pickCoverImage()`: camera-or-library prompt (uses `expo-image-picker`).
-- `show-action-sheet.ts` — `showActionSheet()`: native sheet on iOS, `Alert` on Android.
+- `show-action-sheet.ts` — `showActionSheet()`: backed by `@expo/react-native-action-sheet` via a root `ActionSheetBridge` (themed for dark mode), so it supports any number of options on both platforms (Android is no longer capped at 3 buttons like `Alert`). Keeps a plain imperative API so it's callable from non-component code; falls back to native iOS sheet / `Alert` if the bridge isn't mounted.
+- `alert-dialog.ts` — `alertDialog(title, message?)`: platform-safe alert (`window.alert` on web, native `Alert` on iOS/Android).
+- `pending-read-filter.ts` — `setPendingReadFilter` / `consumePendingReadFilter`: module-level handoff of a reading status chosen on the book screen to the Read List, which auto-selects that filter next time it's focused (covers back-button returns, not just the "Update read list" button).
+- `words-feed-api.ts` — `postWordToFeed(word, meta?)`: fire-and-forget contribution of a saved word + its **public** dictionary values (definition / part of speech / phonetic) to the feed. Never throws (failures swallowed); sends **no** sentence, notes, book, or identity; opt-in via `EXPO_PUBLIC_WORDS_FEED_API_URL`.
+- `feed-api-base.ts` — `FEED_API_BASE_URL` + `FEED_REQUEST_TIMEOUT_MS`: the one place the `word-bank-server` host is resolved (env var, else a platform-aware localhost — `10.0.2.2` on the Android emulator). Every client of that server imports it instead of re-deriving it. Note `words-api.ts` keeps its own base URL — that's the *dictionary* API on a different port/env var.
+- `analyze-api.ts` — `analyzeSentence(text, lang, signal?)`: sentence analysis via the server's `POST /analyze` (see [community server](#community-word-feed-word-bank-server)). `null` on any failure, `'rate-limited'` on a `429` (distinguished so the screen can show a more accurate message), never throws; a **25s** timeout rather than the usual 5s since the server has no cache — every call waits on a full live LLM round trip. Re-validates the payload client-side (rebuilds `{ meaning }` from known fields rather than trusting the raw response). This is the only call in the app that sends text the user wrote — see the privacy note below.
+- `suggestions-api.ts` — `fetchSuggestions(lang?)`: AI-generated word + book-title + example-sentence suggestions via the server's `GET /v1/suggestions` (see [community server](#community-word-feed-word-bank-server)). Resolves to `{ words: [], titles: [], sentences: [] }` on any failure, never throws; a **20s** timeout since the server fires parallel, uncached LLM completions per request — a cold call costs one round trip, but each list is verbose (up to 80 words / 40 titles / 3 sentences). Successful non-empty results are cached in memory per `lang` for the app session (never the empty/failure case), so reopening a screen (e.g. `book.tsx`, opened per book; `analyze.tsx`) doesn't re-trigger a live, unrate-limited LLM call every time. Consumed by `book.tsx` (words), `SearchBar.tsx`/`custom-book.tsx` (titles), and `analyze.tsx` (sentences).
 
 ## Styling / theming convention
 
-Every component defines `buildStyles(C)` and exports `const lightStyles = buildStyles(Colors.light)` / `darkStyles = buildStyles(Colors.dark)`, then selects with `const styles = useThemedStyles(lightStyles, darkStyles)`. A component that **also** needs a raw color value (e.g. a `placeholderColor` from `Colors[scheme]`) keeps `const scheme = useColorScheme()` and indexes `Colors[scheme]` directly. Colors, `ACCENT`, `ERROR`, and `Fonts` live in [styles/global.ts](src/styles/global.ts). `Fonts` maps semantic roles (`serif`, `mono`, `sans`, `rounded`) to platform font families — currently `Fonts.serif` for book titles and `Fonts.mono` for phonetics/IPA and the language code.
+Styling uses **NativeWind v5** (`className`, Tailwind v4). Dark mode is driven by **semantic CSS-variable tokens** defined in [global.css](global.css): a light `@theme` block plus a `@media (prefers-color-scheme: dark)` block that redefines the same `--color-*` vars. Use the semantic utilities everywhere — `bg-background`, `bg-card`, `bg-input`, `text-fg`, `text-secondary`, `text-muted`, `text-body`, `text-meta`, `text-faded`, `border-border`, `border-border-input`, `border-border-edit`, `bg-accent`/`text-accent`, `text-error`, etc. — so a single class flips automatically between light and dark. The persisted theme toggle is bridged to NativeWind in [theme-context.tsx](src/context/theme-context.tsx) via `Appearance.setColorScheme(...)`, so the manual choice (not just the OS) drives the flip.
+
+**What stays as `style` (not `className`):** reanimated/`Animated` animated styles (e.g. `usePulse` in [CoverImage.tsx](src/components/CoverImage.tsx)/[BooksList.tsx](src/components/BooksList.tsx)/[FloatingActionButton.tsx](src/components/FloatingActionButton.tsx)), `StyleSheet.absoluteFill`, safe-area-inset paddings, RN-only props (`textAlignVertical`, `includeFontPadding`), color-value props (`placeholderTextColor`, `ActivityIndicator`/icon `color`), and inline `fontFamily: Fonts.*`. Third-party components without `className` support (e.g. `KeyboardAwareScrollView`) keep `style`/`contentContainerStyle` and are wrapped in a `bg-background` `View` for theming. Dynamic per-status styling (e.g. [ReadListItem.tsx](src/components/ReadListItem.tsx)) uses small `className` record maps.
+
+### ⚠️ Never pad a `TextInput` with `px-*` / `py-*`
+
+Use `p-*`, or the physical edges `pt-/pr-/pb-/pl-*`. **Not** `px-*`/`py-*`/`ps-*`/`pe-*` — those silently do nothing on Android.
+
+Why: Tailwind v4 emits CSS *logical* properties for `px-`/`py-`, and NativeWind compiles them to RN's `paddingInline`/`paddingBlock` (verify any class with `compile()` from `react-native-css/compiler`). RN's Android `TextInput` decides whether to apply the **platform `EditText` theme padding** by checking only the legacy prop names — `padding`, `padding{Horizontal,Vertical}`, `padding{Left,Right,Top,Bottom,Start,End}` (see `AndroidTextInputComponentDescriptor.h` + `AndroidTextInputProps.cpp` in `node_modules/react-native`). `paddingInline`/`paddingBlock` aren't on that list, so Android concludes "no padding was set" and injects the theme's `EditText` padding on `Edge::Start/End/Top/Bottom`. Yoga resolves a specific edge ahead of `Edge::Horizontal`/`Vertical`, so the theme value **wins over the class** — the input renders with Android's default `EditText` padding (~4dp horizontally) while iOS honours the class. `p-*` maps to `padding` and the physical edges map 1:1, so both are seen and no theme padding is injected.
+
+This is why the multiline notes/review inputs (`p-2.5`) were always consistent while the single-line search fields were not.
+
+### ⚠️ A single-line `TextInput` must not carry a line-height **on iOS**
+
+Size single-line inputs as `text-[14px] android:leading-[21px]` rather than `text-base` — an arbitrary size (which emits `fontSize` alone) plus the line-height re-added for Android only. The book-screen meta fields use the `text-sm` equivalent, `text-[12.25px] android:leading-[17.5px]`.
+
+Why iOS only: Tailwind's named sizes bundle a `line-height` (`text-base` → `fontSize: 14` **and** `lineHeight: 21`). On iOS the typed value and the placeholder take different rendering paths — typed text becomes an attributed string where `lineHeight` is applied as `NSParagraphStyle.minimum/maximumLineHeight` (`RCTAttributedTextUtils.mm`), dropping the baseline to the bottom of the line box, while the placeholder is a plain `NSString` (`RCTTextInputComponentView.mm`) that UIKit centers — so the placeholder looks centred and typed text sits visibly lower. Android renders it centred either way, so it keeps the line-height and its previous appearance exactly.
+
+The odd numbers are the previous values preserved: NativeWind resolves `1rem` to **14px** (RN's default font size), so `text-base` is 14px/21 and `text-sm` is 12.25px/17.5 — not 16/14. Verify any class with `compile()` from `react-native-css/compiler`; the `android:` variant compiles to a real platform condition (`m: [['=','platform','android']]`).
+
+**Multiline** inputs (`p-2.5 text-sm` book notes / review / sentence) keep the plain paired line-height on both platforms — it sets line spacing, and top-aligned text has nothing to be centred against.
+
+Raw color values still come from `Colors[scheme]` (indexed via `useColorScheme()`) for the cases above. `ACCENT`, `Colors`, and `Fonts` live in [styles/global.ts](src/styles/global.ts). `Fonts` maps semantic roles (`serif`, `mono`, `sans`, `rounded`) to platform font families — currently `Fonts.serif` for book titles and `Fonts.mono` for phonetics/IPA and the language code.
+
+## Code style
+
+Shared with the sibling `word-bank-server` and `word-bank-site` repos:
+
+- **Guard clauses, not nested conditionals.** Validate/reject early and return, rather than
+  nesting the "happy path" inside `if`/`else`. See `sanitizeWord` in `word-bank-server`'s
+  [`src/word/words.ts`](../word-bank-server/src/word/words.ts) for the canonical shape: one
+  `if (...) { return null; }` per rule, all at the same indentation level.
+- **Every `if`/`for`/`while` body is braced**, even single-statement ones — no one-liners
+  like `if (x) return null;`. Enforced by ESLint's `curly: ["error", "all"]` rule in
+  [`eslint.config.js`](eslint.config.js); run `npm run lint` before committing.
+- **JSDoc on every function** — see "Code comment style" below for the exact shape.
+
+## Code comment style
+
+This is the personal JSDoc style to use for new code throughout this project — the same style already used in the sibling `word-bank-server` and `word-bank-site` repos, so it's shared across all three (in `word-bank-site` it's scoped to `.ts` files and `.astro` frontmatter — see that repo's own AGENTS.md). See [src/storage/analysis-storage.ts](src/storage/analysis-storage.ts) as the canonical example here:
+
+- **File header:** a `//` line comment (one or more lines, not `/**`) describing what the module does, placed after the imports, before the first constant/export.
+- **Every function gets a `/** */` JSDoc block — exported or not, component or plain helper, top-level or nested.** `/**` alone on its own opening line, description starting on the next line (multi-line prose is fine).
+- A blank `*` line separates the description from the tags, and another blank `*` line comes right before the closing `*/`.
+- **`@param {Type} name Description.`** — one per parameter, restating the TypeScript type in braces (mirrors `word-bank-server`'s convention even though TS already has the type), description capitalized with a trailing period. Optional params use `[name]` (e.g. `@param {CompleteOptions} [options] ...`).
+- **`@returns {Type} Description.`** — plural `@returns`, type in braces. For async functions the type is the literal `Promise<...>` (e.g. `{Promise<AnalysisHistoryEntry[]>}`), and the description covers the resolved value (including any fallback like `` `[]` if none or unreadable ``) — don't separately narrate rejection/failure modes, matching `word-bank-server`.
+- Plain `//` line comments are still right for in-line "why" notes *inside* a function body — the JSDoc block above it is for what the function does/takes/returns, not a replacement for those.
+
+Example:
+```ts
+/**
+ * Reads back the past analyses, newest first.
+ *
+ * @returns {Promise<AnalysisHistoryEntry[]>} The list of entries (newest first, capped), or `[]` if none or unreadable.
+ *
+ */
+export async function getAnalysisHistory(): Promise<AnalysisHistoryEntry[]> { ... }
+```
+
+Apply this style whenever adding new functions of any kind, including in files that don't yet use it.
 
 # Development & Build Flow (start here)
 
@@ -438,6 +535,11 @@ This project uses `react-native-keyboard-controller` to keep inputs visible abov
 
 Already installed. `KeyboardProvider` wraps the entire app in `src/app/_layout.tsx` — this is required for all keyboard controller APIs to work.
 
+> **Web:** native-only keyboard APIs must be guarded. `book.tsx`'s `keepInputAboveKeyboard`
+> checks `typeof Keyboard.metrics === "function"` and no-ops on web (`react-native-web` has no
+> `Keyboard.metrics` and no floating keyboard to avoid) — otherwise editing Book Notes crashes
+> on web. See `web.md` for the broader web-readiness story.
+
 ## Pattern: screens with regular inputs
 
 Use `KeyboardAwareScrollView` — it automatically scrolls to the focused input:
@@ -450,7 +552,7 @@ import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         bottomOffset={80}
-        contentContainerStyle={{ paddingBottom: 400 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
     >
         <TextInput ... />
         <TextInput ... />
@@ -461,7 +563,7 @@ import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-
 
 Key notes:
 - `bottomOffset` — extra space between the keyboard and the focused input (increase to show more context)
-- `paddingBottom: 400` on `contentContainerStyle` — ensures the scroll view can always scroll even with few items
+- `contentContainerStyle` bottom padding — keep it **modest** (e.g. `24`). `KeyboardAwareScrollView` adds a dynamic bottom inset (keyboard height) when an input focuses, so it already lifts bottom fields above the keyboard. A large static `paddingBottom` (e.g. 400) is **not** needed and causes dead over-scroll into empty space — avoid it.
 - `KeyboardToolbar` — shows a Done/Prev/Next toolbar above the keyboard. Conditionally render it if you only want it for specific inputs (e.g. `{editingWord ? <KeyboardToolbar /> : null}`)
 
 ## Pattern: excluding inputs from KeyboardToolbar navigation
@@ -527,11 +629,11 @@ npm run update:preview
 `--auto` uses the current git commit message as the update description.
 
 ## How testers receive updates
-The app checks for updates on every launch (`checkAutomatically: "ON_LOAD"` in `app.json`). If an update is available it downloads in the background and applies on the next launch.
+The app checks for updates on every launch (`checkAutomatically: "ON_LOAD"` in `app.config.js`). If an update is available it downloads in the background and applies on the next launch.
 
 ## When a full rebuild is needed
 - Adding or removing a native package (e.g. `react-native-keyboard-controller`)
-- Changing `app.json` native config (icons, permissions, scheme)
+- Changing `app.config.js` native config (icons, permissions, scheme)
 - Bumping `version` in `package.json` — this changes the `runtimeVersion` and requires a new build before updates can be pushed to that version
 
 ## Channels
@@ -540,9 +642,48 @@ The app checks for updates on every launch (`checkAutomatically: "ON_LOAD"` in `
 | `development` | `development` | Dev client builds |
 | `preview` | `preview` | Internal testers |
 
+# Community word feed + AI endpoints (word-bank-server)
+
+The app's **outbound** data. A small Express + SQLite service (`word-bank-server`, a sibling
+repo) collects words people save, so the marketing site can show a live "word wall". It also
+fronts the AI features — sentence analysis and word/book-title placeholder suggestions
+(`GET /v1/suggestions`, integrated) — so the LLM API key stays server-side instead of shipping
+in the app bundle. Unlike `/analyze`, `/v1/suggestions` is **not** rate-limited or cached
+server-side — every call is a live, parallel pair of LLM completions — which is why the app
+caches successful results in memory per `lang` (see `suggestions-api.ts` above).
+
+- **Touch points:** [`words-feed-api.ts`](src/utils/words-feed-api.ts) `postWordToFeed()`
+  contributes a word on add; [`analyze-api.ts`](src/utils/analyze-api.ts) `analyzeSentence()`
+  powers the Analyze screen; [`suggestions-api.ts`](src/utils/suggestions-api.ts)
+  `fetchSuggestions()` powers the AI-generated word/title/sentence placeholder on `book.tsx`
+  (words), `SearchBar.tsx`/`custom-book.tsx` (titles), and `analyze.tsx` (example sentences).
+  All resolve the host through [`feed-api-base.ts`](src/utils/feed-api-base.ts).
+- **Privacy — the feed:** only the bare word and its **public** dictionary values (definition,
+  part of speech, phonetic) are ever sent — never your sentence, notes, book, language, or any
+  identity.
+- **Privacy — `POST /analyze` is the deliberate exception.** A sentence you type *is* your own
+  text, and analyzing it means sending it to the server and on to an LLM (Groq). It only ever
+  happens when you submit a sentence on the Analyze screen, which says so on screen. The server
+  is deliberately simple: no cache, no TTL — every request calls the model live and the
+  response is just `{ meaning: string | null }`, nothing else (no tone, no figurative-device
+  detection, no word list — those were considered and dropped; see `SentenceAnalysis` in
+  `src/models/sentence-analysis.ts`). The server never logs or stores the sentence itself.
+  Nothing identifying is sent either way. See the privacy stance in `word-bank-server/AGENTS.md`.
+  The local history of your analyses stays on the device (`sentence_analyses`) and is wiped by
+  More → "Delete all data".
+- **Opt-in + offline-safe:** enabled by `EXPO_PUBLIC_WORDS_FEED_API_URL` (platform-aware local
+  fallback in dev). Every call is fire-and-forget / `[]`-or-`null`-on-failure, so a missing or
+  unreachable server never affects the UI — the Analyze screen shows a "couldn't analyze" state.
+  The AI endpoints additionally need `GROQ_API_KEY` **on the server**; without it `/analyze`
+  returns `null` and `/v1/suggestions` returns `{ words: [], titles: [] }` (200, not an error), and
+  the app degrades to its static fallback lists either way.
+- **Deploy:** the server ships its own `Dockerfile`/`docker-compose.yml` and can share the
+  Oracle VM that runs the dictionary API — see `word-bank-server/README.md` and the step-by-step
+  in [api.md](api.md).
+
 # Dictionary API (wiktapi.dev)
 
-Word definitions come from a **self-hosted [wiktapi.dev](https://github.com/TheAlexLichter/wiktapi.dev) instance** — a multilingual REST API built on kaikki.org's pre-processed Wiktionary data, backed by a local SQLite database. The app no longer calls Wikimedia/dictionaryapi.dev directly.
+Word definitions come from a **self-hosted [wiktapi.dev](https://github.com/TheAlexLichter/wiktapi.dev) instance** — a multilingual REST API built on kaikki.org's pre-processed Wiktionary data, backed by a local SQLite database. The app no longer calls **Wikimedia's REST API** directly; English still uses the public **dictionaryapi.dev**, everything else the self-hosted instance (see [App integration](#app-integration) below).
 
 **Why self-hosted:** Wikimedia's API enforces a [User-Agent policy](https://meta.wikimedia.org/wiki/User-Agent_policy) and rejects Android's default `okhttp` UA with a 403 — so Dutch lookups failed only on Android. Self-hosting removes the runtime dependency on Wikimedia entirely, gives structured JSON (definitions + part of speech + IPA) instead of fragile text scraping, and supports 100+ languages from one endpoint.
 
