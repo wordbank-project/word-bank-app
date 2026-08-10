@@ -82,7 +82,10 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
             <ClearableTextInput
                 placeholder={typedPlaceholder || "Search a book, author..."}
                 containerClassName="mb-2"
-                className="rounded-lg border border-border-input bg-input px-3 py-3 text-base text-fg"
+                // The unusual padding/size classes are deliberate: `p-3` (not px-3 py-3) so Android
+                // doesn't drop the padding, and an explicit size with the line-height re-added for
+                // Android only, since a lineHeight on iOS pushes typed text below centre. See AGENTS.md.
+                className="rounded-lg border border-border-input bg-input p-3 text-[14px] android:leading-[21px] text-fg"
                 placeholderTextColor={placeholderColor}
                 value={query}
                 onChangeText={setQuery}
