@@ -10,14 +10,13 @@ import { upsertReadListBook } from '@/storage/read-list-storage';
 import { Colors } from '@/styles/global';
 import { openBook } from '@/utils/open-book';
 import { pickCoverImage } from '@/utils/pick-cover-image';
-import { useTypewriterPlaceholder } from '@/hooks/use-typewriter-placeholder';
+import { fetchSuggestions } from '@/utils/suggestions-api';
 import { useIsFocused } from '@react-navigation/native';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 
-// Extend with AI suggestions later
 const RANDOM_TITLES = [
     "My Reading Notes",
     "Reflections on Life",
