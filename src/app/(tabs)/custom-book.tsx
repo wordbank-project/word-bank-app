@@ -113,7 +113,6 @@ export default function CustomBookScreen() {
                         <CoverImage
                             uri={coverUri}
                             className="h-32 w-24 rounded-lg"
-                            radius={8}
                             placeholder={<CoverPlaceholder size={32} />}
                         />
                         <Pressable className="rounded-lg border border-accent px-4 py-2" onPress={handlePickImage}>
