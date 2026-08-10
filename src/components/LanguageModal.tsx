@@ -12,9 +12,10 @@ import { Colors, Fonts } from "@/styles/global";
 type LanguageModalProps = {
     selected: Language;
     onSelect: (language: Language) => void;
+    label?: string;
 };
 
-export default function LanguageModal({ selected, onSelect }: LanguageModalProps) {
+export default function LanguageModal({ selected, onSelect, label = "Dictionary language" }: LanguageModalProps) {
     const insets = useSafeAreaInsets();
     const placeholderColor = Colors[useColorScheme()].textPlaceholder;
 
@@ -60,7 +61,7 @@ export default function LanguageModal({ selected, onSelect }: LanguageModalProps
     return (
         <React.Fragment>
             <Pressable className="flex-row items-center justify-between border-b border-border px-3 py-2" onPress={() => setVisible(true)}>
-                <Text className="text-[13px] text-muted">Dictionary language</Text>
+                <Text className="text-[13px] text-muted">{label}</Text>
                 <View className="flex-row items-center gap-1">
                     <Text className="text-[13px] font-semibold text-accent">{selected.label}</Text>
                     <Text className="text-lg text-accent">›</Text>
@@ -102,7 +103,7 @@ export default function LanguageModal({ selected, onSelect }: LanguageModalProps
                                 }
                             />
                             <View className="flex-row items-center justify-between px-4 pb-2 pt-4">
-                                <Text className="text-base font-bold text-fg">Dictionary language</Text>
+                                <Text className="text-base font-bold text-fg">{label}</Text>
                                 <Pressable onPress={() => setVisible(false)} hitSlop={12}>
                                     <Text className="text-base text-muted">✕</Text>
                                 </Pressable>
