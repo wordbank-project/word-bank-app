@@ -4,6 +4,7 @@ import CoverPlaceholder from '@/components/CoverPlaceholder';
 import ReadStatusSelector from '@/components/ReadStatusSelector';
 import { useColorScheme } from '@/context/theme-context';
 import { useSavedLanguage } from '@/hooks/use-saved-language';
+import { useTypewriterPlaceholder } from '@/hooks/use-typewriter-placeholder';
 import type { ReadStatus } from '@/models/read-list-book';
 import { upsertReadListBook } from '@/storage/read-list-storage';
 import { Colors } from '@/styles/global';
@@ -60,7 +61,7 @@ export default function CustomBookScreen() {
     // Types out one example title while the field is empty and the tab is focused.
     // `word` is the full suggestion, accepted on Enter when the field is empty.
     const isFocused = useIsFocused();
-    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(RANDOM_TITLES, isFocused && !title);
+    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(suggestionTitles, isFocused && !title);
 
     async function handlePickImage(): Promise<void> {
         const uri = await pickCoverImage(coverUri !== null);
