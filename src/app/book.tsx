@@ -550,9 +550,13 @@ export default function BookDetail() {
                                     <Text className="text-xl font-bold text-fg" numberOfLines={3}>{metaTitle || title}</Text>
                                     {(metaAuthor || author) ? <Text className="text-base text-secondary">{metaAuthor || author}</Text> : null}
                                     {(metaYear || year) ? <Text className="text-sm text-muted">{metaYear || year}</Text> : null}
-                                    <Text className="text-[13px] font-semibold text-accent">
-                                        {words.length} {words.length === 1 ? 'word' : 'words'}
-                                    </Text>
+                                    {loadingWords ? (
+                                        <WordCountSkeleton />
+                                    ) : (
+                                        <Text className="text-[13px] font-semibold text-accent">
+                                            {words.length} {words.length === 1 ? 'word' : 'words'}
+                                        </Text>
+                                    )}
                                     {isCustomBook && (
                                         <Pressable onPress={() => setEditingMeta(true)} hitSlop={8} className="mt-0.5 self-start">
                                             <Text className="text-[13px] font-medium text-accent">Edit details</Text>
@@ -577,7 +581,9 @@ export default function BookDetail() {
                         onLayout={(e) => { wordsContainerY.current = e.nativeEvent.layout.y; }}
                     >
                         <Text className="ml-0.5 text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Words</Text>
-                        {words.length === 0 ? (
+                        {loadingWords ? (
+                            <WordCardSkeletons />
+                        ) : words.length === 0 ? (
                             <Text className="my-8 text-center text-[15px] text-muted">No words added yet. Add one above. It will be saved to your <Text className="italic text-muted">word bank</Text> per book.</Text>
                         ) : (
                             words.map((item) => {
@@ -713,7 +719,9 @@ export default function BookDetail() {
                                     <Text className="text-[13px] font-medium text-accent">{editingBookNotes ? 'Cancel' : 'Edit'}</Text>
                                 </Pressable>
                             </View>
-                            {editingBookNotes ? (
+                            {loadingEntry ? (
+                                <NoteCardSkeleton />
+                            ) : editingBookNotes ? (
                                 <React.Fragment>
                                     <TextInput
                                         className="min-h-16 rounded-lg border border-border-input bg-input p-2.5 text-sm text-fg"
@@ -772,6 +780,9 @@ export default function BookDetail() {
                                     <Text className="text-[12px] text-muted">Tap to rate</Text>
                                 )}
                             </View>
+                            {loadingEntry ? (
+                                <NoteCardSkeleton />
+                            ) : editingReview ? (
                                 <React.Fragment>
                                     <TextInput
                                         ref={reviewInputRef}
@@ -808,12 +819,20 @@ export default function BookDetail() {
                 {!(editingWord || editingReview || editingBookNotes) && (
                     // paddingBottom comes from the safe-area inset so the footer clears the OS bar.
                     <View className="gap-3 border-t border-border bg-background px-4 pt-3" style={{ paddingBottom: Math.max(insets.bottom, 12) + 12 }}>
-                        <ReadStatusSelector value={readStatus} onChange={handleChangeReadStatus} />
-                        <Pressable className="mt-1 items-center rounded-lg bg-accent py-2.5" onPress={saveToReadList}>
-                            <Text className="text-[15px] font-semibold text-white">
-                                {inReadList ? 'Update read list' : 'Save to read list'}
-                            </Text>
-                        </Pressable>
+                        {loadingEntry ? (
+                            <ReadStatusSkeleton />
+                        ) : (
+                            <ReadStatusSelector value={readStatus} onChange={handleChangeReadStatus} />
+                        )}
+                        {loadingEntry ? (
+                            <SaveButtonSkeleton />
+                        ) : (
+                            <Pressable className="mt-1 items-center rounded-lg bg-accent py-2.5" onPress={saveToReadList}>
+                                <Text className="text-[15px] font-semibold text-white">
+                                    {inReadList ? 'Update read list' : 'Save to read list'}
+                                </Text>
+                            </Pressable>
+                        )}
                     </View>
                 )}
             </View>
