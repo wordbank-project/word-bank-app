@@ -6,7 +6,12 @@
 //   assets/icon.png                         1024² opaque  — iOS + base launcher icon
 //   assets/adaptive-icon-foreground.png     1024² alpha   — Android adaptive foreground
 //   assets/images/android-icon-monochrome.png 1024² alpha — Android 13+ themed icon
-//   assets/splash.png                       alpha         — splash (mark + wordmark)
+//   assets/splash.png                       alpha         — brand lockup (mark + wordmark). NOT the
+//                                                           app splash: both platforms use the
+//                                                           adaptive foreground instead, because
+//                                                           Android 12+ masks the splash to a
+//                                                           circle and clips the wordmark. See
+//                                                           app.config.js.
 //   assets/favicon.png                       512² alpha    — web browser-tab favicon
 //
 // Icons/splash are native assets — changing them needs a rebuild, not an OTA.
