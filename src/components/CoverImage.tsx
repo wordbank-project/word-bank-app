@@ -9,13 +9,11 @@ type Props = {
     uri: string | null | undefined;
     // Size + rounding for the cover box (e.g. "w-12 h-16 rounded").
     className?: string;
-    // Corner radius (px) for the skeleton/placeholder overlays — match the box's rounding.
-    radius?: number;
     // Static node (e.g. an icon) shown when there's no uri, instead of the pulsing skeleton.
     placeholder?: ReactNode;
 };
 
-export default function CoverImage({ uri, className, radius = 4, placeholder }: Props) {
+export default function CoverImage({ uri, className, placeholder }: Props) {
     const placeholderColor = Colors[useColorScheme()].coverPlaceholder;
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
@@ -38,14 +36,17 @@ export default function CoverImage({ uri, className, radius = 4, placeholder }: 
                     onError={() => setError(true)}
                 />
             ) : null}
+            {/* No borderRadius of their own: the overlays fill the box edge-to-edge and the
+                container's overflow-hidden rounding clips them — rounding them separately
+                leaves corner notches where the un-dimmed image shows through. */}
             <Animated.View
-                style={[StyleSheet.absoluteFill, { backgroundColor: placeholderColor, borderRadius: radius }, skeletonStyle]}
+                style={[StyleSheet.absoluteFill, { backgroundColor: placeholderColor }, skeletonStyle]}
                 pointerEvents="none"
             />
             {showPlaceholder ? (
                 <View
                     className="items-center justify-center"
-                    style={[StyleSheet.absoluteFill, { backgroundColor: placeholderColor, borderRadius: radius }]}
+                    style={[StyleSheet.absoluteFill, { backgroundColor: placeholderColor }]}
                     pointerEvents="none"
                 >
                     {placeholder}
