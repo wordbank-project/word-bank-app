@@ -36,7 +36,7 @@ import { useSavedLanguage } from "@/hooks/use-saved-language";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 
-import { Colors, Fonts } from "@/styles/global";
+import { ACCENT, Colors, Fonts } from "@/styles/global";
 
 import ClearableTextInput from "@/components/ClearableTextInput";
 import CoverImage from "@/components/CoverImage";
