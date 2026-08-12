@@ -5,7 +5,11 @@ import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
+// Extract<..., string>: SymbolViewProps['name'] also allows a per-platform
+// object ({ ios?, android?, web? }) as of expo-symbols' SDK 55 types, but this
+// file only ever maps plain SF Symbol strings (see MAPPING below), and a
+// Record key must be string | number | symbol anyway.
+type IconMapping = Record<Extract<SymbolViewProps['name'], string>, ComponentProps<typeof MaterialIcons>['name']>;
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
