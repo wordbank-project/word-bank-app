@@ -11,8 +11,8 @@ const appName = IS_DEV ? 'Word Bank (Dev)' : IS_PREVIEW ? 'Word Bank (Preview)' 
 const packageName = IS_DEV
     ? 'com.jensrot.wordbank.dev'
     : IS_PREVIEW
-    ? 'com.jensrot.wordbank.preview'
-    : 'com.jensrot.wordbank';
+        ? 'com.jensrot.wordbank.preview'
+        : 'com.jensrot.wordbank';
 
 module.exports = {
     expo: {
