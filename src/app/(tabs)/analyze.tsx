@@ -209,7 +209,7 @@ export default function AnalyzeScreen() {
 
                 <View className="gap-1.5">
                     <Text className="text-[13px] mb-2 font-semibold uppercase tracking-[0.5px] text-muted">
-                        Sentence (Pick your language in the menu above)
+                        Sentence (In any language)
                     </Text>
                     <ClearableTextInput
                         // p-3 (not px-3 py-3) so Android doesn't discard the padding — see AGENTS.md.
@@ -228,8 +228,8 @@ export default function AnalyzeScreen() {
                     />
                     <View className="flex-row items-center justify-between">
                         <Text className="flex-1 text-[11px] leading-3.75 text-faded">
-                            Sent to the Word Bank server to be analyzed. Your sentence isn&apos;t stored
-                            there or tied to you.
+                            The language you type in is the one analyzed; definitions come back in the dictionary language.
+                            Analyzed on the Word Bank server — not stored, not tied to you.
                         </Text>
                         <Text className="text-[11px] text-faded">
                             {sentence.length}/{MAX_SENTENCE_LENGTH}
