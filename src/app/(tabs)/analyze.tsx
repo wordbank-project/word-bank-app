@@ -149,7 +149,7 @@ export default function AnalyzeScreen() {
         setLoading(false);
         if (result === 'rate-limited') {
             console.warn("Analyze rate-limited — either this app's own limit or Groq's upstream limit.");
-            setError("The AI is currently unavailable. Please wait some time and try again.");
+            setError("The AI service is currently unavailable. Please wait and try again later.");
             return false;
         }
         if (!result) {
