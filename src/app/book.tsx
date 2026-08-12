@@ -15,7 +15,10 @@ import { LANGUAGES } from "@/models/language";
 import type { ReadListBook, ReadStatus } from "@/models/read-list-book";
 import type { EditDraft, WordEntry } from "@/models/word-entry";
 
-import { getLanguageCode, setLanguageCode } from "@/storage/language-storage";
+import {
+    getTranslationLanguageCode,
+    setTranslationLanguageCode,
+} from "@/storage/language-storage";
 import { getReadList, setReadBookStatus as persistReadStatus, upsertReadListBook } from "@/storage/read-list-storage";
 import { getWords, setWords } from "@/storage/words-storage";
 
@@ -24,7 +27,7 @@ import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
 import { fetchTrendingWords } from "@/utils/trending-words";
 import { showActionSheet } from "@/utils/show-action-sheet";
-import { fetchDefinition } from "@/utils/words-api";
+import { translateWord } from "@/utils/translate-api";
 import { postWordToFeed } from "@/utils/words-feed-api";
 
 import { useSavedLanguage } from "@/hooks/use-saved-language";
@@ -106,6 +109,15 @@ export default function BookDetail() {
     // Restores the saved dictionary language from AsyncStorage on mount; setLanguage persists too.
     const { language, languageReady, setLanguage } = useSavedLanguage();
 
+    // Optional "translate to" language for the per-word
+    // independent of the dictionary language above.
+    const [translateToLanguage, setTranslateToLanguage] = useState<Language>(LANGUAGES[0]); // Initial language is "nl"
+
+    // Cached translations, keyed `${word}:${toLangCode}` so switching the target
+    // language never shows a stale result. null = fetched but no translation found.
+    const [translations, setTranslations] = useState<Record<string, string | null>>({});
+    const [translatingWord, setTranslatingWord] = useState<string | null>(null);
+
     // AI-generated example words for the current dictionary language, used as a placeholder in the add-word field.
     const [suggestionWords, setSuggestionWords] = useState<string[]>(RANDOM_DICTIONARY_WORDS);
     useEffect(() => {
@@ -160,15 +172,16 @@ export default function BookDetail() {
             clearTimeout(highlightTimer.current);
         }
     }, []);
+
+    // On mount, restore the "translate to" language the user picked last time.
     useEffect(() => {
-        // If there is a saved language in AsyncStorage, use it. Otherwise, keep the default language.
-        getLanguageCode().then((code) => {
+        getTranslationLanguageCode().then((code) => {
             if (!code) {
                 return;
             }
             const saved = LANGUAGES.find(language => language.code === code);
             if (saved) {
-                setLanguage(saved);
+                setTranslateToLanguage(saved);
             }
         });
     }, []);
@@ -322,8 +335,19 @@ export default function BookDetail() {
     }
 
     function handleSelectLanguage(language: Language): void {
-        setLanguage(language);
-        setLanguageCode(language.code);
+    function handleSelectTranslateToLanguage(language: Language): void {
+        setTranslateToLanguage(language);
+        setTranslationLanguageCode(language.code);
+    }
+
+    // Fetches (or re-fetches) a word's translation and caches it, keyed by the
+    // current "translate to" language so switching targets never shows a stale
+    // result. `fromLang` is the word's own sourceLanguage — see WordEntry.
+    async function handleTranslate(word: string, fromLang: string): Promise<void> {
+        setTranslatingWord(word);
+        const result = await translateWord(word, fromLang, translateToLanguage.code);
+        setTranslations((prev) => ({ ...prev, [`${word}:${translateToLanguage.code}`]: result }));
+        setTranslatingWord(null);
     }
 
     // Switches which of a word's definitions is shown, denormalizing the chosen one
@@ -694,6 +718,36 @@ export default function BookDetail() {
                                                 </Text>
                                             </Pressable>
                                         ) : null}
+
+                                        {!isEditing && (item.sourceLanguage ?? language.code) !== translateToLanguage.code ? (() => {
+                                            const cacheKey = `${item.word}:${translateToLanguage.code}`;
+                                            const cached = translations[cacheKey];
+                                            if (cached !== undefined) {
+                                                return cached ? (
+                                                    <Text className="mt-1 text-[13px] leading-5 text-muted">
+                                                        <Text className="font-semibold text-accent">{translateToLanguage.label}: </Text>
+                                                        {cached}
+                                                    </Text>
+                                                ) : (
+                                                    <Text className="mt-1 text-[13px] text-muted">
+                                                        No {translateToLanguage.label} translation found.
+                                                    </Text>
+                                                );
+                                            }
+                                            const isTranslating = translatingWord === item.word;
+                                            return (
+                                                <Pressable
+                                                    hitSlop={8}
+                                                    className="mt-1 self-start"
+                                                    disabled={isTranslating}
+                                                    onPress={() => handleTranslate(item.word, item.sourceLanguage ?? language.code)}
+                                                >
+                                                    <Text className="text-[13px] font-medium text-accent">
+                                                        {isTranslating ? 'Translating…' : `Translate to ${translateToLanguage.label} ›`}
+                                                    </Text>
+                                                </Pressable>
+                                            );
+                                        })() : null}
 
                                         {!isEditing && item.sentence ? (
                                             <Pressable className="mt-1.5 gap-0.5" onPress={() => openWordEdit(item, 'sentence')}>
