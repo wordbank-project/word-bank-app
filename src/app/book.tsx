@@ -228,6 +228,7 @@ export default function BookDetail() {
                 setReadStatus(entry.status);
                 setReview(entry.review ?? '');
                 setBookNotes(entry.bookNotes ?? '');
+                setRating(entry.rating ?? 0);
             }
         });
     }, [key]);
