@@ -57,6 +57,9 @@ export default function AnalyzeScreen() {
     const highlightStyle = useAnimatedStyle(() => ({ opacity: highlightOpacity.value }));
     const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // Live countdown shown in the rate-limited error message (see startRateLimitCountdown).
+    const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
     // Get the stored analysis history
     useEffect(() => {
         getAnalysisHistory().then((entries: AnalysisHistoryEntry[]) => setHistory(entries));
@@ -65,6 +68,7 @@ export default function AnalyzeScreen() {
             if (highlightTimer.current) {
                 clearTimeout(highlightTimer.current);
             }
+            clearRateLimitCountdown();
         };
     }, []);
 
@@ -113,12 +117,46 @@ export default function AnalyzeScreen() {
         highlightTimer.current = setTimeout(() => setShowHighlight(false), 1800);
     }
 
+    /** Stops the in-progress rate-limit countdown, if one is running.
+     * @returns {void} nothing
+     *
+     */
+    function clearRateLimitCountdown(): void {
+        if (countdownTimer.current) {
+            clearInterval(countdownTimer.current);
+            countdownTimer.current = null;
+        }
+    }
+
+    /** Starts a live countdown after a rate-limited response: sets `error` to a
+     * message with the seconds remaining, then updates it once a second until it
+     * reaches zero, at which point the error is cleared so the user can retry.
+     * @param {number} seconds How many seconds to count down from.
+     * @returns {void} nothing — updates `error` on each tick.
+     *
+     */
+    function startRateLimitCountdown(seconds: number): void {
+        clearRateLimitCountdown();
+        let secondsLeft = seconds;
+        setError(`The AI service is currently unavailable. Please wait ${secondsLeft}s and try again.`);
+        countdownTimer.current = setInterval(() => {
+            secondsLeft--;
+            if (secondsLeft <= 0) {
+                clearRateLimitCountdown();
+                setError("");
+                return;
+            }
+            setError(`The AI service is currently unavailable. Please wait ${secondsLeft}s and try again.`);
+        }, 1000);
+    }
+
     /** Analyzes a sentence, updates the state, and saves it to history.
      * @param {string | undefined} input the sentence to analyze, or `undefined` to use the current field value
      * @returns {Promise<boolean>} a promise that resolves to `true` if a result was produced, or `false` if not (e.g. empty field, too long, network error)
      * 
      */
     const handleAnalyze = useCallback(async (input?: string): Promise<boolean> => {
+        clearRateLimitCountdown();
         const text = (input ?? sentence).replace(/\s+/g, " ").trim();
         if (!text) {
             setError("Type or select a sentence first.");
@@ -149,7 +187,7 @@ export default function AnalyzeScreen() {
         setLoading(false);
         if (result === 'rate-limited') {
             console.warn("Analyze rate-limited — either this app's own limit or Groq's upstream limit.");
-            setError("The AI service is currently unavailable. Please wait and try again later.");
+            startRateLimitCountdown(20);
             return false;
         }
         if (!result) {
@@ -170,6 +208,7 @@ export default function AnalyzeScreen() {
      * 
      */
     function handleOpenHistory(entry: AnalysisHistoryEntry): void {
+        clearRateLimitCountdown();
         setSentence(entry.text);
         setAnalysis(entry.analysis);
         setAnalyzed(entry.text);
@@ -220,6 +259,7 @@ export default function AnalyzeScreen() {
                         value={sentence}
                         onChangeText={(t) => {
                             setSentence(t);
+                            clearRateLimitCountdown();
                             setError("");
                         }}
                         multiline
