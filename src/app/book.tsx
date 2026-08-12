@@ -173,8 +173,8 @@ export default function BookDetail() {
     const wordsContainerY = useRef<number>(0);   // words list container, in content coords
     const cardYs = useRef<Record<string, number>>({}); // each word card, relative to the list
     const reviewY = useRef<number>(0);           // review card, relative to the Notes section
-    // Ensures the "Have Read" → write-a-review nudge only fires once per visit.
-    const hasPromptedReview = useRef<boolean>(false);
+    // Ensures the "Have Read" → rate-and/or-review nudge only fires once per visit.
+    const hasPromptedReviewOrRating = useRef<boolean>(false);
 
     // A word tapped on the Words List: scroll to its card once layout is known, then
     // flash it. Held in a ref so it only ever fires once per visit.
@@ -272,21 +272,23 @@ export default function BookDetail() {
         }
     }
 
-    // When a user marks a book as "Have Read" and they haven't written a review yet, 
-    // we prompt them to do so.
-    // This means going to the edit review form
-    function maybePromptForReviewCheck(status: ReadStatus): void {
-        if (status !== 'read' || review || hasPromptedReview.current) {
+    // When a user marks a book "Have Read", nudge them to rate and/or review it.
+    // The star row sits at the top of the review card, so scrolling it into view
+    // surfaces the rating; the editor only auto-opens when no review exists yet.
+    function maybePromptForReviewOrRating(status: ReadStatus): void {
+        if (status !== 'read' || (review && rating) || hasPromptedReviewOrRating.current) {
             return;
         }
         // Only once per visit
-        hasPromptedReview.current = true;
+        hasPromptedReviewOrRating.current = true;
 
-        setReviewDraft('');
-        setEditingReview(true);
         scrollCardIntoView(bookNotesY.current + reviewY.current);
 
-        setTimeout(() => reviewInputRef.current?.focus(), 100);
+        if (!review) {
+            setReviewDraft('');
+            setEditingReview(true);
+            setTimeout(() => reviewInputRef.current?.focus(), 100);
+        }
     }
 
     // Selecting a status saves immediately — the footer button is just an optional shortcut that also navigates to the read list.
@@ -296,7 +298,7 @@ export default function BookDetail() {
         // Remember the chosen status so the Read List shows the matching filter on
         // return — including via the back button, which can't carry a route param.
         setPendingReadFilter(status);
-        maybePromptForReviewCheck(status);
+        maybePromptForReviewOrRating(status);
     }
 
     async function saveToReadList(): Promise<void> {
