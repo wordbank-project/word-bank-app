@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ActivityIndicator, FlatList, Keyboard, Pressable, Text, View } from "react-native";
 
@@ -8,10 +8,13 @@ import { useColorScheme } from "@/context/theme-context";
 import { useFlatListScroll } from "@/hooks/use-scroll-registration";
 
 import { getReadList } from "@/storage/read-list-storage";
+import { getSortMode, setSortMode as saveSortMode, SORT_MODES, type SortMode } from "@/storage/words-list-storage";
 import { getWords } from "@/storage/words-storage";
 
 import { ACCENT, Colors } from "@/styles/global";
+
 import { openBook } from "@/utils/open-book";
+import { normalizePos, POS_ORDER, posColor, posLabel } from "@/utils/part-of-speech";
 import { showActionSheet } from "@/utils/show-action-sheet";
 
 import WordListItem, { type WordWithBook } from "@/components/WordListItem";
@@ -20,38 +23,13 @@ import SearchButton from "@/components/SearchButton";
 
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
-// The part-of-speech filter pills: everything, or only nouns / adjectives.
-type PosFilter = 'all' | 'noun' | 'adjective';
-
-const POS_FILTERS: { value: PosFilter; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'noun', label: 'Nouns' },
-    { value: 'adjective', label: 'Adjectives' },
-];
-
-// How the list is ordered: alphabetical (both directions), grouped by the book each
-// word came from, or newest-added first.
-type SortMode = 'az' | 'za' | 'book' | 'recent';
-const SORT_MODES: SortMode[] = ['az', 'za', 'book', 'recent'];
+// Labels for the sort modes (saved choice lives in @/storage/words-list-storage).
 const SORT_LABELS: Record<SortMode, string> = {
     az: 'A–Z',
     za: 'Z–A',
     book: 'By book',
     recent: 'Recently added',
 };
-
-// Whether a word's part of speech matches the selected filter. Matches across both
-// dictionaries (dictionaryapi.dev says "adjective"; wiktapi/kaikki says "adj").
-function matchesPos(partOfSpeech: string, filter: PosFilter): boolean {
-    const pos = partOfSpeech.toLowerCase();
-    if (filter === 'noun') {
-        return pos === 'noun';
-    }
-    if (filter === 'adjective') {
-        return pos === 'adjective' || pos === 'adj';
-    }
-    return true;
-}
 
 export default function WordsListScreen() {
     // placeholderTextColor needs a color value (not a class), so keep it themed here.
@@ -60,8 +38,19 @@ export default function WordsListScreen() {
     const [allWords, setAllWords] = useState<WordWithBook[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [search, setSearch] = useState<string>('');
-    const [posFilter, setPosFilter] = useState<PosFilter>('all');
-    const [sortMode, setSortMode] = useState<SortMode>('az');
+
+    // Selected parts of speech (canonical keys)
+    const [posSelected, setPosSelected] = useState<Set<string>>(new Set());
+    const [sortMode, setSortMode] = useState<SortMode>('az'); // default sort mode is A-Z
+
+    // Restore the previously chosen sort order on launch.
+    useEffect(() => {
+        getSortMode().then((saved) => {
+            if (saved) {
+                setSortMode(saved);
+            }
+        });
+    }, []);
 
     const isFocused = useIsFocused();
 
@@ -106,7 +95,7 @@ export default function WordsListScreen() {
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();
         const result = allWords.filter((w) =>
-            matchesPos(w.partOfSpeech, posFilter)
+            (posSelected.size === 0 || posSelected.has(normalizePos(w.partOfSpeech)))
             && (!query || w.word.toLowerCase().includes(query))
         );
         result.sort((a, b) => {
@@ -118,14 +107,47 @@ export default function WordsListScreen() {
             }
         });
         return result;
-    }, [allWords, search, posFilter, sortMode]);
+    }, [allWords, search, posSelected, sortMode]);
 
-    // How many saved words fall under each filter, shown on the pills themselves.
-    const posCounts = useMemo<Record<PosFilter, number>>(() => ({
-        all: allWords.length,
-        noun: allWords.filter((w) => matchesPos(w.partOfSpeech, 'noun')).length,
-        adjective: allWords.filter((w) => matchesPos(w.partOfSpeech, 'adjective')).length,
-    }), [allWords]);
+    // Count how many saved words have each part of speech (noun, verb, etc.),
+    // and only list the ones that actually show up — so we never show a filter
+    // chip for a part of speech with zero words. Noun/verb/adjective/adverb
+    // come first if present; anything else after, in alphabetical order.
+    const presentPos = useMemo<{ pos: string; count: number }[]>(() => {
+        const counts = new Map<string, number>();
+        for (const w of allWords) {
+            const key = normalizePos(w.partOfSpeech);
+            if (!key) {
+                continue;
+            }
+            counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+        return [...counts.entries()]
+            .map(([pos, count]) => ({ pos, count }))
+            .sort((a, b) => {
+                const ai = POS_ORDER.indexOf(a.pos);
+                const bi = POS_ORDER.indexOf(b.pos);
+                if (ai !== -1 || bi !== -1) {
+                    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+                }
+                return a.pos.localeCompare(b.pos);
+            });
+    }, [allWords]);
+
+    // Select or deselect one part-of-speech filter chip. We build a brand new
+    // Set rather than editing the old one, because React only re-renders when
+    // it sees a new object — changing the existing Set in place wouldn't work.
+    function togglePos(pos: string): void {
+        setPosSelected((prev) => {
+            const next = new Set(prev);
+            if (next.has(pos)) {
+                next.delete(pos);
+            } else {
+                next.add(pos);
+            }
+            return next;
+        });
+    }
 
     // Filter to the typed word, or accept the placeholder suggestion when empty.
     function handleSearch(): void {
@@ -139,7 +161,10 @@ export default function WordsListScreen() {
         showActionSheet('Sort words:', undefined, [
             ...SORT_MODES.map((mode) => ({
                 text: `${sortMode === mode ? '✓ ' : ''}${SORT_LABELS[mode]}`,
-                onPress: () => setSortMode(mode),
+                onPress: () => {
+                    setSortMode(mode);
+                    saveSortMode(mode);
+                },
             })),
             { text: 'Cancel', style: 'cancel' as const },
         ]);
@@ -182,30 +207,46 @@ export default function WordsListScreen() {
                 <SearchButton onPress={handleSearch} />
             </View>
 
-            {/* Part-of-speech filter pills: All / Nouns / Adjectives. */}
-            <View className="flex-row gap-2 px-4 pb-2">
-                {POS_FILTERS.map(({ value, label }) => {
-                    const selected = posFilter === value;
-                    return (
-                        <Pressable
-                            key={value}
-                            onPress={() => setPosFilter(value)}
-                            className={`flex-1 items-center justify-center rounded-lg border px-1 py-1.75 ${selected ? "border-accent bg-accent" : "border-border-input bg-input"}`}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected }}
-                        >
-                            <Text
-                                className={`text-xs font-semibold ${selected ? "text-white" : "text-muted"}`}
-                                numberOfLines={1}
-                                adjustsFontSizeToFit
-                                minimumFontScale={0.7}
+            {/* Part-of-speech filter chips — one per POS present, colour-coded,
+                multi-select (empty = All). Hidden when there's nothing to filter. */}
+            {presentPos.length > 1 && (
+                <View className="flex-row flex-wrap gap-2 px-4 pb-2">
+                    <Pressable
+                        onPress={() => setPosSelected(new Set())}
+                        className={`flex-row items-center rounded-full border px-3 py-1.5 ${posSelected.size === 0 ? "border-accent bg-accent" : "border-border-input bg-input"}`}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: posSelected.size === 0 }}
+                    >
+                        <Text className={`text-xs font-semibold ${posSelected.size === 0 ? "text-white" : "text-muted"}`}>
+                            All {allWords.length}
+                        </Text>
+                    </Pressable>
+                    {presentPos.map(({ pos, count }) => {
+                        const selected = posSelected.has(pos);
+                        const color = posColor(pos);
+                        return (
+                            <Pressable
+                                key={pos}
+                                onPress={() => togglePos(pos)}
+                                style={selected ? { backgroundColor: color, borderColor: color } : undefined}
+                                className={`flex-row items-center gap-1.5 rounded-full border px-3 py-1.5 ${selected ? "" : "border-border-input bg-input"}`}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected }}
                             >
-                                {label} {posCounts[value]}
-                            </Text>
-                        </Pressable>
-                    );
-                })}
-            </View>
+                                {!selected && (
+                                    <View className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                                )}
+                                <Text className={`text-xs font-semibold ${selected ? "text-white" : "text-fg"}`}>
+                                    {posLabel(pos)}
+                                </Text>
+                                <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>
+                                    {count}
+                                </Text>
+                            </Pressable>
+                        );
+                    })}
+                </View>
+            )}
 
             {/* Sort control */}
             <View className="items-end px-4 pb-2">
