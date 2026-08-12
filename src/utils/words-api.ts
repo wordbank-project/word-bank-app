@@ -2,7 +2,6 @@ import { Platform } from 'react-native';
 
 import type { WordDefinition, WordEntry } from '@/models/word-entry';
 import { timedFetch } from '@/utils/dict-utils';
-import { damerauLevenshtein } from '@/utils/edit-distance';
 
 /**
  * Base URL of the self-hosted wiktapi.dev instance (https://github.com/TheAlexLichter/wiktapi.dev).
