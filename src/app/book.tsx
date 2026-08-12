@@ -90,7 +90,7 @@ export default function BookDetail() {
     // that do have content.
     const [loadingWords, setLoadingWords] = useState<boolean>(true);
     const [loadingEntry, setLoadingEntry] = useState<boolean>(true);
-    
+
     const [input, setInput] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
@@ -397,16 +397,10 @@ export default function BookDetail() {
         setInput(text);
     }
 
-    async function handleAddWord(): Promise<void> {
-        let word = input.trim().toLowerCase();
-        if (!word) {
-            // If a suggested word is available from the placeholder use that.
-            word = suggestedWord.toLowerCase();
-            if (!word) {
-                return;
-            }
-            setInput(word);
-        }
+    // Core add flow with the word passed explicitly — shared by the submit
+    // button and the as-you-type suggestion chips (passing the word avoids
+    // racing a just-set `input` state).
+    async function addWord(word: string): Promise<void> {
         if (words.some((w) => w.word === word)) {
             setError("Word already added.");
             return;
@@ -420,9 +414,8 @@ export default function BookDetail() {
             // When it shows an error the keyboard stays open so the user can easily edit the input and try again
             Keyboard.dismiss();
 
-            // Added timestamp for sorting by "Recently added" in the Words List. 
-            // This is not part of the dictionary data, so it's added here.
-            await persistWords([{ ...newEntry, addedAt: Date.now() }, ...words]);
+            // Added timestamp for sorting by "Recently added" in the Words List
+            await persistWords([{ ...newEntry, addedAt: Date.now(), sourceLanguage: language.code }, ...words]);
             // Fire-and-forget: contribute the word + its public dictionary definition
             // to the floating-words feed (no user-authored sentence/notes).
             postWordToFeed(newEntry.word, {
@@ -443,6 +436,19 @@ export default function BookDetail() {
         } finally {
             setLoading(false);
         }
+    }
+
+    async function handleAddWord(): Promise<void> {
+        let word = input.trim().toLowerCase();
+        if (!word) {
+            // If a suggested word is available from the placeholder use that.
+            word = suggestedWord.toLowerCase();
+            if (!word) {
+                return;
+            }
+            setInput(word);
+        }
+        await addWord(word);
     }
 
     function handleDeleteWord(word: string): void {
