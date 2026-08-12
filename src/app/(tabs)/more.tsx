@@ -154,8 +154,8 @@ export default function MoreScreen() {
             </Section>
 
             <Section title="Your data">
-                <Row label="Export Books" chevron first onPress={() => handleComingSoon('Exporting your books')} />
-                <Row label="Import Books" chevron onPress={() => handleComingSoon('Importing books')} />
+                <Row label="Export Data" chevron first onPress={() => handleComingSoon('Exporting all your data')} />
+                <Row label="Import Data" chevron onPress={() => handleComingSoon('Importing all your data')} />
                 <Row label="Delete all data" danger onPress={handleDeleteAll} />
             </Section>
 
