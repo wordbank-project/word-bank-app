@@ -7,7 +7,7 @@ import { useColorScheme } from "@/context/theme-context";
 import type { WordDefinition } from "@/models/word-entry";
 
 import { Colors } from "@/styles/global";
-import { posColor } from "@/utils/pos";
+import { posColor } from "@/utils/part-of-speech";
 
 type DefinitionModalProps = {
     visible: boolean;
