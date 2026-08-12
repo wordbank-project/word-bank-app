@@ -16,7 +16,7 @@ import { Keyboard, View } from "react-native";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
 
-const RANDOM_TITLES = [
+const RANDOM_BOOK_TITLES = [
     "The Great Gatsby",
     "To Kill a Mockingbird",
     "1984",
@@ -49,14 +49,17 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
     const { language, languageReady } = useSavedLanguage();
 
     // Live AI-generated book-title suggestions replace the static list once available.
-    const [suggestionTitles, setSuggestionTitles] = useState<string[]>(RANDOM_TITLES);
+    const [suggestionTitles, setSuggestionTitles] = useState<string[]>(RANDOM_BOOK_TITLES);
+
     useEffect(() => {
         if (!languageReady) {
             return;
         }
-        fetchSuggestions(language.code).then(({ titles }) => {
-            if (titles.length > 0) {
-                setSuggestionTitles(titles);
+        fetchSuggestions(language.code).then(({ books }) => {
+            if (books.length > 0) {
+                // The server sends a title/author/year object.
+                // We only need the title of the book here.
+                setSuggestionTitles(books.map((book) => book.title));
             }
         });
     }, [languageReady, language.code]);
