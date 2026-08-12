@@ -133,8 +133,7 @@ The pass is **idempotent and self-erasing**: it only writes back when something 
 
 ## Utils (`src/utils/`)
 
-- `words-api.ts` — `fetchDefinition(word, lang)`: routes English to dictionaryapi.dev, everything else to the self-hosted wiktapi.dev instance (see [Dictionary API](#dictionary-api-wiktapidev)). Returns a `WordEntry` with **all** definitions flattened into `definitions[]` (deduped, capped at 50), the first selected by default. Also `fetchWordSuggestions(prefix, lang, limit?, signal?)` — as-you-type prefix suggestions (Datamuse for English, wiktapi `/search` otherwise; `[]`-on-failure, abortable) — and `suggestCorrections(failedWord, lang)` — "Did you mean?" candidates for a failed add: prefix-fetch ~50 words sharing the typo's first 3 chars, rank by Damerau-Levenshtein (`utils/edit-distance.ts`), keep distance ≤ 2, top 3. Known limits: typos in the first two chars find nothing; Datamuse's vocab contains some misspellings (a tapped one just fails validation into did-you-mean again).
-- `edit-distance.ts` — `damerauLevenshtein(a, b)`: pure edit-distance with adjacent transpositions (so "recieve" → "receive" is 1), used to rank did-you-mean candidates.
+- `words-api.ts` — `fetchDefinition(word, lang)`: routes English to dictionaryapi.dev, everything else to the self-hosted wiktapi.dev instance (see [Dictionary API](#dictionary-api-wiktapidev)). Returns a `WordEntry` with **all** definitions flattened into `definitions[]` (deduped, capped at 50), the first selected by default. Also `fetchWordSuggestions(prefix, lang, limit?, signal?)` — as-you-type prefix suggestions (Datamuse for English, wiktapi `/search` otherwise; `[]`-on-failure, abortable).
 - `translate-api.ts` — `translateWord(word, from, to, signal?)`: tap-to-reveal word translation via the unofficial `translate.googleapis.com` endpoint (free, no key). Returns `null` on any failure, including the endpoint's quirk of echoing back untranslatable input as its own "translation" — treated the same as "not found."
 - `pos.ts` — part-of-speech helpers shared by the Words List filter and `DefinitionModal` so colours/labels stay consistent: `POS_COLORS`, `normalizePos` (folds source variants — `adj`→`adjective`, `adv`→`adverb`, …), `posColor`, `posLabel`, `POS_ORDER`.
 - `dict-utils.ts` — `timedFetch` (8s timeout with friendly errors).
@@ -833,6 +832,32 @@ Then set `EXPO_PUBLIC_DICT_API_URL=https://dict.yourdomain.com` in `eas.json` fo
 **Keeping it fresh:** monthly (or quarterly — definitions change rarely), rebuild `wiktionary.db` on the Mac, `scp` it over, then `docker restart wiktapi`.
 
 **Caveat:** fine for yourself + preview testers; home power/internet is the uptime weak link for a real launch. The same image moves to a $4–6/mo VPS with zero code changes — just keep the env URL pointed at wherever it lives.
+
+## Should English move onto the self-hosted instance too?
+
+English is deliberately kept off wiktapi.dev today — `fetchDefinition` routes it to the public
+dictionaryapi.dev instead, and `fetchWordSuggestions` routes its autocomplete to Datamuse (see
+[App integration](#app-integration) below). Once the self-hosted instance is reliably hosted,
+it's tempting to import the English edition too and unify everything onto one provider. Current
+recommendation: **don't**, for two reasons that outweigh the tidiness win:
+
+1. **Size/hosting cost.** The English edition is by far the largest — ~2.3 GB compressed just to
+   download, larger still once imported into SQLite. Every hosting option documented above
+   (Oracle free-tier VM, a Raspberry Pi, a $4–6/mo VPS) is resource-constrained; English is the
+   one language that would meaningfully strain it, and the monthly `wiktionary.db`
+   rebuild-and-`scp` cycle (see "Keeping it fresh" above) gets noticeably heavier for just this
+   one language.
+2. **Reliability.** English is almost certainly the most-used language. Right now it depends on
+   two free, already-running, third-party services (dictionaryapi.dev + Datamuse) with their own
+   uptime, independent of your infrastructure — if the self-hosted box loses power or restarts,
+   non-English lookups degrade but English keeps working. Routing English through wiktapi.dev too
+   means a hiccup in your own hosting takes down the language most people actually use.
+
+The one genuine quality win from unifying: Wiktionary's own `/search` would give English
+autocomplete real dictionary words instead of Datamuse's word-frequency-based suggestions (which
+`fetchWordSuggestions`'s own comment already flags as occasionally containing misspellings) — so
+if Datamuse's suggestion quality ever becomes a recurring real problem (not just theoretical),
+that's the trigger to revisit this, not "the server can technically host it now."
 
 ## Alternative dictionary APIs considered
 
