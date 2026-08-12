@@ -37,6 +37,10 @@ export function useFlatListScroll<T = any>() {
     return useScrollRegistration<FlatList<T>>(flatListToTop);
 }
 
-export function useScrollViewScroll() {
-    return useScrollRegistration<ScrollView>(scrollViewToTop);
+// Generic so callers whose scroll view is a superset of `ScrollView` (e.g.
+// `KeyboardAwareScrollViewRef`, which adds `assureFocusedInputVisible`) can
+// type their own ref precisely — `scrollViewToTop` only touches `.scrollTo`,
+// a plain `ScrollView` member, so it stays valid for any such R.
+export function useScrollViewScroll<R extends ScrollView = ScrollView>() {
+    return useScrollRegistration<R>(scrollViewToTop);
 }
