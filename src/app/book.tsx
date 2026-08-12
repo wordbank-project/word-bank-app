@@ -39,6 +39,7 @@ import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 
 import { ACCENT, Colors, Fonts } from "@/styles/global";
 
+import { NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/BookDetailSkeletons";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import CoverImage from "@/components/CoverImage";
 import CoverPlaceholder from "@/components/CoverPlaceholder";
@@ -84,6 +85,13 @@ export default function BookDetail() {
     const [coverUri, setCoverUri] = useState<string | null>(coverImageUri(cover_i, 'M'));
 
     const [words, setWordsState] = useState<WordEntry[]>([]);
+
+    // True until the initial AsyncStorage reads resolve — gates the skeletons so the
+    // empty states ("No words added yet", "Add book notes…") never flash for books
+    // that do have content.
+    const [loadingWords, setLoadingWords] = useState<boolean>(true);
+    const [loadingEntry, setLoadingEntry] = useState<boolean>(true);
+    
     const [input, setInput] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
@@ -213,13 +221,16 @@ export default function BookDetail() {
     useEffect(() => {
         // If words are added to a book, show them
         if (key) {
-            getWords(key).then(setWordsState);
+            getWords(key).then(setWordsState).finally(() => setLoadingWords(false));
+        } else {
+            setLoadingWords(false);
         }
     }, [key]);
 
     // Reflect whether this book is already on the read list (and its status) so the toggle shows current state.
     useEffect(() => {
         if (!key) {
+            setLoadingEntry(false);
             return;
         }
         getReadList().then((list) => {
@@ -231,7 +242,7 @@ export default function BookDetail() {
                 setBookNotes(entry.bookNotes ?? '');
                 setRating(entry.rating ?? 0);
             }
-        });
+        }).finally(() => setLoadingEntry(false));
     }, [key]);
 
     // Builds a read-list entry from the current book metadata. `addedAt` is owned by
@@ -860,21 +871,23 @@ export default function BookDetail() {
                         <View className="gap-1 rounded-[10px] bg-card p-3.5">
                             <View className="flex-row items-center justify-between">
                                 <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">Book Notes</Text>
-                                <Pressable
-                                    className="ml-auto"
-                                    hitSlop={8}
-                                    onPress={() => {
-                                        if (editingBookNotes) {
-                                            setEditingBookNotes(false);
-                                        } else {
-                                            setBookNotesDraft(bookNotes);
-                                            setEditingBookNotes(true);
-                                            scrollCardIntoView(bookNotesY.current);
-                                        }
-                                    }}
-                                >
-                                    <Text className="text-[13px] font-medium text-accent">{editingBookNotes ? 'Cancel' : 'Edit'}</Text>
-                                </Pressable>
+                                {!loadingEntry && (
+                                    <Pressable
+                                        className="ml-auto"
+                                        hitSlop={8}
+                                        onPress={() => {
+                                            if (editingBookNotes) {
+                                                setEditingBookNotes(false);
+                                            } else {
+                                                setBookNotesDraft(bookNotes);
+                                                setEditingBookNotes(true);
+                                                scrollCardIntoView(bookNotesY.current);
+                                            }
+                                        }}
+                                    >
+                                        <Text className="text-[13px] font-medium text-accent">{editingBookNotes ? 'Cancel' : 'Edit'}</Text>
+                                    </Pressable>
+                                )}
                             </View>
                             {loadingEntry ? (
                                 <NoteCardSkeleton />
@@ -915,21 +928,23 @@ export default function BookDetail() {
                         >
                             <View className="flex-row items-center justify-between">
                                 <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">My Review</Text>
-                                <Pressable
-                                    className="ml-auto"
-                                    hitSlop={8}
-                                    onPress={() => {
-                                        if (editingReview) {
-                                            setEditingReview(false);
-                                        } else {
-                                            setReviewDraft(review);
-                                            setEditingReview(true);
-                                            scrollCardIntoView(bookNotesY.current + reviewY.current);
-                                        }
-                                    }}
-                                >
-                                    <Text className="text-[13px] font-medium text-accent">{editingReview ? 'Cancel' : 'Edit'}</Text>
-                                </Pressable>
+                                {!loadingEntry && (
+                                    <Pressable
+                                        className="ml-auto"
+                                        hitSlop={8}
+                                        onPress={() => {
+                                            if (editingReview) {
+                                                setEditingReview(false);
+                                            } else {
+                                                setReviewDraft(review);
+                                                setEditingReview(true);
+                                                scrollCardIntoView(bookNotesY.current + reviewY.current);
+                                            }
+                                        }}
+                                    >
+                                        <Text className="text-[13px] font-medium text-accent">{editingReview ? 'Cancel' : 'Edit'}</Text>
+                                    </Pressable>
+                                )}
                             </View>
                             <View className="flex-row items-center gap-2 pb-1">
                                 <StarRating value={rating} onChange={handleSetRating} size={28} />
