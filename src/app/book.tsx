@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { useIsFocused, usePreventRemove } from "@react-navigation/native";
 
-import { ActivityIndicator, Keyboard, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
 import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,11 +28,13 @@ import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
 import { fetchTrendingWords } from "@/utils/trending-words";
 import { showActionSheet } from "@/utils/show-action-sheet";
+import { fetchSuggestions } from "@/utils/suggestions-api";
 import { translateWord } from "@/utils/translate-api";
 import { postWordToFeed } from "@/utils/words-feed-api";
 
 import { useSavedLanguage } from "@/hooks/use-saved-language";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
+import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 
 import { Colors, Fonts } from "@/styles/global";
 
@@ -140,6 +142,11 @@ export default function BookDetail() {
         suggestionWords,
         isFocused && !input && !editingWord,
     );
+
+    // As-you-type dictionary suggestions (debounced): real words from Datamuse
+    // (English) or the self-hosted wiktapi /search (other languages). Empty on
+    // any failure — the chip row simply doesn't render.
+    const suggestions = useWordSuggestions(input, language.code, isFocused && !editingWord && !loading);
 
     const notesRef = useRef<TextInput>(null);
     const sentenceRef = useRef<TextInput>(null);
@@ -561,7 +568,31 @@ export default function BookDetail() {
                     </View>
                 )}
 
-                {error ? <Text className="px-3 pb-1 text-[13px] text-error">{error}</Text> : null}
+                {/* As-you-type dictionary suggestions — tap a chip to add that word. */}
+                {!editingWord && !error && suggestions.length > 0 ? (
+                    <ScrollView
+                        horizontal
+                        keyboardShouldPersistTaps="handled"
+                        showsHorizontalScrollIndicator={false}
+                        className="max-h-10 grow-0 px-3 mx-0 my-1"
+                        contentContainerStyle={{ gap: 8, alignItems: 'center' }}
+                    >
+                        {suggestions.map((suggestion) => (
+                            <Pressable
+                                key={suggestion}
+                                onPress={() => {
+                                    setInput(suggestion);
+                                    addWord(suggestion);
+                                }}
+                                className="rounded-2xl border border-border bg-card px-3 py-1.5"
+                            >
+                                <Text className="text-[13px] font-medium text-accent">{suggestion}</Text>
+                            </Pressable>
+                        ))}
+                    </ScrollView>
+                ) : null}
+
+                {error ? <Text className="mx-3 my-1 text-[13px] text-error">{error}</Text> : null}
 
                 <LanguageModal selected={language} onSelect={handleSelectLanguage} />
 
