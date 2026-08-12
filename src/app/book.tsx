@@ -40,8 +40,7 @@ import LanguageModal from "@/components/LanguageModal";
 import ReadStatusSelector from "@/components/ReadStatusSelector";
 import StarRating from "@/components/StarRating";
 
-// Extend with AI suggestions later
-const RANDOM_WORDS = [
+const RANDOM_DICTIONARY_WORDS = [
     "serendipity",
     "ephemeral",
     "melancholy",
@@ -108,7 +107,7 @@ export default function BookDetail() {
     const { language, languageReady, setLanguage } = useSavedLanguage();
 
     // AI-generated example words for the current dictionary language, used as a placeholder in the add-word field.
-    const [suggestionWords, setSuggestionWords] = useState<string[]>(RANDOM_WORDS);
+    const [suggestionWords, setSuggestionWords] = useState<string[]>(RANDOM_DICTIONARY_WORDS);
     useEffect(() => {
         if (!languageReady) {
             return;
