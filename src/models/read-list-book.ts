@@ -19,4 +19,5 @@ export type ReadListBook = {
     addedAt: number;
     review?: string;     // user's overall review of the book (optional)
     bookNotes?: string;  // general notes about the book (optional)
+    rating?: number;     // 0–5 star rating of the book (optional)
 };
