@@ -222,6 +222,7 @@ export default function BookDetail() {
             status: readStatus,
             review: review || undefined,
             bookNotes: bookNotes || undefined,
+            rating: rating || undefined,
             ...overrides,
         };
     }
@@ -290,6 +291,14 @@ export default function BookDetail() {
             year: metaYear.trim(),
         }));
         setEditingMeta(false);
+    }
+
+    // A star tap saves immediately (like selecting a read status). Tapping the
+    // current top star again clears the rating back to 0.
+    async function handleSetRating(next: number): Promise<void> {
+        setRating(next);
+        await upsertReadListBook(buildReadListEntry({ rating: next || undefined }));
+        setInReadList(true);
     }
 
     async function handleSaveReview(): Promise<void> {
