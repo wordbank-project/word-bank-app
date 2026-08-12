@@ -8,6 +8,9 @@ export type BookNavParams = {
     author: string;
     year: string;
     cover_i: string;
+    // Optional: a word to scroll to and highlight once the book screen lays out
+    // (sent by the Words List, where you tap a specific word).
+    focusWord?: string;
 };
 
 // Ignore re-taps while a push is still transitioning — rapid taps on a list

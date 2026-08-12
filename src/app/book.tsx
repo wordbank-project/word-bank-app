@@ -64,12 +64,13 @@ export default function BookDetail() {
     // placeholderTextColor needs a color value (not a class), so keep it themed here.
     const placeholderColor = Colors[useColorScheme()].textPlaceholder;
 
-    const { key, title, author, year, cover_i } = useLocalSearchParams<{
+    const { key, title, author, year, cover_i, focusWord } = useLocalSearchParams<{
         key: string;
         title: string;
         author: string;
         year: string;
         cover_i: string;
+        focusWord?: string;
     }>();
 
     const isCustomBook = key?.startsWith('custom_');
@@ -147,7 +148,19 @@ export default function BookDetail() {
     // Ensures the "Have Read" → write-a-review nudge only fires once per visit.
     const hasPromptedReview = useRef<boolean>(false);
 
-    // On mount, restore the dictionary language the user picked last time (saved in AsyncStorage).
+    // A word tapped on the Words List: scroll to its card once layout is known, then
+    // flash it. Held in a ref so it only ever fires once per visit.
+    const pendingFocusWord = useRef<string | null>(focusWord ?? null);
+    const [highlightedWord, setHighlightedWord] = useState<string | null>(null);
+    const highlightOpacity = useSharedValue(0);
+    const highlightStyle = useAnimatedStyle(() => ({ opacity: highlightOpacity.value }));
+    const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => () => {
+        if (highlightTimer.current) {
+            clearTimeout(highlightTimer.current);
+        }
+    }, []);
     useEffect(() => {
         // If there is a saved language in AsyncStorage, use it. Otherwise, keep the default language.
         getLanguageCode().then((code) => {
@@ -406,6 +419,36 @@ export default function BookDetail() {
         setTimeout(() => scrollRef.current?.scrollTo({ y: top, animated: true }), 350);
     }
 
+    // Scroll to the word the user tapped on the Words List and flash an accent
+    // outline around it. Both the words container's y and the target card's y
+    // (relative to it) are needed; each arrives from its own onLayout, in no
+    // guaranteed order — so this is called from both handlers and whichever lands
+    // last does the work. No timers, no guessing.
+    function maybeScrollToFocusWord(): void {
+        const word = pendingFocusWord.current;
+        if (!word || wordsContainerY.current === 0 || cardYs.current[word] === undefined) {
+            return;
+        }
+        pendingFocusWord.current = null; // consume: only once per visit
+
+        scrollCardIntoView(wordsContainerY.current + cardYs.current[word]);
+
+        setHighlightedWord(word);
+        // Show at full strength immediately — a plain assignment, so no accessibility
+        // setting can skip it — then fade out. ReduceMotion.Never throughout: with the
+        // default (System) a device with "Remove animations" / battery saver snaps
+        // animations to their end value, which left the outline invisible on Android.
+        // Same reason SearchButton's loading dots opt out.
+        highlightOpacity.value = 1;
+        highlightOpacity.value = withDelay(
+            1200,
+            withTiming(0, { duration: 500, reduceMotion: ReduceMotion.Never }),
+            ReduceMotion.Never,
+        );
+        // Unmount the overlay once the fade has finished.
+        highlightTimer.current = setTimeout(() => setHighlightedWord(null), 1800);
+    }
+
     // Open a word's inline edit form, seeding the draft from its current values.
     // `field` decides which input gets focus (tapping the Sentence vs Notes text).
     function openWordEdit(item: WordEntry, field: 'sentence' | 'notes' = 'sentence'): void {
@@ -578,7 +621,7 @@ export default function BookDetail() {
 
                     <View
                         className="gap-2.5 p-3"
-                        onLayout={(e) => { wordsContainerY.current = e.nativeEvent.layout.y; }}
+                        onLayout={(e) => { wordsContainerY.current = e.nativeEvent.layout.y; maybeScrollToFocusWord(); }}
                     >
                         <Text className="ml-0.5 text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Words</Text>
                         {loadingWords ? (
@@ -592,8 +635,22 @@ export default function BookDetail() {
                                     <View
                                         key={item.word}
                                         className="gap-1 rounded-[10px] bg-card p-3.5"
-                                        onLayout={(e) => { cardYs.current[item.word] = e.nativeEvent.layout.y; }}
+                                        onLayout={(e) => { cardYs.current[item.word] = e.nativeEvent.layout.y; maybeScrollToFocusWord(); }}
                                     >
+                                        {/* Brief accent outline marking the word we scrolled to.
+                                            Absolutely positioned so it can't shift the card's layout
+                                            (a real border would nudge every card by 2px). */}
+                                        {highlightedWord === item.word ? (
+                                            <Animated.View
+                                                pointerEvents="none"
+                                                style={[
+                                                    StyleSheet.absoluteFill,
+                                                    { borderWidth: 2, borderColor: ACCENT, borderRadius: 10 },
+                                                    highlightStyle,
+                                                ]}
+                                            />
+                                        ) : null}
+
                                         <View className="flex-row items-center gap-2">
                                             <Text className="text-[17px] font-bold text-fg">{item.word}</Text>
                                             {item.phonetic ? (

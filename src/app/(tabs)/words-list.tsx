@@ -170,7 +170,7 @@ export default function WordsListScreen() {
         ]);
     }
 
-    // Open the book this word belongs to.
+    // Open the book this word belongs to, scrolled straight to this word's card.
     const openWord = useCallback((item: WordWithBook): void => {
         openBook({
             key: item.bookKey,
@@ -178,6 +178,7 @@ export default function WordsListScreen() {
             author: item.bookAuthor,
             year: item.bookYear,
             cover_i: item.bookCover,
+            focusWord: item.word,
         });
     }, []);
 
