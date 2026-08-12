@@ -238,30 +238,3 @@ export async function fetchWordSuggestions(
         signal?.removeEventListener('abort', onOuterAbort);
     }
 }
-
-const MAX_CORRECTIONS = 3;
-const MAX_CORRECTION_DISTANCE = 2;
-
-/**
- * "Did you mean?" candidates for a word that failed dictionary lookup: fetch
- * words sharing the typo's first characters, then rank by edit distance.
- * Works for any language via fetchWordSuggestions. Known limit: a typo inside
- * the first two characters (e.g. "hnod") finds nothing. Resolves to [] on any
- * failure; never throws.
- */
-export async function suggestCorrections(failedWord: string, language: string): Promise<string[]> {
-    const word = failedWord.trim().toLowerCase();
-    if (word.length < 3) {
-        return [];
-    }
-    const prefix = word.slice(0, word.length === 3 ? 2 : 3);
-    const candidates = await fetchWordSuggestions(prefix, language, 50);
-
-    return candidates
-        .filter((c) => c !== word)
-        .map((c) => ({ word: c, distance: damerauLevenshtein(c, word) }))
-        .filter((c) => c.distance <= MAX_CORRECTION_DISTANCE)
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, MAX_CORRECTIONS)
-        .map((c) => c.word);
-}
