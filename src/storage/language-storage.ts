@@ -2,18 +2,29 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// Saves and restores the selected dictionary language, and the separate
+// "translate to" language preference for the book screen's translation feature.
+
 const LANGUAGE_KEY = "dictionary_language";
 
-/** The language code is a short identifier like "en" for English or "es" for Spanish.
- * We store it in AsyncStorage so the app remembers the user's choice across sessions.
+/**
+ * Persists the chosen dictionary language.
+ *
+ * @param {string} code The language code to save, e.g. "en" for English or "es" for Spanish.
+ * @returns {Promise<void>} Resolves once the value has been written.
+ *
  */
 export async function setLanguageCode(code: string): Promise<void> {
     await AsyncStorage.setItem(LANGUAGE_KEY, code);
 }
 
-/* Returns the stored language code, or null if none is set or if there's an error accessing storage. 
-* Based on that we pick the language from language.ts when looking up word definitions.
-*/
+/**
+ * Reads back the saved dictionary language code, used to pick the matching
+ * `Language` from `models/language.ts` when looking up word definitions.
+ *
+ * @returns {Promise<string | null>} The saved language code, or `null` if none is set or unreadable.
+ *
+ */
 export async function getLanguageCode(): Promise<string | null> {
     try {
         return await AsyncStorage.getItem(LANGUAGE_KEY);
