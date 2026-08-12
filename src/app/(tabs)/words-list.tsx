@@ -205,7 +205,7 @@ export default function WordsListScreen() {
                     autoCapitalize="none"
                     returnKeyType="search"
                 />
-                <SearchButton onPress={handleSearch} />
+                <SearchButton onPress={handleSearch} suggestion={word} />
             </View>
 
             {/* Part-of-speech filter chips — one per POS present, colour-coded,
