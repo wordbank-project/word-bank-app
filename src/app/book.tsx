@@ -102,6 +102,7 @@ export default function BookDetail() {
     const [editingBookNotes, setEditingBookNotes] = useState<boolean>(false);
     const [reviewDraft, setReviewDraft] = useState<string>('');
     const [bookNotesDraft, setBookNotesDraft] = useState<string>('');
+    const [rating, setRating] = useState<number>(0);
 
     const [inReadList, setInReadList] = useState<boolean>(false);
     const [readStatus, setReadStatus] = useState<ReadStatus>('want'); // Initial value is: "Want to read"
