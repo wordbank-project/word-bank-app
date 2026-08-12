@@ -335,6 +335,9 @@ export default function BookDetail() {
     }
 
     function handleSelectLanguage(language: Language): void {
+        setLanguage(language); // saved too — see useSavedLanguage
+    }
+
     function handleSelectTranslateToLanguage(language: Language): void {
         setTranslateToLanguage(language);
         setTranslationLanguageCode(language.code);
