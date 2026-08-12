@@ -22,6 +22,7 @@ export const Colors = {
         star: '#F5A623',
         tint: ACCENT,
         icon: '#687076',
+        error: '#e05252', // mirrors global.css's --color-error (text-error) — same value in both themes
         tabIconDefault: '#687076',
         tabIconSelected: ACCENT,
     },
@@ -44,6 +45,7 @@ export const Colors = {
         star: '#F5A623',
         tint: '#fff',
         icon: '#9BA1A6',
+        error: '#e05252', // mirrors global.css's --color-error (text-error) — same value in both themes
         tabIconDefault: '#9BA1A6',
         tabIconSelected: '#fff',
     },
