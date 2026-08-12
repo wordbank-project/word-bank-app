@@ -620,10 +620,10 @@ export default function BookDetail() {
                     <View className="flex-row items-center gap-3.5 border-b border-border p-4">
                         {isCustomBook ? (
                             <Pressable onPress={handlePickCover}>
-                                <CoverImage uri={coverUri} className="h-40 w-30 rounded-lg" radius={8} placeholder={<CoverPlaceholder size={40} />} />
+                                <CoverImage uri={coverUri} className="h-40 w-30 rounded-lg" placeholder={<CoverPlaceholder size={40} />} />
                             </Pressable>
                         ) : (
-                            <CoverImage uri={coverUri} className="h-40 w-30 rounded-lg" radius={8} placeholder={<CoverPlaceholder size={40} />} />
+                            <CoverImage uri={coverUri} className="h-40 w-30 rounded-lg" placeholder={<CoverPlaceholder size={40} />} />
                         )}
                         <View className="flex-1 justify-center gap-1.5">
                             {editingMeta ? (
