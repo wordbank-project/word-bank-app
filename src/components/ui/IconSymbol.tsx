@@ -28,6 +28,10 @@ const MAPPING = {
     'books.vertical.fill': 'auto-stories',
     'star.fill': 'star',
     'star': 'star-border',
+    'sparkles': 'auto-awesome',
+    'square.and.arrow.up': 'ios-share',
+    'square.and.arrow.down': 'file-download',
+    'trash.fill': 'delete',
 } as IconMapping;
 
 /**

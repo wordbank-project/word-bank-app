@@ -1,9 +1,13 @@
+import { useColorScheme } from "@/context/theme-context";
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { clearAllBookData } from "@/storage/read-list-storage";
+import { Colors } from "@/styles/global";
 import { alertDialog } from "@/utils/alert-dialog";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { Link, router, type Href } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
+
+import IconSymbol from "@/components/ui/IconSymbol";
 
 import { license, version } from "../../../package.json";
 
@@ -46,15 +50,24 @@ type RowProps = {
     chevron?: boolean;
     first?: boolean;
     danger?: boolean;
+    icon?: React.ComponentProps<typeof IconSymbol>['name']; // leading icon, e.g. an AI-powered feature's "sparkles"
 };
 
 // A single settings-style row. Renders a chevron when it leads somewhere, or a
 // right-aligned value for read-only info (version, license). `danger` styles a
-// destructive action's label in red.
-function Row({ label, value, href, onPress, chevron, first, danger }: RowProps) {
+// destructive action's label in red. 
+// `icon`property shows a small leading icon before
+// the label (alongside the chevron, not instead of it — the chevron stays the
+// "this leads somewhere" cue every linked row on this screen uses).
+function Row({ label, value, href, onPress, chevron, first, danger, icon }: RowProps) {
+    const colors = Colors[useColorScheme()];
+    const iconColor = danger ? colors.error : colors.icon;
     const inner = (
         <View className={`flex-row items-center justify-between p-3.5 ${!first ? "border-t border-border" : ""}`}>
-            <Text className={`text-[15px] ${danger ? "text-error" : "text-fg"}`}>{label}</Text>
+            <View className="flex-row items-center gap-2">
+                {icon ? <IconSymbol name={icon} size={17} color={iconColor} /> : null}
+                <Text className={`text-[15px] ${danger ? "text-error" : "text-fg"}`}>{label}</Text>
+            </View>
             <View className="flex-row items-center gap-1.5">
                 {value ? <Text className="text-[15px] text-muted">{value}</Text> : null}
                 {chevron ? <Text className="text-lg text-faded">›</Text> : null}
@@ -150,13 +163,13 @@ export default function MoreScreen() {
             onScroll={onScroll}
         >
             <Section title="Tools">
-                <Row label="Analyze a sentence" chevron first href="/analyze" />
+                <Row label="Analyze a sentence" icon="sparkles" chevron first href="/analyze" />
             </Section>
 
             <Section title="Your data">
-                <Row label="Export Data" chevron first onPress={() => handleComingSoon('Exporting all your data')} />
-                <Row label="Import Data" chevron onPress={() => handleComingSoon('Importing all your data')} />
-                <Row label="Delete all data" danger onPress={handleDeleteAll} />
+                <Row label="Export Data" icon="square.and.arrow.up" chevron first onPress={exportData} />
+                <Row label="Import Data" icon="square.and.arrow.down" chevron onPress={importData} />
+                <Row label="Delete all data" icon="trash.fill" danger onPress={handleDeleteAll} />
             </Section>
 
             <Section title="Sources">
