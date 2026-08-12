@@ -1,7 +1,8 @@
 import { Platform } from 'react-native';
 
-import type { WordEntry } from '@/models/word-entry';
+import type { WordDefinition, WordEntry } from '@/models/word-entry';
 import { timedFetch } from '@/utils/dict-utils';
+import { damerauLevenshtein } from '@/utils/edit-distance';
 
 /**
  * Base URL of the self-hosted wiktapi.dev instance (https://github.com/TheAlexLichter/wiktapi.dev).
@@ -60,6 +61,43 @@ function firstGloss(sense: WiktSense): string | undefined {
     return (sense.glosses ?? sense.raw_glosses ?? [])[0];
 }
 
+// Caps how many definitions we keep/store per word — some words return dozens.
+const MAX_DEFINITIONS = 50;
+
+/* Builds a WordEntry from the flattened list of candidate definitions: dedupes
+ * exact duplicates, caps the count, and denormalizes the first one as the
+ * selected definition so existing display code and old saved words keep working.
+ */
+function buildEntry(word: string, definitions: WordDefinition[], phonetic?: string): WordEntry {
+    const seen = new Set<string>();
+    const unique = definitions.filter((d) => {
+        if (!d.definition) {
+            return false;
+        }
+        const id = `${d.partOfSpeech}|${d.definition}`;
+        if (seen.has(id)) {
+            return false;
+        }
+        seen.add(id);
+        return true;
+    }).slice(0, MAX_DEFINITIONS);
+
+    if (unique.length === 0) {
+        throw new Error(`No definition found for: ${word}`);
+    }
+
+    const first = unique[0];
+    return {
+        word,
+        phonetic,
+        partOfSpeech: first.partOfSpeech,
+        definition: first.definition,
+        exampleSentence: first.exampleSentence,
+        definitions: unique,
+        selectedDefinition: 0,
+    };
+}
+
 /* English is served by the free public Free Dictionary API (no key)
  * User-Agent required), so the self-hosted server never has to import the ~2.3 GB English edition.
  */
@@ -73,15 +111,25 @@ async function fetchEnglish(word: string): Promise<WordEntry> {
         throw new Error('Word not found in dictionary.');
     }
     const data = await res.json();
-    const entry = data[0];
-    const meaning = entry.meanings[0];
-    return {
-        word: entry.word,
-        phonetic: entry.phonetic,
-        partOfSpeech: meaning.partOfSpeech,
-        definition: meaning.definitions[0].definition,
-        exampleSentence: meaning.definitions[0].example, // optional; used as a placeholder text in the edit form
-    };
+
+    // Flatten every entry → meaning (part of speech) → definition into one list.
+    const definitions: WordDefinition[] = [];
+    for (const entry of data) {
+        for (const meaning of entry.meanings ?? []) {
+            for (const def of meaning.definitions ?? []) {
+                definitions.push({
+                    partOfSpeech: meaning.partOfSpeech ?? '',
+                    definition: def.definition ?? '',
+                    exampleSentence: def.example, // optional; used as a placeholder text in the edit form
+                });
+            }
+        }
+    }
+
+    // The first entry that carries a phonetic transcription.
+    const phonetic = data.find((e: { phonetic?: string }) => e.phonetic)?.phonetic;
+
+    return buildEntry(data[0]?.word ?? word, definitions, phonetic);
 }
 
 // All non-English languages are served by the self-hosted wiktapi.dev: https://github.com/TheAlexLichter/wiktapi.dev instance.
@@ -100,24 +148,24 @@ async function fetchSelfHosted(word: string, language: string): Promise<WordEntr
 
     const data: DefinitionsResponse = await res.json();
 
-    // One definition per part of speech / etymology; pick the first with a gloss.
-    const definition = (data.definitions ?? []).find((d) => (d.senses ?? []).some(firstGloss));
-    if (!definition) {
-        throw new Error(`No definition found for: ${word}`);
+    // Flatten every definition (part of speech) → sense into one list. Each sense's
+    // gloss is the definition text; its first example becomes the placeholder hint.
+    const definitions: WordDefinition[] = [];
+    for (const definition of data.definitions ?? []) {
+        for (const sense of definition.senses ?? []) {
+            const gloss = firstGloss(sense);
+            if (!gloss) {
+                continue;
+            }
+            definitions.push({
+                partOfSpeech: (definition.pos ?? '').toLowerCase(),
+                definition: gloss.trim(),
+                exampleSentence: sense.examples?.find((e) => e.text)?.text?.trim(),
+            });
+        }
     }
 
-    // the sense is where the human-readable gloss lives, so find the first one with a gloss
-    const sense = (definition.senses ?? []).find(firstGloss)!;
-
-    // The sense's first example sentence, shown as a placeholder hint in the edit form.
-    const example = sense.examples?.find((e) => e.text)?.text;
-
-    return {
-        word,
-        partOfSpeech: (definition.pos ?? '').toLowerCase(),
-        definition: (firstGloss(sense) ?? '').trim(),
-        exampleSentence: example?.trim(),
-    };
+    return buildEntry(word, definitions);
 }
 
 /**
@@ -129,4 +177,91 @@ export async function fetchDefinition(word: string, language = 'en'): Promise<Wo
         return fetchEnglish(word);
     }
     return fetchSelfHosted(word, language);
+}
+
+/* --- As-you-type suggestions + "did you mean" corrections ------------------
+ *
+ * Both are best-effort helpers around the add-word input: every failure path
+ * resolves to [] so a missing or unreachable server never breaks the UI (the
+ * same contract as the community feed clients).
+ */
+
+const SUGGESTIONS_TIMEOUT_MS = 3000;
+
+/**
+ * Prefix-search the dictionary for autocomplete. English uses the free
+ * Datamuse suggest API: https://www.datamuse.com/api/
+ * (dictionaryapi.dev has no prefix endpoint); everything
+ * else uses the self-hosted wiktapi.dev /search route. Resolves to [] on ANY
+ * failure — timeout, network, non-200, bad JSON — and never throws. `signal`
+ * lets the caller cancel superseded requests while the user keeps typing.
+ */
+export async function fetchWordSuggestions(
+    prefix: string,
+    language: string,
+    limit = 8,
+    signal?: AbortSignal,
+): Promise<string[]> {
+    // Own timeout + external signal (timedFetch throws and takes no signal;
+    // AbortSignal.any isn't reliably available on Hermes).
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SUGGESTIONS_TIMEOUT_MS);
+    const onOuterAbort = () => controller.abort();
+    signal?.addEventListener('abort', onOuterAbort);
+    try {
+        const url = language === 'en'
+            ? `https://api.datamuse.com/sug?s=${encodeURIComponent(prefix)}&max=${limit}`
+            : `${API_BASE_URL}/v1/${EDITION_BY_LANG[language] ?? language}/search?q=${encodeURIComponent(prefix)}&lang=${encodeURIComponent(language)}&limit=${limit}`;
+
+        const res = await fetch(url, { signal: controller.signal });
+        if (!res.ok) {
+            return [];
+        }
+        // Datamuse: [{ word, score }] — wiktapi: { results: [{ word, ... }] }.
+        const data = await res.json();
+        const rows: { word?: string }[] = Array.isArray(data) ? data : (data?.results ?? []);
+
+        const seen = new Set<string>();
+        const words: string[] = [];
+        for (const row of rows) {
+            const word = row.word?.trim().toLowerCase(); // the app stores words lowercased
+            if (word && !seen.has(word)) {
+                seen.add(word);
+                words.push(word);
+            }
+        }
+        return words;
+    } catch {
+        return []; // includes AbortError — callers check their own signal before applying
+    } finally {
+        clearTimeout(timer);
+        signal?.removeEventListener('abort', onOuterAbort);
+    }
+}
+
+const MAX_CORRECTIONS = 3;
+const MAX_CORRECTION_DISTANCE = 2;
+
+/**
+ * "Did you mean?" candidates for a word that failed dictionary lookup: fetch
+ * words sharing the typo's first characters, then rank by edit distance.
+ * Works for any language via fetchWordSuggestions. Known limit: a typo inside
+ * the first two characters (e.g. "hnod") finds nothing. Resolves to [] on any
+ * failure; never throws.
+ */
+export async function suggestCorrections(failedWord: string, language: string): Promise<string[]> {
+    const word = failedWord.trim().toLowerCase();
+    if (word.length < 3) {
+        return [];
+    }
+    const prefix = word.slice(0, word.length === 3 ? 2 : 3);
+    const candidates = await fetchWordSuggestions(prefix, language, 50);
+
+    return candidates
+        .filter((c) => c !== word)
+        .map((c) => ({ word: c, distance: damerauLevenshtein(c, word) }))
+        .filter((c) => c.distance <= MAX_CORRECTION_DISTANCE)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, MAX_CORRECTIONS)
+        .map((c) => c.word);
 }
