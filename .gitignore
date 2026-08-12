@@ -47,6 +47,7 @@ yarn-error.*
 screenshots/
 TODOS.md
 IDEAS.md
+api.md
 
 # Personal bash scripts
 .scripts/
