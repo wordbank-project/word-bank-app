@@ -607,6 +607,7 @@ export default function BookDetail() {
                 {error ? <Text className="mx-3 my-1 text-[13px] text-error">{error}</Text> : null}
 
                 <LanguageModal selected={language} onSelect={handleSelectLanguage} />
+                <LanguageModal selected={translateToLanguage} onSelect={handleSelectTranslateToLanguage} label="Translate to" />
 
                 <KeyboardAwareScrollView
                     ref={scrollRef}
