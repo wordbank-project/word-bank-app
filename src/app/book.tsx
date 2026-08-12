@@ -165,6 +165,10 @@ export default function BookDetail() {
     // Scroll-to-notes: the scroll view ref + the Book Notes section's y offset
     // (captured on layout), so the "Jump to notes" link can scroll straight there.
     const scrollRef = useRef<React.ComponentRef<typeof KeyboardAwareScrollView>>(null);
+    const bookNotesInputRef = useRef<TextInput>(null);
+    // Current scroll position, tracked via onScroll so keepInputAboveKeyboard can
+    // scroll by a precise delta as a multiline input grows.
+    const scrollOffset = useRef<number>(0);
     const bookNotesY = useRef<number>(0);
     // Offsets (captured on layout) so opening an editor can scroll that card's input
     // up above the keyboard immediately. onLayout is parent-relative, so a card's
@@ -513,6 +517,30 @@ export default function BookDetail() {
         highlightTimer.current = setTimeout(() => setHighlightedWord(null), 1800);
     }
 
+    // Keep a growing multiline input's bottom above the keyboard while editing.
+    // The focus handler positions the card once; as the user keeps typing the
+    // field grows downward and the caret can slip under the keyboard, so re-scroll
+    // by just the overlap on each content-size change. Shrinking (backspace) yields
+    // a non-positive overlap → no-op, so it never jumps back.
+    function keepInputAboveKeyboard(ref: React.RefObject<TextInput | null>): void {
+        // Native-only: react-native-web has no Keyboard.metrics (and no floating
+        // keyboard to avoid), so this whole helper is a no-op on web.
+        if (typeof Keyboard.metrics !== "function") {
+            return;
+        }
+        const kb = Keyboard.metrics();
+        if (!kb) {
+            return; // keyboard not shown yet — focus handler already positioned it
+        }
+        const MARGIN = 24; // breathing room below the caret
+        ref.current?.measureInWindow((_x, y, _w, h) => {
+            const overlap = y + h + MARGIN - kb.screenY; // kb.screenY = keyboard top
+            if (overlap > 0) {
+                scrollRef.current?.scrollTo({ y: scrollOffset.current + overlap, animated: true });
+            }
+        });
+    }
+
     // Open a word's inline edit form, seeding the draft from its current values.
     // `field` decides which input gets focus (tapping the Sentence vs Notes text).
     function openWordEdit(item: WordEntry, field: 'sentence' | 'notes' = 'sentence'): void {
@@ -622,6 +650,8 @@ export default function BookDetail() {
                     style={{ flex: 1 }}
                     contentContainerStyle={{ paddingBottom: 24 }}
                     keyboardShouldPersistTaps="handled"
+                    onScroll={(e) => { scrollOffset.current = e.nativeEvent.contentOffset.y; }}
+                    scrollEventThrottle={16}
                     // Adjust the space between the keyboard and the selected input to ensure the input is not covered by the keyboard.
                     bottomOffset={230}
                 >
@@ -902,12 +932,18 @@ export default function BookDetail() {
                             ) : editingBookNotes ? (
                                 <React.Fragment>
                                     <TextInput
+                                        ref={bookNotesInputRef}
                                         className="min-h-16 rounded-lg border border-border-input bg-input p-2.5 text-sm text-fg"
                                         style={{ textAlignVertical: 'top' }}
                                         placeholder="General notes about this book…"
                                         placeholderTextColor={placeholderColor}
                                         value={bookNotesDraft}
                                         onChangeText={setBookNotesDraft}
+                                        onContentSizeChange={() => {
+                                            if (editingBookNotes) {
+                                                keepInputAboveKeyboard(bookNotesInputRef);
+                                            }
+                                        }}
                                         multiline
                                         autoCorrect
                                         autoFocus
@@ -972,6 +1008,11 @@ export default function BookDetail() {
                                         placeholderTextColor={placeholderColor}
                                         value={reviewDraft}
                                         onChangeText={setReviewDraft}
+                                        onContentSizeChange={() => {
+                                            if (editingReview) {
+                                                keepInputAboveKeyboard(reviewInputRef);
+                                            }
+                                        }}
                                         multiline
                                         autoCorrect
                                         autoFocus
