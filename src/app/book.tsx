@@ -30,6 +30,7 @@ import { fetchTrendingWords } from "@/utils/trending-words";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { fetchSuggestions } from "@/utils/suggestions-api";
 import { translateWord } from "@/utils/translate-api";
+import { fetchDefinition } from "@/utils/words-api";
 import { postWordToFeed } from "@/utils/words-feed-api";
 
 import { useSavedLanguage } from "@/hooks/use-saved-language";
