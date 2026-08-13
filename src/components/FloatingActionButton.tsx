@@ -1,6 +1,6 @@
 import { useScrollContext } from "@/context/scroll-context";
-import { showActionSheet, type ActionSheetButton } from "@/utils/show-action-sheet";
-import { router, usePathname } from "expo-router";
+import { openAddBookMenu } from "@/utils/open-add-book-menu";
+import { usePathname } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Pressable, Text } from "react-native";
 
@@ -32,27 +32,7 @@ export default function FloatingActionButton() {
             scrollToTop();
             return;
         }
-
-        const onSearch = pathname === '/';                  // Search tab (index)
-        const onCustom = pathname.endsWith('/custom-book'); // custom-book screen
-
-        // Only offer the actions that make sense from the current screen.
-        const actions: ActionSheetButton[] = [];
-        if (!onSearch) {
-            actions.push({ text: 'Search for a book', onPress: () => router.navigate('/') });
-        }
-        if (!onCustom) {
-            actions.push({ text: 'Add a custom book', onPress: () => router.push('/(tabs)/custom-book' as any) });
-        }
-
-        // On the Search / custom-book screens only one action remains — just do it,
-        // rather than showing a single-item menu.
-        if (actions.length === 1) {
-            actions[0].onPress?.();
-            return;
-        }
-
-        showActionSheet('What would you like to do?', undefined, [...actions, { text: 'Cancel', style: 'cancel' }]);
+        openAddBookMenu(pathname);
     }
 
     return (

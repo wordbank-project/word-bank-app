@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 
-import { Link, useFocusEffect } from "expo-router";
+import { useFocusEffect, usePathname } from "expo-router";
 
 import { useFlatListScroll } from "@/hooks/use-scroll-registration";
 
@@ -17,6 +17,7 @@ import { showActionSheet } from "@/utils/show-action-sheet";
 import { ACCENT } from "@/styles/global";
 
 import { openBook } from "@/utils/open-book";
+import { openAddBookMenu } from "@/utils/open-add-book-menu";
 
 import ReadListItem from "@/components/ReadListItem";
 
@@ -48,6 +49,8 @@ export default function ReadListScreen() {
     )
         .slice()
         .sort((a, b) => (wordCounts[b.key] ?? 0) - (wordCounts[a.key] ?? 0));
+
+    const pathname = usePathname();
 
     // Reload the books every time the tab comes into focus, so changes made
     // elsewhere (e.g. adding a book or words) show up here.
@@ -159,9 +162,11 @@ export default function ReadListScreen() {
                     readList.length === 0 ? (
                         <View className="mt-16 items-center gap-2.5 px-8">
                             <Text className="text-lg font-semibold text-fg">No books yet</Text>
-                            <Link href="/" className="text-center text-sm text-accent">
-                                Search for a book on the Search tab, open it, and save it to your read list.
-                            </Link>
+                            <Pressable onPress={() => openAddBookMenu(pathname)}>
+                                <Text className="text-center text-sm text-accent">
+                                    Search for a book, or add one yourself, to get started.
+                                </Text>
+                            </Pressable>
                         </View>
                     ) : (
                         <View className="mt-16 items-center gap-2.5 px-8">
