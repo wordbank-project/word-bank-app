@@ -268,8 +268,8 @@ export default function AnalyzeScreen() {
                     />
                     <View className="flex-row items-center justify-between">
                         <Text className="flex-1 text-[11px] leading-3.75 text-faded">
-                            The language you type in is the one analyzed; definitions come back in the dictionary language.
-                            Analyzed on the Word Bank server.
+                            The language you type in is the language that gets analyzed; definitions are returned in your dictionary's language.{"\n\n"}
+                            Analysis is performed on the Word Bank server.
                         </Text>
                         <Text className="text-[11px] text-faded">
                             {sentence.length}/{MAX_SENTENCE_LENGTH}
@@ -315,7 +315,7 @@ export default function AnalyzeScreen() {
                 {!analysis && !loading ? (
                     <View className="gap-2">
                         <Text className="text-[11px] mt-7 mb-2 font-semibold uppercase tracking-[0.5px] text-muted">
-                            Try one
+                            Try one sentence
                         </Text>
                         {suggestionSentences.map((exampleSentence: string) => (
                             <Pressable
@@ -341,7 +341,7 @@ export default function AnalyzeScreen() {
                 {history.length > 0 ? (
                     <View className="gap-2">
                         <Text className="text-[11px] mt-7 mb-2 font-semibold uppercase tracking-[0.5px] text-muted">
-                            Recent ({history.length})
+                            Recent sentences ({history.length})
                         </Text>
                         {history.map((entry) => (
                             <Pressable
