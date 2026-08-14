@@ -134,10 +134,9 @@ function handleComingSoon(feature: string): void {
 
 function handleDeleteAll(): void {
     showActionSheet(
-        "Delete all data",
+        "Delete all data?",
         "This permanently deletes every book and all analyzed sentences. This cannot be undone!",
         [
-            { text: "Cancel", style: "cancel" },
             {
                 text: "Delete everything",
                 style: "destructive",
@@ -147,6 +146,7 @@ function handleDeleteAll(): void {
                     router.navigate('/(tabs)/read-list');
                 },
             },
+            { text: "Cancel", style: "cancel" },
         ],
     );
 }

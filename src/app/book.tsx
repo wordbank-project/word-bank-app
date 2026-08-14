@@ -459,10 +459,9 @@ export default function BookDetail() {
 
     function handleDeleteWord(word: string): void {
         showActionSheet(
-            "Remove word",
+            "Remove word?",
             `Remove "${word}" from this book?`,
             [
-                { text: "Cancel", style: "cancel" },
                 {
                     text: "Remove",
                     style: "destructive",
@@ -470,6 +469,7 @@ export default function BookDetail() {
                         await persistWords(words.filter((w) => w.word !== word));
                     },
                 },
+                { text: "Cancel", style: "cancel" },
             ]
         );
     }
