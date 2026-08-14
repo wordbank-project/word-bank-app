@@ -269,7 +269,7 @@ export default function AnalyzeScreen() {
                     <View className="flex-row items-center justify-between">
                         <Text className="flex-1 text-[11px] leading-3.75 text-faded">
                             The language you type in is the one analyzed; definitions come back in the dictionary language.
-                            Analyzed on the Word Bank server — not stored, not tied to you.
+                            Analyzed on the Word Bank server.
                         </Text>
                         <Text className="text-[11px] text-faded">
                             {sentence.length}/{MAX_SENTENCE_LENGTH}
