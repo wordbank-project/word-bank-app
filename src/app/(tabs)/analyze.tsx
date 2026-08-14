@@ -222,13 +222,13 @@ export default function AnalyzeScreen() {
      * 
      */
     function handleRemoveHistory(entry: AnalysisHistoryEntry): void {
-        showActionSheet("Remove analysis", entry.text, [
-            { text: "Cancel", style: "cancel" },
+        showActionSheet("Remove analysis?", entry.text, [
             {
                 text: "Remove",
                 style: "destructive",
                 onPress: async () => setHistory(await removeAnalysis(entry.createdAt)),
             },
+            { text: "Cancel", style: "cancel" },
         ]);
     }
 
