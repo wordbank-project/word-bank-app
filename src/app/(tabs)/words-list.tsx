@@ -195,7 +195,7 @@ export default function WordsListScreen() {
             <View className="px-4 pb-2 pt-3">
                 <ClearableTextInput
                     containerClassName="mb-2"
-                    className="rounded-lg border border-border-input bg-input px-3 py-3 text-[15px] text-fg"
+                    className="rounded-lg border border-border-input bg-input px-3 py-3 text-[14px] android:leading-[21px] text-fg"
                     placeholder={typedPlaceholder || "Search your word bank..."}
                     placeholderTextColor={placeholderColor}
                     value={search}
