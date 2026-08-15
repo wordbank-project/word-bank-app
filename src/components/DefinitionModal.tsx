@@ -119,7 +119,7 @@ export default function DefinitionModal({ visible, onClose, word, definitions, s
                         </View>
 
                         <TextInput
-                            className="mx-4 rounded-lg border border-border-input bg-input px-3 py-3 text-[15px] text-fg"
+                            className="mx-4 rounded-lg border border-border-input bg-input p-3 text-[14px] android:leading-[21px] text-fg"
                             placeholder="Search definitions..."
                             placeholderTextColor={placeholderColor}
                             value={search}
