@@ -592,7 +592,7 @@ export default function BookDetail() {
                     <View className="flex-row gap-2 p-3 pb-1">
                         <ClearableTextInput
                             containerClassName="flex-1"
-                            className="rounded-lg border border-border-input bg-input px-3 py-3 text-base text-fg"
+                            className="rounded-lg border border-border-input bg-input p-3 text-[14px] android:leading-[21px] text-fg"
                             placeholder={typedWordPlaceholder || "Add a word..."}
                             placeholderTextColor={placeholderColor}
                             value={input}
