@@ -22,6 +22,7 @@ export default function LanguageModal({ selected, onSelect, label = "Dictionary 
     const [visible, setVisible] = useState<boolean>(false);
     const [search, setSearch] = useState<string>('');
     const listRef = useRef<FlatList<Language>>(null);
+    const searchInputRef = useRef<TextInput>(null);
 
     function handleSelect(language: Language): void {
         onSelect(language);
@@ -73,10 +74,11 @@ export default function LanguageModal({ selected, onSelect, label = "Dictionary 
                 transparent
                 animationType="slide"
                 onRequestClose={() => setVisible(false)}
+                onShow={() => searchInputRef.current?.focus()}
             >
                 <KeyboardAvoidingView behavior="padding" className="flex-1">
                     <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setVisible(false)}>
-                        <Pressable className="max-h-[70%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
+                        <Pressable className="max-h-[90%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
                             <FlatList
                                 ref={listRef}
                                 data={filteredLanguages}
@@ -110,12 +112,12 @@ export default function LanguageModal({ selected, onSelect, label = "Dictionary 
                             </View>
 
                             <TextInput
-                                className="mx-4 rounded-lg border border-border-input bg-input px-3 py-3 text-[15px] text-fg"
+                                ref={searchInputRef}
+                                className="mx-4 rounded-lg border border-border-input bg-input p-3 text-[15px] text-fg"
                                 placeholder="Search languages..."
                                 placeholderTextColor={placeholderColor}
                                 value={search}
                                 onChangeText={setSearch}
-                                autoFocus
                                 autoCorrect={false}
                                 autoCapitalize="none"
                             />
