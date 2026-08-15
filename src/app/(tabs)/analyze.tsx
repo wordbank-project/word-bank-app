@@ -138,7 +138,7 @@ export default function AnalyzeScreen() {
     function startRateLimitCountdown(seconds: number): void {
         clearRateLimitCountdown();
         let secondsLeft = seconds;
-        setError(`The AI service is currently unavailable. Please wait ${secondsLeft}s and try again.`);
+        setError(`The AI service is currently unavailable.\nPlease wait ${secondsLeft}s and try again.`);
         countdownTimer.current = setInterval(() => {
             secondsLeft--;
             if (secondsLeft <= 0) {
@@ -146,7 +146,7 @@ export default function AnalyzeScreen() {
                 setError("");
                 return;
             }
-            setError(`The AI service is currently unavailable. Please wait ${secondsLeft}s and try again.`);
+            setError(`The AI service is currently unavailable.\nPlease wait ${secondsLeft}s and try again.`);
         }, 1000);
     }
 
