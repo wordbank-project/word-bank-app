@@ -73,7 +73,7 @@ export default function DefinitionModal({ visible, onClose, word, definitions, s
         >
             <KeyboardAvoidingView behavior="padding" className="flex-1">
                 <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-                    <Pressable className="max-h-[70%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
+                    <Pressable className="max-h-[50%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
                         <FlatList
                             data={rows}
                             keyExtractor={(row, index) => (row.type === 'header' ? `h_${index}` : `d_${row.index}`)}
