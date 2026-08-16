@@ -74,7 +74,14 @@ export default function ReadListScreen() {
         }, [])
     );
 
-    // Tapping a book's status opens a menu to pick a new reading status, then saves it.
+    /**
+     * Opens a menu to pick a new reading status for a book, saves the choice,
+     * and switches the shown filter to match it.
+     *
+     * @param {ReadListBook} item The book whose status is being changed.
+     * @returns {void} Returns nothing.
+     *
+     */
     function handleChangeStatus(item: ReadListBook): void {
         showActionSheet(
             'Reading status',
@@ -93,7 +100,13 @@ export default function ReadListScreen() {
         );
     }
 
-    // Asks for confirmation, then removes the book from the read list.
+    /**
+     * Asks for confirmation, then removes the book from the read list.
+     *
+     * @param {ReadListBook} item The book to remove.
+     * @returns {void} Returns nothing.
+     *
+     */
     function handleRemove(item: ReadListBook): void {
         showActionSheet(
             'Remove from read list',
