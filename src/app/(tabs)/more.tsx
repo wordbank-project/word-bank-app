@@ -22,13 +22,13 @@ type BookSource = {
 
 const SOURCES: BookSource[] = [
     {
-        category: 'Books',
+        category: 'Books:',
         description: 'Where Word Bank finds books and their covers.',
         active: 'Open Library',
         providers: [{ name: 'Open Library' }, { name: 'Google Books', future: true }],
     },
     {
-        category: 'Definitions',
+        category: 'Definitions:',
         description: 'Where word meanings and example sentences come from.',
         active: 'Wiktionary & Free Dictionary',
         providers: [{ name: 'Wiktionary & Free Dictionary' }, { name: 'Urban Dictionary', future: true }],
