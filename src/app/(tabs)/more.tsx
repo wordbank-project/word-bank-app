@@ -3,6 +3,7 @@ import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { clearAllBookData } from "@/storage/read-list-storage";
 import { Colors } from "@/styles/global";
 import { alertDialog } from "@/utils/alert-dialog";
+import { seedTestData, type SeedSize } from "@/utils/seed-test-data";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { Link, router, type Href } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -151,6 +152,42 @@ function handleDeleteAll(): void {
     );
 }
 
+/**
+ * Runs the seeder for the chosen size, shows a summary of what was written,
+ * then navigates to the (now-repopulated) Read List.
+ *
+ * @param {SeedSize} size Which preset to generate ("small" | "medium" | "large").
+ * @returns {Promise<void>} Resolves once the summary alert has been shown and navigation triggered.
+ *
+ */
+async function runSeed(size: SeedSize): Promise<void> {
+    const result = await seedTestData(size);
+    alertDialog("Test data seeded", `${result.books} books, ${result.words} words, ${result.analyses} analyses.`);
+    router.navigate('/(tabs)/read-list');
+}
+
+/**
+ * Dev-only: prompts for a seed size, then replaces all book data with
+ * generated test data — for stress-testing lists/filters/sort/Memory/
+ * export-import with real volume. Only reachable via the `__DEV__`-gated row
+ * below — never rendered in a production build.
+ *
+ * @returns {void} Returns nothing — the action sheet's choice drives `runSeed`.
+ *
+ */
+function handleSeedTestData(): void {
+    showActionSheet(
+        "Seed test data",
+        "Replaces all books, words, and analyses with generated test data. This cannot be undone!",
+        [
+            { text: "Small (10 books)", onPress: () => runSeed("small") },
+            { text: "Medium (50 books)", onPress: () => runSeed("medium") },
+            { text: "Large (200 books)", onPress: () => runSeed("large") },
+            { text: "Cancel", style: "cancel" },
+        ],
+    );
+}
+
 export default function MoreScreen() {
     const { ref: scrollRef, onScroll, scrollEventThrottle } = useScrollViewScroll();
 
@@ -195,6 +232,7 @@ export default function MoreScreen() {
                 {API_LINKS.map((link, i) => (
                     <Row key={link.href} label={link.label} href={link.href as Href} chevron first={i === 0} />
                 ))}
+                {__DEV__ ? <Row label="Seed test data" chevron onPress={handleSeedTestData} /> : null}
             </Section>
         </ScrollView>
     );
