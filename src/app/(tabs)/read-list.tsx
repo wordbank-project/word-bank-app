@@ -129,7 +129,7 @@ export default function ReadListScreen() {
      */
     function handleRemove(item: ReadListBook): void {
         showActionSheet(
-            'Remove from read list',
+            'Remove from read list?',
             `Remove "${item.title}"?`,
             [
                 {
