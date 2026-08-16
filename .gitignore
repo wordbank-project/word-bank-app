@@ -47,7 +47,9 @@ yarn-error.*
 screenshots/
 TODOS.md
 IDEAS.md
+NOTES.md
 api.md
+word-bank-backup*
 
 # Personal bash scripts
 .scripts/
