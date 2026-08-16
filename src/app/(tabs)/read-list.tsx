@@ -132,7 +132,6 @@ export default function ReadListScreen() {
             'Remove from read list',
             `Remove "${item.title}"?`,
             [
-                { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Remove',
                     style: 'destructive',
@@ -141,6 +140,7 @@ export default function ReadListScreen() {
                         setReadList(updated);
                     },
                 },
+                { text: 'Cancel', style: 'cancel' },
             ]
         );
     }
