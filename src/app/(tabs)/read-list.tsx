@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 
 import { ActivityIndicator, FlatList, Pressable, Text, View } from "react-native";
 
@@ -6,10 +6,10 @@ import { useFocusEffect, usePathname } from "expo-router";
 
 import { useFlatListScroll } from "@/hooks/use-scroll-registration";
 
-import type { ReadListBook, ReadStatus } from "@/models/read-list-book";
-import { READ_STATUS_LABELS, READ_STATUS_ORDER } from "@/models/read-list-book";
+import type { ReadListBook, ReadListFilter, ReadStatus } from "@/models/read-list-book";
+import { READ_LIST_FILTERS, READ_STATUS_FILTER_LABELS, READ_STATUS_LABELS, READ_STATUS_ORDER } from "@/models/read-list-book";
 
-import { getReadList, removeReadListBook, setReadBookStatus } from "@/storage/read-list-storage";
+import { getReadList, getReadListFilter, removeReadListBook, setReadBookStatus, setReadListFilter } from "@/storage/read-list-storage";
 import { getWordCounts } from "@/storage/words-storage";
 import { consumePendingReadFilter } from "@/utils/pending-read-filter";
 import { showActionSheet } from "@/utils/show-action-sheet";
@@ -21,19 +21,16 @@ import { openAddBookMenu } from "@/utils/open-add-book-menu";
 
 import ReadListItem from "@/components/ReadListItem";
 
-// What the filter pills can be: a real reading status, or "all" to show everything.
-type StatusFilter = ReadStatus | 'all';
-
 // The filter buttons shown at the top: "All" plus one per reading status.
-const FILTERS: { value: StatusFilter; label: string }[] = [
-    { value: 'all', label: 'All' },
-    ...READ_STATUS_ORDER.map((status) => ({ value: status, label: READ_STATUS_LABELS[status] })),
-];
+const FILTERS: { value: ReadListFilter; label: string }[] = READ_LIST_FILTERS.map((value) => ({
+    value,
+    label: READ_STATUS_FILTER_LABELS[value],
+}));
 
 export default function ReadListScreen() {
     const [readList, setReadList] = useState<ReadListBook[]>([]); // all saved books
     const [readListLoading, setReadListLoading] = useState<boolean>(true); // true until the first load finishes
-    const [filter, setFilter] = useState<StatusFilter>('all'); // Initial value is: "All"
+    const [filter, setFilter] = useState<ReadListFilter>('all'); // Initial value is: "All"
     const [wordCounts, setWordCounts] = useState<Record<string, number>>({}); // how many words each book has, by key
 
     // Connects this list to the scroll-to-top button shared across tabs.
@@ -52,6 +49,29 @@ export default function ReadListScreen() {
 
     const pathname = usePathname();
 
+    // Restore the previously chosen filter of the read list on launch. Sets
+    // state directly (not selectFilter) — no need to write back the value we
+    // just read.
+    useEffect(() => {
+        getReadListFilter().then((filter) => {
+            if (filter) {
+                setFilter(filter);
+            }
+        });
+    }, []);
+
+    /**
+     * Updates the shown filter and persists it so it's restored next launch.
+     *
+     * @param {ReadListFilter} next The filter to switch to.
+     * @returns {void} Returns nothing.
+     *
+     */
+    function selectFilter(next: ReadListFilter): void {
+        setFilter(next);
+        setReadListFilter(next);
+    }
+
     // Reload the books every time the tab comes into focus, so changes made
     // elsewhere (e.g. adding a book or words) show up here.
     useFocusEffect(
@@ -60,7 +80,7 @@ export default function ReadListScreen() {
             // (covers back-button returns, not only the "Update read list" button).
             const pending = consumePendingReadFilter();
             if (pending) {
-                setFilter(pending);
+                selectFilter(pending);
             }
 
             getReadList().then((books) => {
@@ -92,7 +112,7 @@ export default function ReadListScreen() {
                     onPress: async () => {
                         const updated = await setReadBookStatus(item.key, status);
                         setReadList(updated);
-                        setFilter(status);
+                        selectFilter(status);
                     },
                 })),
                 { text: 'Cancel', style: 'cancel' as const },
@@ -143,7 +163,7 @@ export default function ReadListScreen() {
                     return (
                         <Pressable
                             key={value}
-                            onPress={() => setFilter(value)}
+                            onPress={() => selectFilter(value)}
                             className={`flex-1 items-center justify-center rounded-lg border px-1 py-1.75 ${selected ? "border-accent bg-accent" : "border-border-input bg-input"}`}
                             accessibilityRole="button"
                             accessibilityState={{ selected }}

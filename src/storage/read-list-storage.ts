@@ -1,11 +1,17 @@
-import type { ReadListBook, ReadStatus } from "@/models/read-list-book";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import type { ReadListBook, ReadListFilter, ReadStatus } from "@/models/read-list-book";
+import { READ_LIST_FILTERS } from "@/models/read-list-book";
+
 import { clearAnalysisHistory } from "@/storage/analysis-storage";
 import { getJSON, setJSON } from "@/storage/storage";
 import { removeWords } from "@/storage/words-storage";
 
-export type { ReadListBook, ReadStatus } from "@/models/read-list-book";
+export type { ReadListBook, ReadStatus, ReadListFilter } from "@/models/read-list-book";
 
 const READ_LIST_KEY = "read_list";
+
+const READ_LIST_FILTER_KEY = "read_list_filter";
 
 export async function getReadList(): Promise<ReadListBook[]> {
     const books = await getJSON<ReadListBook[]>(READ_LIST_KEY, []);
@@ -88,4 +94,31 @@ export async function clearAllBookData(): Promise<void> {
     await removeWords(books.map((b) => b.key));
     await setReadList([]);
     await clearAnalysisHistory();
+}
+
+/**
+ * Reads back the saved read list filter.
+ *
+ * @returns {Promise<ReadListFilter | null>} The saved read list filter, or `null` if none is set
+ * (or the value is unreadable/invalid) so the caller can fall back to the default.
+ *
+ */
+export async function getReadListFilter(): Promise<ReadListFilter | null> {
+    try {
+        const saved = await AsyncStorage.getItem(READ_LIST_FILTER_KEY);
+        return READ_LIST_FILTERS.includes(saved as ReadListFilter) ? (saved as ReadListFilter) : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Saves the chosen read list filter.
+ *
+ * @param {ReadListFilter} filter The chosen filter to save.
+ * @returns {Promise<void>} Resolves once the value has been written.
+ *
+ */
+export async function setReadListFilter(filter: ReadListFilter): Promise<void> {
+    await AsyncStorage.setItem(READ_LIST_FILTER_KEY, filter);
 }
