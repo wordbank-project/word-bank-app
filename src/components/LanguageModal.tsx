@@ -81,7 +81,7 @@ export default function LanguageModal({ selected, onSelect, label = "Dictionary 
                         {/* On web we use 50% max height. We open the keyboard on native devices so we
                             pick 90% height to cover the screen for better UX. */}
                         <Pressable
-                            className={`${Platform.OS === "web" ? "max-h-[50%]" : "max-h-[90%]"} rounded-t-2xl bg-background`}
+                            className={`${Platform.OS === "web" ? "max-h-[70%]" : "max-h-[90%]"} rounded-t-2xl bg-background`}
                             style={{ paddingBottom: insets.bottom + 16 }}
                         >
                             <FlatList
