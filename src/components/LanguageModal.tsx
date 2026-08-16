@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Modal, Pressable, Text, TextInput, View } from "react-native";
+import { FlatList, KeyboardAvoidingView, Modal, Pressable, Text, TextInput, View, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColorScheme } from "@/context/theme-context";
@@ -78,7 +78,12 @@ export default function LanguageModal({ selected, onSelect, label = "Dictionary 
             >
                 <KeyboardAvoidingView behavior="padding" className="flex-1">
                     <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setVisible(false)}>
-                        <Pressable className="max-h-[90%] rounded-t-2xl bg-background" style={{ paddingBottom: insets.bottom + 16 }}>
+                        {/* On web we use 50% max height. We open the keyboard on native devices so we
+                            pick 90% height to cover the screen for better UX. */}
+                        <Pressable
+                            className={`${Platform.OS === "web" ? "max-h-[50%]" : "max-h-[90%]"} rounded-t-2xl bg-background`}
+                            style={{ paddingBottom: insets.bottom + 16 }}
+                        >
                             <FlatList
                                 ref={listRef}
                                 data={filteredLanguages}
