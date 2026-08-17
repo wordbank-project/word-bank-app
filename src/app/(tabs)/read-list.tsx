@@ -104,7 +104,7 @@ export default function ReadListScreen() {
      */
     function handleChangeStatus(item: ReadListBook): void {
         showActionSheet(
-            'Reading status',
+            'Reading status:',
             item.title,
             [
                 ...READ_STATUS_ORDER.map((status) => ({
