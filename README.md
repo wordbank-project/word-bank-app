@@ -16,11 +16,14 @@ _iOS — coming soon · Web — coming soon · F-Droid — planned_
 - **A word bank per book** — each book keeps its own vocabulary, with a running word count.
 - **Instant, precise definitions** — every meaning at once, with part of speech and IPA; search and pick the one that fits, colour-coded by part of speech.
 - **Make words stick** — save each word with the sentence you found it in and your own notes; rate each book with stars and add a review and notes per book.
-- **Typo-proof lookups** — as-you-type suggestions while adding a word, and "Did you mean …?" corrections when a lookup fails.
 - **Translate on demand** — tap-to-reveal translation of a word into your own language; never called automatically.
 - **All your words in one place** — the Words List gathers every word from every book; search, filter by part of speech, and sort A–Z, by book, or by recently added.
 - **Read in your language** — definitions across 100+ languages (Wiktionary data); English and Dutch live today.
 - **Private & offline** · **Dark mode** included.
+- **Analyze a sentence with AI** — paste any sentence and get a plain-language explanation of what it means; user-initiated per sentence, and it's the only feature that sends text you wrote.
+- **AI-generated suggestions** — placeholder book titles, words, and example sentences you can accept with one tap, so search and add fields never start blank.
+- **Practice with flashcards, track your progress** — flip-to-reveal Memory cards over every saved word, self-rated "Still learning" / "Knew it", plus a Stats screen showing your knew-it rate and which words still need work. An optional daily reminder nudges you to practice.
+- **Back up and restore your data** — export everything to a file and bring it back later or on another device, merging with what's already there or replacing it entirely.
 
 ## Tech
 
@@ -51,7 +54,7 @@ The full build matrix — dev client vs standalone APK, local Gradle builds, EAS
 ```
 src/
   app/            # expo-router routes (file = route); book.tsx is the book detail
-    (tabs)/       # Search · Read List · Words List · More  (+ custom-book, about)
+    (tabs)/       # Search · Words List · Read List · Memory · More  (+ custom-book, about, support, analyze, stats)
   components/     # presentational + small stateful UI
   hooks/          # reusable hooks (search, scroll, placeholder typewriter…)
   context/        # theme + scroll providers
@@ -74,9 +77,11 @@ The app talks to the network only for the features you use, and sends only what 
 | Definitions | self-hosted wiktapi.dev · dictionaryapi.dev (English) | the word you look up |
 | As-you-type suggestions | api.datamuse.com (English) · wiktapi search | the typed prefix |
 | Translate (tap-to-reveal) | translate.googleapis.com (unofficial, keyless) | the word + two language codes — only when you tap |
-| Community word feed (**opt-in**) | your [word-bank-server](https://github.com/wordbank-project/word-bank-server) instance | the saved word + its public dictionary data — never your sentences, notes, books, or identity |
+| Analyze a sentence (AI) | your [word-bank-server](https://github.com/wordbank-project/word-bank-server) instance | the sentence you type — only when you tap "Analyze"; this is the one call in the app that sends text you wrote |
+| AI suggestions (titles/words/example sentences) | your word-bank-server instance | nothing personal — just your dictionary language, to fetch placeholder suggestions |
+| Community word feed (**opt-in**) | your word-bank-server instance | the saved word + its public dictionary data — never your sentences, notes, books, or identity |
 
-The community feed is disabled unless `EXPO_PUBLIC_WORDS_FEED_API_URL` is set at build time. There are no analytics, crash reporters, or ad SDKs in the app.
+The community feed and AI features (analysis + suggestions) all talk to the same word-bank-server instance, resolved via `EXPO_PUBLIC_WORDS_FEED_API_URL` at build time — without it configured, those features degrade gracefully (a "couldn't analyze" state, or static fallback suggestions) rather than break. There are no analytics, crash reporters, or ad SDKs in the app.
 
 ## Contributing
 
