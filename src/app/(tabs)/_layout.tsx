@@ -69,11 +69,11 @@ export default function TabLayout() {
                         }}
                     />
                     <Tabs.Screen
-                        name="words-list"
+                        name="memory-words"
                         options={{
-                            title: "Words List",
+                            title: "Memory",
                             tabBarIcon: ({ color, size }) => (
-                                <Ionicons name="list" size={size} color={color} />
+                                <Ionicons name="alarm" size={size} color={color} />
                             ),
                         }}
                     />
