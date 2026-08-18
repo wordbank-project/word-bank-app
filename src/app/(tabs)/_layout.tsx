@@ -51,9 +51,18 @@ export default function TabLayout() {
                         }}
                     />
                     <Tabs.Screen
+                        name="words-list"
+                        options={{
+                            title: "Words",
+                            tabBarIcon: ({ color, size }) => (
+                                <Ionicons name="list" size={size} color={color} />
+                            ),
+                        }}
+                    />
+                    <Tabs.Screen
                         name="read-list"
                         options={{
-                            title: "Read List",
+                            title: "Read",
                             tabBarIcon: ({ color, size }) => (
                                 <Ionicons name="list-circle" size={size} color={color} />
                             ),
