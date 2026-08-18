@@ -266,14 +266,14 @@ export default function WordsListScreen() {
                 keyboardShouldPersistTaps="handled"
                 ListEmptyComponent={
                     allWords.length === 0 ? (
-                        <View className="mt-16 items-center gap-2.5 px-8">
+                        <View className="mt-2 items-center gap-2.5 px-8">
                             <Text className="text-lg font-semibold text-fg">No words yet</Text>
                             <Link href="/read-list" className="text-center text-sm text-accent">
                                 Open a book and add words to build your word bank.
                             </Link>
                         </View>
                     ) : (
-                        <View className="mt-16 items-center gap-2.5 px-8">
+                        <View className="mt-2 items-center gap-2.5 px-8">
                             <Text className="text-lg font-semibold text-fg">No words are matched</Text>
                         </View>
                     )

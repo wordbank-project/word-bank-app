@@ -193,7 +193,7 @@ export default function ReadListScreen() {
                 // or none matching the current filter.
                 ListEmptyComponent={
                     readList.length === 0 ? (
-                        <View className="mt-16 items-center gap-2.5 px-8">
+                        <View className="mt-7 items-center gap-2.5 px-8">
                             <Text className="text-lg font-semibold text-fg">No books yet</Text>
                             <Pressable onPress={() => openAddBookMenu(pathname)}>
                                 <Text className="text-center text-sm text-accent">
@@ -202,7 +202,7 @@ export default function ReadListScreen() {
                             </Pressable>
                         </View>
                     ) : (
-                        <View className="mt-16 items-center gap-2.5 px-8">
+                        <View className="mt-7 items-center gap-2.5 px-8">
                             <Text className="text-lg font-semibold text-fg">
                                 {filter === 'all' ? 'No books yet' : `Nothing under "${READ_STATUS_LABELS[filter as ReadStatus]}"`}
                             </Text>

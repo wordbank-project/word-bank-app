@@ -34,7 +34,7 @@ export default function HomeScreen() {
                 onRetryLoadMore={retryLoadMore}
                 header={header}
                 listEmptyComponent={
-                    <View className="mt-16 items-center gap-2.5 px-8">
+                    <View className="mt-2 items-center gap-2.5 px-8">
                         <Text className="text-center text-sm leading-5 text-muted">
                             Search for a book and add a word to your <Text className="italic text-muted">word bank</Text> per book!
                             Want to add a custom book? Press the + button.
