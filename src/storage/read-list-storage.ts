@@ -6,9 +6,20 @@ import { READ_LIST_FILTERS } from "@/models/read-list-book";
 import { clearAnalysisHistory } from "@/storage/analysis-storage";
 import { clearMemoryStats } from "@/storage/memory-stats-storage";
 import { getJSON, setJSON } from "@/storage/storage";
-import { removeWords } from "@/storage/words-storage";
+import { getWords, removeWords, type WordEntry } from "@/storage/words-storage";
 
 export type { ReadListBook, ReadStatus, ReadListFilter } from "@/models/read-list-book";
+
+// A saved word denormalized with its source book's info — the shape getAllWords()
+// returns, so callers (Words List, the Memory tab) can display or navigate to the
+// source book without a second lookup.
+export type WordWithBook = WordEntry & {
+    bookKey: string;
+    bookTitle: string;
+    bookAuthor: string;
+    bookYear: string;
+    bookCover: string;
+};
 
 const READ_LIST_KEY = "read_list";
 
@@ -51,6 +62,29 @@ export async function getReadList(): Promise<ReadListBook[]> {
 
 export async function setReadList(books: ReadListBook[]): Promise<void> {
     await setJSON(READ_LIST_KEY, books);
+}
+
+/**
+ * Loads every saved word across every book on the read list, each tagged with
+ * its source book's info.
+ *
+ * @returns {Promise<WordWithBook[]>} All words, denormalized with their book's
+ * key/title/author/year/cover so callers can display or navigate without a second lookup.
+ *
+ */
+export async function getAllWords(): Promise<WordWithBook[]> {
+    const books = await getReadList();
+    const perBook = await Promise.all(books.map((book) => getWords(book.key)));
+    return books.flatMap((book, i) =>
+        perBook[i].map((word) => ({
+            ...word,
+            bookKey: book.key,
+            bookTitle: book.title,
+            bookAuthor: book.author,
+            bookYear: book.year,
+            bookCover: book.cover_i,
+        })),
+    );
 }
 
 // Adds a book, or updates it if it's already saved.

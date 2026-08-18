@@ -7,9 +7,8 @@ import { Link, useFocusEffect, useIsFocused } from "expo-router";
 import { useColorScheme } from "@/context/theme-context";
 import { useFlatListScroll } from "@/hooks/use-scroll-registration";
 
-import { getReadList } from "@/storage/read-list-storage";
+import { getAllWords, type WordWithBook } from "@/storage/read-list-storage";
 import { getSortMode, setSortMode as saveSortMode, SORT_MODES, type SortMode } from "@/storage/words-list-storage";
-import { getWords } from "@/storage/words-storage";
 
 import { ACCENT, Colors } from "@/styles/global";
 
@@ -17,7 +16,7 @@ import { openBook } from "@/utils/open-book";
 import { normalizePos, POS_ORDER, posColor, posLabel } from "@/utils/part-of-speech";
 import { showActionSheet } from "@/utils/show-action-sheet";
 
-import WordListItem, { type WordWithBook } from "@/components/WordListItem";
+import WordListItem from "@/components/WordListItem";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
 
@@ -60,18 +59,7 @@ export default function WordsListScreen() {
     // info so we can show it and open it. Runs each time the tab is opened.
     useFocusEffect(
         useCallback(() => {
-            getReadList().then(async (books) => {
-                const perBook = await Promise.all(books.map((book) => getWords(book.key)));
-                const flat = books.flatMap((book, i) =>
-                    perBook[i].map((word) => ({
-                        ...word,
-                        bookKey: book.key,
-                        bookTitle: book.title,
-                        bookAuthor: book.author,
-                        bookYear: book.year,
-                        bookCover: book.cover_i,
-                    }))
-                );
+            getAllWords().then((flat) => {
                 // Ordering is handled by the `filtered` memo (depends on the sort mode).
                 setAllWords(flat);
                 setLoading(false);

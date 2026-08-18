@@ -2,18 +2,9 @@ import React from "react";
 
 import { Pressable, Text, View } from "react-native";
 
-import type { WordEntry } from "@/models/word-entry";
+import type { WordWithBook } from "@/storage/read-list-storage";
 
 import { Fonts } from "@/styles/global";
-
-// A word plus the book it was added to, so the list can label and navigate to its source.
-export type WordWithBook = WordEntry & {
-    bookKey: string;
-    bookTitle: string;
-    bookAuthor: string;
-    bookYear: string;
-    bookCover: string;
-};
 
 type WordListItemProps = {
     item: WordWithBook;
