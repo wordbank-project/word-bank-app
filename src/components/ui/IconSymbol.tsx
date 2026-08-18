@@ -32,6 +32,7 @@ const MAPPING = {
     'square.and.arrow.up': 'ios-share',
     'square.and.arrow.down': 'file-download',
     'trash.fill': 'delete',
+    'chart.bar.fill': 'bar-chart',
 } as IconMapping;
 
 /**
