@@ -204,6 +204,7 @@ export default function MoreScreen() {
         >
             <Section title="Tools">
                 <Row label="Analyze a sentence" icon="sparkles" chevron first href="/analyze" />
+                <Row label="Practice history" icon="chart.bar.fill" chevron href={{ pathname: "/stats", params: { from: "more" } }} />
             </Section>
 
             <Section title="Your data">
