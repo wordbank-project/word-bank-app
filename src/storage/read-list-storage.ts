@@ -4,6 +4,7 @@ import type { ReadListBook, ReadListFilter, ReadStatus } from "@/models/read-lis
 import { READ_LIST_FILTERS } from "@/models/read-list-book";
 
 import { clearAnalysisHistory } from "@/storage/analysis-storage";
+import { clearMemoryStats } from "@/storage/memory-stats-storage";
 import { getJSON, setJSON } from "@/storage/storage";
 import { removeWords } from "@/storage/words-storage";
 
@@ -85,15 +86,17 @@ export async function setReadBookStatus(bookKey: string, status: ReadStatus): Pr
     return updatedReadBookStatus;
 }
 
-/** Delete all book data, including the read list, words, and analysis history. 
-* @returns {Promise<void>} test A promise that resolves when all data has been cleared.
-* 
+/** Delete all book data, including the read list, words, analysis history, and
+* Memory-tab practice stats.
+* @returns {Promise<void>} A promise that resolves when all data has been cleared.
+*
 */
 export async function clearAllBookData(): Promise<void> {
     const books = await getReadList();
     await removeWords(books.map((b) => b.key));
     await setReadList([]);
     await clearAnalysisHistory();
+    await clearMemoryStats();
 }
 
 /**
