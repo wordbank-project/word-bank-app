@@ -162,7 +162,10 @@ function handleDeleteAll(): void {
  */
 async function runSeed(size: SeedSize): Promise<void> {
     const result = await seedTestData(size);
-    alertDialog("Test data seeded", `${result.books} books, ${result.words} words, ${result.analyses} analyses.`);
+    alertDialog(
+        "Test data seeded",
+        `${result.books} books, ${result.words} words, ${result.analyses} analyses, ${result.wordsWithStats} with practice stats.`,
+    );
     router.navigate('/(tabs)/read-list');
 }
 
