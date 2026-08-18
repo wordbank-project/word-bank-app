@@ -8,14 +8,16 @@ import type { WordEntry } from "@/models/word-entry";
 
 import { clearAllBookData, setReadList } from "@/storage/read-list-storage";
 import { setAnalysisHistory } from "@/storage/analysis-storage";
+import { setMemoryStats, type WordStat } from "@/storage/memory-stats-storage";
 import { pick, randomInt, shuffle } from "@/utils/random";
 
 // Dev-only: generates large amounts of realistic-shaped test data (books,
-// words, sentence analyses) for stress-testing lists/filters/sort/Memory/
-// export-import with real volume. Only ever reachable from More → Developer's
-// __DEV__-gated "Seed test data" row — never runs in a production build.
-// Always wipes existing book data first (via clearAllBookData) so repeated
-// runs are reproducible instead of accumulating.
+// words, sentence analyses, Memory-tab practice stats) for stress-testing
+// lists/filters/sort/Memory/export-import with real volume. Only ever
+// reachable from More → Developer's __DEV__-gated "Seed test data" row —
+// never runs in a production build. Always wipes existing book data first
+// (via clearAllBookData, which also clears memory stats) so repeated runs
+// are reproducible instead of accumulating.
 
 export type SeedSize = "small" | "medium" | "large";
 
@@ -23,6 +25,7 @@ export type SeedResult = {
     books: number;
     words: number;
     analyses: number;
+    wordsWithStats: number;
 };
 
 const SEED_SIZES: Record<SeedSize, { books: number; minWords: number; maxWords: number }> = {
@@ -241,6 +244,35 @@ function buildSeedWords(count: number): WordEntry[] {
 }
 
 /**
+ * Builds seeded Memory-tab practice stats for a random subset of the given
+ * words — mirrors buildSeedWords's "only some words get a saved sentence"
+ * pattern, so the Stats screen shows a realistic mix of practiced and
+ * never-practiced words rather than every single word having history.
+ *
+ * @param {Set<string>} words Every seeded word's lowercased, trimmed text, across all books.
+ * @returns {Record<string, WordStat>} Stats for roughly half of `words`, keyed the same way memory-stats-storage.ts does.
+ *
+ */
+function buildSeedMemoryStats(words: Set<string>): Record<string, WordStat> {
+    const stats: Record<string, WordStat> = {};
+    for (const word of words) {
+        // Only some words have been practiced at all — most real words haven't yet.
+        if (Math.random() >= 0.5) {
+            continue;
+        }
+        const total = randomInt(1, 8);
+        const knewIt = randomInt(0, total);
+        stats[word] = {
+            knewIt,
+            stillLearning: total - knewIt,
+            // More recent than addedAt's 180-day spread — practice happens after adding.
+            lastReviewedAt: Date.now() - randomInt(0, 14) * 24 * 60 * 60 * 1000,
+        };
+    }
+    return stats;
+}
+
+/**
  * Builds the seeded sentence-analysis history, capped at MAX_ANALYSES_ENTRIES
  * (matching the real app's own cap — see analysis-storage.ts).
  *
@@ -257,13 +289,14 @@ function buildSeedAnalyses(): AnalysisHistoryEntry[] {
 }
 
 /**
- * Replaces all book data (read list, every book's words, analysis history)
- * with generated test data of the given size. Always wipes existing data
- * first (via clearAllBookData) so repeated runs are reproducible rather than
- * accumulating. Dev-only — see the file header.
+ * Replaces all book data (read list, every book's words, analysis history,
+ * Memory-tab practice stats) with generated test data of the given size.
+ * Always wipes existing data first (via clearAllBookData, which also clears
+ * memory stats) so repeated runs are reproducible rather than accumulating.
+ * Dev-only — see the file header.
  *
  * @param {SeedSize} size Which preset to generate ("small" | "medium" | "large").
- * @returns {Promise<SeedResult>} How many books/words/analyses were written.
+ * @returns {Promise<SeedResult>} How many books/words/analyses/stat-carrying words were written.
  *
  */
 export async function seedTestData(size: SeedSize): Promise<SeedResult> {
@@ -272,6 +305,7 @@ export async function seedTestData(size: SeedSize): Promise<SeedResult> {
     const config = SEED_SIZES[size];
     const books: ReadListBook[] = [];
     const wordEntries: [string, string][] = [];
+    const allWordTexts = new Set<string>();
     let totalWords = 0;
 
     for (let i = 0; i < config.books; i++) {
@@ -280,6 +314,7 @@ export async function seedTestData(size: SeedSize): Promise<SeedResult> {
 
         const words = buildSeedWords(randomInt(config.minWords, config.maxWords));
         totalWords += words.length;
+        words.forEach((word) => allWordTexts.add(word.word.trim().toLowerCase()));
         wordEntries.push([`words_${book.key}`, JSON.stringify(words)]);
     }
 
@@ -292,5 +327,13 @@ export async function seedTestData(size: SeedSize): Promise<SeedResult> {
     const analyses = buildSeedAnalyses();
     await setAnalysisHistory(analyses);
 
-    return { books: books.length, words: totalWords, analyses: analyses.length };
+    const memoryStats = buildSeedMemoryStats(allWordTexts);
+    await setMemoryStats(memoryStats);
+
+    return {
+        books: books.length,
+        words: totalWords,
+        analyses: analyses.length,
+        wordsWithStats: Object.keys(memoryStats).length,
+    };
 }
