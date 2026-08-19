@@ -127,7 +127,7 @@ export default function StatsScreen() {
                     onPress={() => router.push("/words-list")}
                 >
                     <Text className="text-2xl font-bold text-fg">{totalStats.wordsTracked}</Text>
-                    <Text className="text-xs text-muted">Words practiced</Text>
+                    <Text className="text-xs text-muted">Unique words practiced</Text>
                 </Pressable>
                 <View className="flex-1 items-center gap-1 rounded-[10px] bg-card p-3.5">
                     <Text className="text-2xl font-bold text-accent">{totalStats.knewItRatePercentage}%</Text>
