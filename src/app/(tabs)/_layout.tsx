@@ -62,7 +62,7 @@ export default function TabLayout() {
                     <Tabs.Screen
                         name="read-list"
                         options={{
-                            title: "Read",
+                            title: "Library",
                             tabBarIcon: ({ color, size }) => (
                                 <Ionicons name="list-circle" size={size} color={color} />
                             ),
