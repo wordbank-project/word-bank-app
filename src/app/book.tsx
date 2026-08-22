@@ -38,7 +38,7 @@ import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 
 import { ACCENT, Colors, Fonts } from "@/styles/global";
 
-import { NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/BookDetailSkeletons";
+import { LanguageModalSkeleton, NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/BookDetailSkeletons";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import CoverImage from "@/components/CoverImage";
 import CoverPlaceholder from "@/components/CoverPlaceholder";
@@ -124,6 +124,10 @@ export default function BookDetail() {
     // Optional "translate to" language for the per-word
     // independent of the dictionary language above.
     const [translateToLanguage, setTranslateToLanguage] = useState<Language>(LANGUAGES[0]); // Initial language is "nl"
+    // Mirrors useSavedLanguage's languageReady, but for this independent
+    // preference — true once the mount-time restore below has resolved, so its
+    // LanguageModal row can show a skeleton instead of flashing LANGUAGES[0].
+    const [translateToLanguageReady, setTranslateToLanguageReady] = useState<boolean>(false);
 
     // Cached translations, keyed `${word}:${toLangCode}` so switching the target
     // language never shows a stale result. null = fetched but no translation found.
@@ -197,13 +201,11 @@ export default function BookDetail() {
     // On mount, restore the "translate to" language the user picked last time.
     useEffect(() => {
         getTranslationLanguageCode().then((code) => {
-            if (!code) {
-                return;
-            }
-            const saved = LANGUAGES.find(language => language.code === code);
+            const saved = code ? LANGUAGES.find(language => language.code === code) : undefined;
             if (saved) {
                 setTranslateToLanguage(saved);
             }
+            setTranslateToLanguageReady(true);
         });
     }, []);
 
@@ -642,8 +644,16 @@ export default function BookDetail() {
 
                 {error ? <Text className="mx-3 my-1 text-[13px] text-error">{error}</Text> : null}
 
-                <LanguageModal selected={language} onSelect={handleSelectLanguage} />
-                <LanguageModal selected={translateToLanguage} onSelect={handleSelectTranslateToLanguage} label="Translate to" />
+                {languageReady ? (
+                    <LanguageModal selected={language} onSelect={handleSelectLanguage} />
+                ) : (
+                    <LanguageModalSkeleton />
+                )}
+                {translateToLanguageReady ? (
+                    <LanguageModal selected={translateToLanguage} onSelect={handleSelectTranslateToLanguage} label="Translate to" />
+                ) : (
+                    <LanguageModalSkeleton label="Translate to" />
+                )}
 
                 <KeyboardAwareScrollView
                     ref={scrollRef}

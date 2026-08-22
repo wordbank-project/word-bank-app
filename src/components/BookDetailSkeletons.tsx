@@ -1,6 +1,6 @@
 import React from "react";
 
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import Reanimated from "react-native-reanimated";
 
 import { usePulse } from "@/hooks/use-pulse";
@@ -67,6 +67,24 @@ export function WordCountSkeleton() {
         <Reanimated.View style={animStyle} className="my-0.5">
             <View className="rounded bg-cover-placeholder" style={{ width: 64, height: 13 }} />
         </Reanimated.View>
+    );
+}
+
+// Placeholder for a LanguageModal trigger row while its saved language hasn't
+// loaded yet (see useSavedLanguage's languageReady / book.tsx's own
+// translateToLanguageReady) — keeps the row's chrome (border, label) and only
+// skeletonizes the value/chevron side, so it doesn't flash the default
+// language before the real saved one loads.
+export function LanguageModalSkeleton({ label = "Dictionary language" }: { label?: string }) {
+    const animStyle = usePulse();
+
+    return (
+        <View className="flex-row items-center justify-between border-b border-border px-3 py-2">
+            <Text className="text-[13px] text-muted">{label}</Text>
+            <Reanimated.View style={animStyle}>
+                <View className="rounded bg-cover-placeholder" style={{ width: 70, height: 14 }} />
+            </Reanimated.View>
+        </View>
     );
 }
 
