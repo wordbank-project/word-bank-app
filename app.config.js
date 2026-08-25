@@ -65,6 +65,13 @@ module.exports = {
                     cameraPermission: "Take a photo to use as your book cover."
                 }
             ],
+            // Android release builds block plain HTTP by default (API 28+) — Expo's prebuild
+            // only exempts the debug variant (android/app/src/debug/AndroidManifest.xml), so a
+            // `preview` release APK silently fails every http:// request otherwise. Scoped to
+            // `preview` only — a temporary self-hosted server on the LAN (see deployment.md's
+            // "Testing before you have a domain") is the one case that needs this; `production`
+            // always talks to the real HTTPS domain and should stay locked down.
+            ...(IS_PREVIEW ? [["expo-build-properties", { android: { usesCleartextTraffic: true } }]] : []),
             [
                 "expo-splash-screen",
                 {
