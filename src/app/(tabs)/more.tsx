@@ -129,6 +129,13 @@ function handleChooseSource(source: BookSource): void {
     ]);
 }
 
+/**
+ * Shows a "Coming soon" alert for a not-yet-implemented feature.
+ *
+ * @param {string} feature The feature's name, shown in the alert's message.
+ * @returns {void} Returns nothing.
+ *
+ */
 function handleComingSoon(feature: string): void {
     alertDialog('Coming soon', `${feature} will be available in a future version.`);
 }
