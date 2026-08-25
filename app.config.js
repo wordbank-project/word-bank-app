@@ -93,7 +93,14 @@ module.exports = {
                     resizeMode: "contain",
                     backgroundColor: "#208AEF"
                 }
-            ]
+            ],
+            // No options needed — the Memory tab's daily reminder is local-only
+            // scheduling (src/utils/daily-reminder.ts); the plugin's icon/color/
+            // sound options only affect push-notification presentation.
+            "expo-notifications",
+            // No options needed — the plugin only customizes optional Android
+            // picker-dialog theming; default OS styling is fine.
+            "@react-native-community/datetimepicker"
         ],
         experiments: {
             typedRoutes: true,
