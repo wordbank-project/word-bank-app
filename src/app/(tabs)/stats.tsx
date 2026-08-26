@@ -176,7 +176,7 @@ export default function StatsScreen() {
             {strugglingWords.length > 0 ? (
                 <View className="gap-2">
                     <Text className="mb-2 text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">
-                        Still struggling with
+                        Still struggling with ({strugglingWords.length})
                     </Text>
                     <Text className="ml-1 text-[11px] text-faded">Long-press an entry to remove it.</Text>
 
