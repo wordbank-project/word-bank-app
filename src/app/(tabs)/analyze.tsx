@@ -315,7 +315,7 @@ export default function AnalyzeScreen() {
                 {!analysis && !loading ? (
                     <View className="gap-2">
                         <Text className="text-[11px] mt-7 mb-2 font-semibold uppercase tracking-[0.5px] text-muted">
-                            Try one sentence
+                            Try one sentence ({suggestionSentences.length})
                         </Text>
                         {suggestionSentences.map((exampleSentence: string) => (
                             <Pressable
