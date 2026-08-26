@@ -447,10 +447,11 @@ export default function BookDetail() {
     }
 
     async function handleAddWord(): Promise<void> {
-        let word = input.trim().toLowerCase();
+        // toLowerCase() was not correct here, since words with uppercase should also be searchable.
+        let word = input.trim();
         if (!word) {
             // If a suggested word is available from the placeholder use that.
-            word = suggestedWord.toLowerCase();
+            word = suggestedWord;
             if (!word) {
                 return;
             }
