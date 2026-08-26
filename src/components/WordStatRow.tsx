@@ -9,14 +9,15 @@ type WordStatRowProps = {
     word: WordWithBook;
     stat: WordStat;
     onPress: () => void;
+    onLongPress: () => void;
 };
 
 // One row on the Stats screen's "Still struggling with" list: the word, its
 // source book, and how many times it's been rated each way. Mirrors
 // WordListItem's layout/tone, with counts in place of the definition.
-function WordStatRow({ word, stat, onPress }: WordStatRowProps) {
+function WordStatRow({ word, stat, onPress, onLongPress }: WordStatRowProps) {
     return (
-        <Pressable className="gap-1 rounded-[10px] bg-card p-3.5 mb-1" onPress={onPress}>
+        <Pressable className="gap-1 rounded-[10px] bg-card p-3.5 mb-1" onPress={onPress} onLongPress={onLongPress}>
             <View className="flex-row items-center justify-between">
                 <Text className="text-[17px] font-bold text-fg">{word.word}</Text>
                 <Text className="text-xs text-muted">

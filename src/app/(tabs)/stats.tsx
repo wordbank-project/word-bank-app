@@ -7,12 +7,13 @@ import { useFocusEffect, useLocalSearchParams, router, Link } from "expo-router"
 import { useBackTo } from "@/hooks/use-back-to";
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 
-import { getMemoryStats, type WordStat } from "@/storage/memory-stats-storage";
+import { getMemoryStats, removeMemoryStat, type WordStat } from "@/storage/memory-stats-storage";
 import { getAllWords, type WordWithBook } from "@/storage/read-list-storage";
 
 import { ACCENT } from "@/styles/global";
 
 import { openBook } from "@/utils/open-book";
+import { showActionSheet } from "@/utils/show-action-sheet";
 
 import WordStatRow from "@/components/WordStatRow";
 
@@ -92,6 +93,32 @@ export default function StatsScreen() {
         return { wordsTracked: allRatedWords.length, knewItCount, stillLearningCount, knewItRatePercentage };
     }, [allRatedWords]);
 
+    /** 
+     * Prompts the user to remove a history word, 
+     * and removes it if confirmed.
+     * @param {string} word the history word to remove.
+     * @returns Returns nothing.
+     * 
+     */
+    function handleRemoveHistory(word: string): void {
+        showActionSheet("Remove word from history?", word, [
+            {
+                text: "Remove",
+                style: "destructive",
+                onPress: async () => {
+                    await removeMemoryStat(word);
+                    // Reload the stats
+                    setStats((prev: Record<string, WordStat>) => {
+                        const next = { ...prev };
+                        delete next[word.trim().toLowerCase()];
+                        return next;
+                    });
+                },
+            },
+            { text: "Cancel", style: "cancel" },
+        ]);
+    }
+
     if (loading) {
         return (
             <View className="flex-1 bg-background">
@@ -151,6 +178,8 @@ export default function StatsScreen() {
                     <Text className="mb-2 text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">
                         Still struggling with
                     </Text>
+                    <Text className="ml-1 text-[11px] text-faded">Long-press an entry to remove it.</Text>
+
                     <View className="gap-2">
                         {/* Visits the word in the book when we tap on it */}
                         {strugglingWords.map((row: StruggleRow) => (
@@ -168,6 +197,7 @@ export default function StatsScreen() {
                                         focusWord: row.word.word,
                                     })
                                 }
+                                onLongPress={() => handleRemoveHistory(row.word.word)}
                             />
                         ))}
                     </View>

@@ -71,6 +71,20 @@ export async function recordRating(word: string, knew: boolean): Promise<void> {
 }
 
 /**
+ * Removes one word's practice counters entirely.
+ *
+ * @param {string} word The word to remove (any casing/whitespace — matched the same way `recordRating` keys it).
+ * @returns {Promise<void>} Resolves once the updated counters have been written.
+ *
+ */
+export async function removeMemoryStat(word: string): Promise<void> {
+    const key = word.trim().toLowerCase();
+    const memoryStats: Record<string, WordStat> = await getMemoryStats();
+    delete memoryStats[key];
+    await setJSON(MEMORY_STATS_KEY, memoryStats);
+}
+
+/**
  * Clears every saved practice counter. Used by "Delete all data" — stats for
  * words no longer saved anywhere aren't meaningful to keep around.
  *
