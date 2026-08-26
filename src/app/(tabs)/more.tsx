@@ -52,6 +52,7 @@ type RowProps = {
     first?: boolean;
     danger?: boolean;
     icon?: React.ComponentProps<typeof IconSymbol>['name']; // leading icon, e.g. an AI-powered feature's "sparkles"
+    external?: boolean; // opens href in a new tab on web; native already opens external URLs in the system browser regardless
 };
 
 // A single settings-style row. Renders a chevron when it leads somewhere, or a
@@ -60,7 +61,7 @@ type RowProps = {
 // `icon`property shows a small leading icon before
 // the label (alongside the chevron, not instead of it — the chevron stays the
 // "this leads somewhere" cue every linked row on this screen uses).
-function Row({ label, value, href, onPress, chevron, first, danger, icon }: RowProps) {
+function Row({ label, value, href, onPress, chevron, first, danger, icon, external }: RowProps) {
     const colors = Colors[useColorScheme()];
     const iconColor = danger ? colors.error : colors.icon;
     const inner = (
@@ -77,9 +78,15 @@ function Row({ label, value, href, onPress, chevron, first, danger, icon }: RowP
     );
 
     if (href) {
+        // `target` on <Link asChild> never reaches the DOM: react-native-web's View only
+        // reads a nested `hrefAttrs` object, but Link's asChild path spreads `target` as a
+        // bare prop instead — so it's passed directly to the Pressable child here instead.
+        // react-native-web reads hrefAttrs off props at runtime but doesn't declare it on
+        // PressableProps, so it needs a cast here.
+        const webLinkProps = external ? ({ hrefAttrs: { target: "_blank" } } as object) : {};
         return (
             <Link href={href} asChild>
-                <Pressable>{inner}</Pressable>
+                <Pressable {...webLinkProps}>{inner}</Pressable>
             </Link>
         );
     }
@@ -234,14 +241,14 @@ export default function MoreScreen() {
             <Section title="About">
                 <Row label="About" href="/about" chevron first />
                 <Row label="Support Word Bank" href="/support" chevron />
-                <Row label="Source code" href="https://github.com/wordbank-project/word-bank" chevron />
+                <Row label="Source code" href="https://github.com/wordbank-project/word-bank" chevron external />
                 <Row label="Version" value={version} />
                 <Row label="License" value={license} />
             </Section>
 
             <Section title="Developer">
                 {API_LINKS.map((link, i) => (
-                    <Row key={link.href} label={link.label} href={link.href as Href} chevron first={i === 0} />
+                    <Row key={link.href} label={link.label} href={link.href as Href} chevron first={i === 0} external />
                 ))}
                 {__DEV__ ? <Row label="Seed test data" chevron onPress={handleSeedTestData} /> : null}
             </Section>
