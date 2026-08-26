@@ -40,7 +40,7 @@ const SOURCES: BookSource[] = [
 const API_LINKS: { label: string; href: string }[] = [
     { label: 'Open Library API', href: 'https://openlibrary.org/developers/api' },
     { label: 'Free Dictionary API', href: 'https://dictionaryapi.dev' },
-    { label: 'Wiktionary API (wiktapi.dev)', href: 'https://github.com/TheAlexLichter/wiktapi.dev' },
+    { label: 'Wiktionary API (wiktapi.dev)', href: 'https://github.com/wordbank-project/wiktapi.dev' },
 ];
 
 type RowProps = {
