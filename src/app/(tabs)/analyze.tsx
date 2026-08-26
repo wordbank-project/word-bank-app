@@ -343,6 +343,7 @@ export default function AnalyzeScreen() {
                         <Text className="text-[11px] mt-7 mb-2 font-semibold uppercase tracking-[0.5px] text-muted">
                             Recent sentences ({history.length})
                         </Text>
+                        <Text className="ml-1 text-[11px] text-faded">Long-press an entry to remove it.</Text>
                         {history.map((entry) => (
                             <Pressable
                                 key={entry.createdAt}
@@ -356,7 +357,6 @@ export default function AnalyzeScreen() {
                                 <Text className="text-lg text-faded">›</Text>
                             </Pressable>
                         ))}
-                        <Text className="ml-1 text-[11px] text-faded">Long-press an entry to remove it.</Text>
                     </View>
                 ) : null}
             </KeyboardAwareScrollView>
