@@ -434,8 +434,9 @@ export default function BookDetail() {
             setWordAdded(true);
             setInput("");
 
-            // Goes to the edit screen of the newly added word to encourage users to add sentence and notes 
-            setDraft({ sentence: '', notes: '' });
+            // Goes to the edit screen of the newly added word to encourage users to add sentence and notes.
+            // Pre-fills the dictionary's own example sentence when there is one, same fallback as openWordEdit.
+            setDraft({ sentence: newEntry.exampleSentence ?? '', notes: '' });
 
             // Set the editing word to the newly added word to open the edit form
             setEditingWord(newEntry.word);
@@ -546,10 +547,12 @@ export default function BookDetail() {
 
     // Open a word's inline edit form, seeding the draft from its current values.
     // `field` decides which input gets focus (tapping the Sentence vs Notes text).
+    // Falls back to the dictionary's own example sentence when there's no saved
+    // one yet, so accepting it is a tap away instead of retyping it from the placeholder.
     function openWordEdit(item: WordEntry, field: 'sentence' | 'notes' = 'sentence'): void {
         focusFieldRef.current = field;
         setEditingWord(item.word);
-        setDraft({ sentence: item.sentence ?? '', notes: item.notes ?? '' });
+        setDraft({ sentence: item.sentence ?? item.exampleSentence ?? '', notes: item.notes ?? '' });
         scrollCardIntoView(wordsContainerY.current + (cardYs.current[item.word] ?? 0));
     }
 
@@ -847,10 +850,16 @@ export default function BookDetail() {
                                             );
                                         })() : null}
 
-                                        {!isEditing && item.sentence ? (
+                                        {!isEditing && (item.sentence || item.exampleSentence) ? (
                                             <Pressable className="mt-1.5 gap-0.5" onPress={() => openWordEdit(item, 'sentence')}>
-                                                <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">Sentence</Text>
-                                                <Text className="text-sm leading-5 text-meta">{item.sentence}</Text>
+                                                <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">
+                                                    {item.sentence ? 'Sentence' : 'Example sentence'}
+                                                </Text>
+                                                {item.sentence ? (
+                                                    <Text className="text-sm leading-5 text-meta">{item.sentence}</Text>
+                                                ) : (
+                                                    <Text className="text-sm italic leading-5 text-muted">“{item.exampleSentence}”</Text>
+                                                )}
                                             </Pressable>
                                         ) : null}
 
