@@ -21,6 +21,10 @@ type BookSource = {
     providers: SourceProvider[]; // options shown in the chooser
 };
 
+// The apis behind the sources above.
+// Information for developers.
+type ApiLink = { label: string; href: string };
+
 const SOURCES: BookSource[] = [
     {
         category: 'Books:',
@@ -37,7 +41,7 @@ const SOURCES: BookSource[] = [
 ];
 
 // Developer-facing links to the actual APIs behind the sources above.
-const API_LINKS: { label: string; href: string }[] = [
+const API_LINKS: ApiLink[] = [
     { label: 'Open Library API', href: 'https://openlibrary.org/developers/api' },
     { label: 'Free Dictionary API', href: 'https://dictionaryapi.dev' },
     { label: 'Wiktionary API (wiktapi.dev)', href: 'https://github.com/wordbank-project/wiktapi.dev' },
@@ -228,7 +232,7 @@ export default function MoreScreen() {
             </Section>
 
             <Section title="Sources">
-                {SOURCES.map((source, i) => (
+                {SOURCES.map((source: BookSource, i: number) => (
                     <SourceRow
                         key={source.category}
                         source={source}
@@ -247,7 +251,7 @@ export default function MoreScreen() {
             </Section>
 
             <Section title="Developer">
-                {API_LINKS.map((link, i) => (
+                {API_LINKS.map((link: ApiLink, i: number) => (
                     <Row key={link.href} label={link.label} href={link.href as Href} chevron first={i === 0} external />
                 ))}
                 {__DEV__ ? <Row label="Seed test data" chevron onPress={handleSeedTestData} /> : null}
