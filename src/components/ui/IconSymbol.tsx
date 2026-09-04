@@ -33,6 +33,8 @@ const MAPPING = {
     'square.and.arrow.down': 'file-download',
     'trash.fill': 'delete',
     'chart.bar.fill': 'bar-chart',
+    'square': 'check-box-outline-blank',
+    'checkmark.square.fill': 'check-box',
 } as IconMapping;
 
 /**

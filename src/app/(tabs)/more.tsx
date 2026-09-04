@@ -151,6 +151,42 @@ function handleComingSoon(feature: string): void {
     alertDialog('Coming soon', `${feature} will be available in a future version.`);
 }
 
+/**
+ * Shows a one-time "here's what this does" notice (with a "don't show again"
+ * checkbox), then kicks off the actual export.
+ *
+ * @returns {void} Returns nothing — the notice's acknowledgement drives `exportData`.
+ *
+ */
+function handleExportData(): void {
+    alertDialog(
+        "Export data",
+        "This saves your books, words, and analyses to a JSON file on your device, which you can then share or save anywhere you like.",
+        {
+            dontShowAgain: { id: "export-data", checkboxLabel: "Don't show this again" },
+            onAcknowledge: () => void exportData(),
+        },
+    );
+}
+
+/**
+ * Shows a one-time "here's what this does" notice (with a "don't show again"
+ * checkbox), then kicks off the import file picker.
+ *
+ * @returns {void} Returns nothing — the notice's acknowledgement drives `importData`.
+ *
+ */
+function handleImportData(): void {
+    alertDialog(
+        "Import data",
+        "This opens your device's file picker so you can choose a Word Bank backup file (.json) to import.",
+        {
+            dontShowAgain: { id: "import-data", checkboxLabel: "Don't show this again" },
+            onAcknowledge: () => void importData(),
+        },
+    );
+}
+
 function handleDeleteAll(): void {
     showActionSheet(
         "Delete all data?",

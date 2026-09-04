@@ -1,6 +1,7 @@
 import '../../global.css';
 
 import ActionSheetBridge from '@/components/ActionSheetBridge';
+import AlertDialogBridge from '@/components/AlertDialogBridge';
 import NotificationResponseBridge from '@/components/NotificationResponseBridge';
 import { AppThemeProvider, useTheme } from '@/context/theme-context';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
@@ -29,6 +30,7 @@ export default function RootLayout() {
                 <KeyboardProvider>
                     <AppThemeProvider>
                         <ActionSheetBridge />
+                        <AlertDialogBridge />
                         <ThemedStack />
                         <NotificationResponseBridge />
                     </AppThemeProvider>
