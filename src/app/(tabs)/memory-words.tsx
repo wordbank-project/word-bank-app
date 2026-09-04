@@ -8,6 +8,7 @@ import { DateTimePickerAndroid, type DateTimePickerEvent } from "@react-native-c
 
 import { getAllWords, type WordWithBook } from "@/storage/read-list-storage";
 import { recordRating } from "@/storage/memory-stats-storage";
+import { getRoundSize, setRoundSize as persistRoundSize } from "@/storage/memory-round-size-storage";
 import {
     areNotificationsEnabled,
     getReminderTime,
@@ -76,6 +77,11 @@ export default function MemoryWordsScreen() {
         getReminderWordCount().then((savedRoundSize: RoundSize | null) => {
             if (savedRoundSize) {
                 setReminderWordCount(savedRoundSize);
+            }
+        });
+        getRoundSize().then((savedRoundSize: RoundSize | null) => {
+            if (savedRoundSize) {
+                setRoundSize(savedRoundSize);
             }
         });
     }, []);
@@ -260,6 +266,19 @@ export default function MemoryWordsScreen() {
     }
 
     /**
+     * Applies a newly picked practice round size: updates state and saves it
+     * so it survives an app restart / page reload.
+     *
+     * @param {RoundSize} value The new round size ("all" for the whole pool).
+     * @returns {void} Returns nothing.
+     *
+     */
+    function handleRoundSizeChange(value: RoundSize): void {
+        setRoundSize(value);
+        persistRoundSize(value).catch((error) => (console.error(error)));
+    }
+
+    /**
      * Applies a new reminder word-count target: updates state, saves it,
      * and — if the reminder is on — re-schedules it with the updated default body.
      *
@@ -308,7 +327,7 @@ export default function MemoryWordsScreen() {
                     <Text className="ml-0.5 text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">
                         Round size
                     </Text>
-                    <SizeChipRow value={roundSize} onChange={setRoundSize} maxAllowedInputValue={wordPool.length} />
+                    <SizeChipRow value={roundSize} onChange={handleRoundSizeChange} maxAllowedInputValue={wordPool.length} />
                 </View>
             ) : null}
 
