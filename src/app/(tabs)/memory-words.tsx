@@ -6,7 +6,7 @@ import { Link, useFocusEffect } from "expo-router";
 
 import { DateTimePickerAndroid, type DateTimePickerEvent } from "@react-native-community/datetimepicker";
 
-import { getAllWords, type WordWithBook } from "@/storage/read-list-storage";
+import { getAllWords } from "@/storage/read-list-storage";
 import { recordRating } from "@/storage/memory-stats-storage";
 import { getRoundSize, setRoundSize as persistRoundSize } from "@/storage/memory-round-size-storage";
 import {
@@ -15,9 +15,7 @@ import {
     getReminderWordCount,
     setNotificationsEnabled as persistNotificationsEnabled,
     setReminderTime as persistReminderTime,
-    setReminderWordCount as persistReminderWordCount,
-    type ReminderTime,
-    type RoundSize,
+    setReminderWordCount as persistReminderWordCount
 } from "@/storage/notifications-storage";
 
 import { ACCENT } from "@/styles/global";
@@ -35,6 +33,10 @@ import { dateFromTime } from "@/utils/date";
 import DailyReminderCard from "@/components/DailyReminderCard";
 import FlashCard from "@/components/FlashCard";
 import SizeChipRow from "@/components/SizeChipRow";
+
+import type { WordWithBook } from "@/models/word-entry";
+import type { RoundSize } from "@/models/round-size";
+import type { ReminderTime } from "@/models/reminder-time";
 
 // Round phases
 type RoundPhase = "start" | "playing" | "summary";

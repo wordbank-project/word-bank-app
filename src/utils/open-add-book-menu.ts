@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 
-import { showActionSheet, type ActionSheetButton } from "@/utils/show-action-sheet";
+import { showActionSheet } from "@/utils/show-action-sheet";
+import type { ActionSheetButton } from "@/models/action-sheet-button";
 
 /** 
  * Opens the "Add a book" menu screen (e.g. no "Search for a book" while already on the Search tab). 

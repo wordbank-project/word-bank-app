@@ -1,5 +1,7 @@
 import { FEED_API_BASE_URL } from '@/utils/feed-api-base';
 
+import { SuggestedBook, Suggestions } from "@/models/suggestion";
+
 // The server fires two live LLM completions in parallel (Promise.all, no caching, no rate
 // limit) to build this response, so a cold call costs one round trip, not two — but each list
 // is verbose to generate (up to 80 words / 40 books), so keep it close to ANALYZE_TIMEOUT_MS
@@ -9,12 +11,6 @@ const SUGGESTIONS_TIMEOUT_MS = 20_000;
 const MAX_WORDS = 80;
 const MAX_BOOKS = 40;
 const MAX_SENTENCES = 3;
-
-/** One well-known book, structured — the server sends title/author/year apart
- * so clients never have to parse them back out of a formatted string. */
-export type SuggestedBook = { title: string; author: string; year: string };
-
-export type Suggestions = { words: string[]; books: SuggestedBook[], sentences: string[] };
 
 const EMPTY: Suggestions = { words: [], books: [], sentences: [] };
 

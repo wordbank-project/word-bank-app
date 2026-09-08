@@ -1,6 +1,7 @@
 import { Alert, Platform } from "react-native";
 
 import { dismissAlert, isAlertDismissed } from "@/storage/dismissed-alerts-storage";
+import type { DontShowAgainOptions } from "@/models/dont-show-again";
 
 // Platform-safe alert. `Alert.alert` can't offer a Cancel button plus reliable
 // tap-outside-to-dismiss on both platforms (iOS's native alert has no backdrop to
@@ -10,11 +11,6 @@ import { dismissAlert, isAlertDismissed } from "@/storage/dismissed-alerts-stora
 // imperative API with a root bridge. Web uses `window.confirm` instead of
 // `window.alert` so it gets a real Cancel too (still no room for a checkbox —
 // `dontShowAgain` is native-only either way).
-
-export type DontShowAgainOptions = {
-    id: string; // stable identifier persisted via dismissed-alerts-storage
-    checkboxLabel: string;
-};
 
 type AlertDialogOptions = {
     dontShowAgain?: DontShowAgainOptions;

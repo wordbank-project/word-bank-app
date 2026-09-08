@@ -5,10 +5,12 @@ import type { AnalysisHistoryEntry } from "@/models/sentence-analysis";
 import { READ_STATUS_ORDER } from "@/models/read-list-book";
 import type { ReadListBook } from "@/models/read-list-book";
 import type { WordEntry } from "@/models/word-entry";
+import type { WordStat } from "@/models/word-stat";
+import type { SeedResult, SeedSize } from "@/models/seed";
 
 import { clearAllBookData, setReadList } from "@/storage/read-list-storage";
 import { setAnalysisHistory } from "@/storage/analysis-storage";
-import { setMemoryStats, type WordStat } from "@/storage/memory-stats-storage";
+import { setMemoryStats } from "@/storage/memory-stats-storage";
 import { pick, randomInt, shuffle } from "@/utils/random";
 
 // Dev-only: generates large amounts of realistic-shaped test data (books,
@@ -18,15 +20,6 @@ import { pick, randomInt, shuffle } from "@/utils/random";
 // never runs in a production build. Always wipes existing book data first
 // (via clearAllBookData, which also clears memory stats) so repeated runs
 // are reproducible instead of accumulating.
-
-export type SeedSize = "small" | "medium" | "large";
-
-export type SeedResult = {
-    books: number;
-    words: number;
-    analyses: number;
-    wordsWithStats: number;
-};
 
 const SEED_SIZES: Record<SeedSize, { books: number; minWords: number; maxWords: number }> = {
     small: { books: 10, minWords: 3, maxWords: 10 },

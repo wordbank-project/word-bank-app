@@ -1,5 +1,5 @@
-import type { RoundSize } from "@/storage/notifications-storage";
-import type { WordWithBook } from "@/storage/read-list-storage";
+import type { WordWithBook } from "@/models/word-entry";
+import type { RoundSize } from "@/models/round-size";
 
 import { shuffle } from "@/utils/random";
 

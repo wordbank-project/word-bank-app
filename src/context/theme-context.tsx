@@ -7,7 +7,9 @@ import {
 } from "react";
 import { Appearance, Platform, useColorScheme as useSystemColorScheme } from "react-native";
 
-import { getTheme, setTheme, type ColorScheme } from "@/storage/theme-storage";
+import { getTheme, setTheme } from "@/storage/theme-storage";
+
+import type { ColorScheme } from "@/models/theme";
 
 type ThemeContextType = {
     colorScheme: ColorScheme;

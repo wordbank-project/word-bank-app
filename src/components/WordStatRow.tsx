@@ -2,8 +2,8 @@ import React from "react";
 
 import { Pressable, Text, View } from "react-native";
 
-import type { WordStat } from "@/storage/memory-stats-storage";
-import type { WordWithBook } from "@/storage/read-list-storage";
+import type { WordWithBook } from "@/models/word-entry";
+import type { WordStat } from "@/models/word-stat";
 
 type WordStatRowProps = {
     word: WordWithBook;

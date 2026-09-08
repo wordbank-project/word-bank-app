@@ -1,9 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Saves and restores the Words List's persisted sort choice.
-
-export type SortMode = 'az' | 'za' | 'book' | 'recent';
-export const SORT_MODES: SortMode[] = ['az', 'za', 'book', 'recent'];
+import { SortMode, SORT_MODES } from "@/models/sort-mode";
 
 const SORT_MODE_KEY = "words_list_sort";
 

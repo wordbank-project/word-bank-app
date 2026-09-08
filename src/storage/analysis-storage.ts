@@ -1,14 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type { AnalysisHistoryEntry, SentenceAnalysis } from "@/models/sentence-analysis";
+import { MAX_ANALYSES_ENTRIES } from "@/models/sentence-analysis";
 
 import { getJSON, setJSON } from "@/storage/storage";
 
 // Saves and restores the user's sentence analyses history across sessions.
 
 const ANALYSES_KEY = "sentence_analyses";
-
-const MAX_ANALYSES_ENTRIES = 20;
 
 /**
  * Reads back the past analyses, newest first.

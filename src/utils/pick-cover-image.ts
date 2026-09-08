@@ -1,5 +1,6 @@
 import { alertDialog } from '@/utils/alert-dialog';
-import { showActionSheet, type ActionSheetButton } from '@/utils/show-action-sheet';
+import { showActionSheet } from '@/utils/show-action-sheet';
+import type { ActionSheetButton } from '@/models/action-sheet-button';
 import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 

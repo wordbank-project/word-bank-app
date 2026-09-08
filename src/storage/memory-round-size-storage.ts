@@ -1,5 +1,6 @@
 import { getJSON, setJSON } from "@/storage/storage";
-import type { RoundSize } from "@/storage/notifications-storage";
+
+import type { RoundSize } from "@/models/round-size";
 
 // Saves and restores the Memory tab's in-session practice round size.
 

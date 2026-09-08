@@ -1,10 +1,6 @@
 import { ActionSheetIOS, Alert, Platform } from 'react-native';
 
-export type ActionSheetButton = {
-    text: string;
-    onPress?: () => void;
-    style?: 'default' | 'cancel' | 'destructive';
-};
+import type { ActionSheetButton } from '@/models/action-sheet-button';
 
 // The subset of @expo/react-native-action-sheet's showActionSheetWithOptions we use.
 type ShowFn = (

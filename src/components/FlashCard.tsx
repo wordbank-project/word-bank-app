@@ -3,11 +3,11 @@ import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { interpolate, ReduceMotion, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
-import type { WordWithBook } from "@/storage/read-list-storage";
-
 import { openBook } from "@/utils/open-book";
 
 import { Fonts } from "@/styles/global";
+
+import type { WordWithBook } from "@/models/word-entry";
 
 // The Memory tab's tap-to-flip practice card
 

@@ -2,7 +2,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export type ColorScheme = "light" | "dark";
+import type { ColorScheme } from "@/models/theme";
 
 const THEME_KEY = "app_theme";
 

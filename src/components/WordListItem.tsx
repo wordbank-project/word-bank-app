@@ -2,9 +2,9 @@ import React from "react";
 
 import { Pressable, Text, View } from "react-native";
 
-import type { WordWithBook } from "@/storage/read-list-storage";
-
 import { Fonts } from "@/styles/global";
+
+import type { WordWithBook } from "@/models/word-entry";
 
 type WordListItemProps = {
     item: WordWithBook;

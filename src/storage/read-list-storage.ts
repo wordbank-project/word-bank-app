@@ -2,24 +2,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type { ReadListBook, ReadListFilter, ReadStatus } from "@/models/read-list-book";
 import { READ_LIST_FILTERS } from "@/models/read-list-book";
+import { WordWithBook } from "@/models/word-entry";
 
 import { clearAnalysisHistory } from "@/storage/analysis-storage";
 import { clearMemoryStats } from "@/storage/memory-stats-storage";
 import { getJSON, setJSON } from "@/storage/storage";
-import { getWords, removeWords, type WordEntry } from "@/storage/words-storage";
+import { getWords, removeWords } from "@/storage/words-storage";
 
 export type { ReadListBook, ReadStatus, ReadListFilter } from "@/models/read-list-book";
-
-// A saved word denormalized with its source book's info — the shape getAllWords()
-// returns, so callers (Words List, the Memory tab) can display or navigate to the
-// source book without a second lookup.
-export type WordWithBook = WordEntry & {
-    bookKey: string;
-    bookTitle: string;
-    bookAuthor: string;
-    bookYear: string;
-    bookCover: string;
-};
 
 const READ_LIST_KEY = "read_list";
 

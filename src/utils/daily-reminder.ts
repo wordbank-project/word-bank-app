@@ -1,9 +1,9 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
-import type { RoundSize } from "@/storage/notifications-storage";
-
 import { alertDialog } from "@/utils/alert-dialog";
+
+import type { RoundSize } from "@/models/round-size";
 
 // Schedules/cancels the Memory tab's single daily practice-reminder notification —
 // one fixed identifier, user-chosen time (persisted in notifications-storage.ts,

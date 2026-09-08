@@ -26,6 +26,17 @@ export type WordEntry = {
     sourceLanguage?: string;
 };
 
+// A saved word denormalized with its source book's info — the shape getAllWords()
+// returns, so callers (Words List, the Memory tab) can display or navigate to the
+// source book without a second lookup.
+export type WordWithBook = WordEntry & {
+    bookKey: string;
+    bookTitle: string;
+    bookAuthor: string;
+    bookYear: string;
+    bookCover: string;
+};
+
 export type EditDraft = {
     sentence: string;
     notes: string;

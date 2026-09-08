@@ -22,9 +22,11 @@ import { Colors } from '@/styles/global';
 
 import { openBook } from '@/utils/open-book';
 import { pickCoverImage } from '@/utils/pick-cover-image';
-import { fetchSuggestions, type SuggestedBook } from '@/utils/suggestions-api';
+import { fetchSuggestions } from '@/utils/suggestions-api';
 
 import { useIsFocused } from '@react-navigation/native';
+
+import type { SuggestedBook } from '@/models/suggestion';
 
 const RANDOM_BOOKS_WITH_AUTHORS_AND_YEARS: SuggestedBook[] = [
     { title: "My Reading Notes", author: "John Doe", year: "2020" },

@@ -1,17 +1,6 @@
 import { router } from "expo-router";
 
-// The info the book detail screen needs to open. All strings, since they go
-// through navigation params.
-export type BookNavParams = {
-    key: string;
-    title: string;
-    author: string;
-    year: string;
-    cover_i: string;
-    // Optional: a word to scroll to and highlight once the book screen lays out
-    // (sent by the Words List, where you tap a specific word).
-    focusWord?: string;
-};
+import type { BookNavParams } from "@/models/book-nav";
 
 // Ignore re-taps while a push is still transitioning — rapid taps on a list
 // item would otherwise stack the book screen once per tap.

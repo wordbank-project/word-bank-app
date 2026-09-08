@@ -7,8 +7,8 @@ import { useFocusEffect, useLocalSearchParams, router, Link } from "expo-router"
 import { useBackTo } from "@/hooks/use-back-to";
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 
-import { getMemoryStats, removeMemoryStat, type WordStat } from "@/storage/memory-stats-storage";
-import { getAllWords, type WordWithBook } from "@/storage/read-list-storage";
+import { getMemoryStats, removeMemoryStat } from "@/storage/memory-stats-storage";
+import { getAllWords } from "@/storage/read-list-storage";
 
 import { ACCENT } from "@/styles/global";
 
@@ -16,6 +16,9 @@ import { openBook } from "@/utils/open-book";
 import { showActionSheet } from "@/utils/show-action-sheet";
 
 import WordStatRow from "@/components/WordStatRow";
+
+import type { WordWithBook } from "@/models/word-entry";
+import type { WordStat } from "@/models/word-stat";
 
 // The Memory tab's practice-history screen: overall "Knew it" vs "Still
 // Shows stats about the words

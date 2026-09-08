@@ -4,13 +4,13 @@ import DateTimePicker, { type DateTimePickerEvent } from "@react-native-communit
 
 import { useColorScheme } from "@/context/theme-context";
 
-import type { RoundSize } from "@/storage/notifications-storage";
-
 import { ACCENT, Colors } from "@/styles/global";
 
 import { dateFromTime, formatTime } from "@/utils/date";
 
 import SizeChipRow from "@/components/SizeChipRow";
+
+import type { RoundSize } from "@/models/round-size";
 
 type DailyReminderCardProps = {
     enabled: boolean;

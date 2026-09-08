@@ -1,9 +1,10 @@
 import { useColorScheme } from "@/context/theme-context";
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
+import type { SeedSize } from "@/models/seed";
 import { clearAllBookData } from "@/storage/read-list-storage";
 import { Colors } from "@/styles/global";
 import { alertDialog } from "@/utils/alert-dialog";
-import { seedTestData, type SeedSize } from "@/utils/seed-test-data";
+import { seedTestData } from "@/utils/seed-test-data";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { Link, router, type Href } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";

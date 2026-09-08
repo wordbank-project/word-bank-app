@@ -1,19 +1,13 @@
 import { FEED_API_BASE_URL, FEED_REQUEST_TIMEOUT_MS } from '@/utils/feed-api-base';
+import type { FeedWordMeta } from '@/models/feed-word-meta';
 
 /**
  * Contributes words users add to the external "floating words" feed, which powers
- * the live floating-words background on the marketing site and currently saved words 
+ * the live floating-words background on the marketing site and currently saved words
  * (word-bank-site). Only the word and its *public dictionary* values (definition / part of speech / IPA)
  * are ever sent — no book, language, sentence, notes, or any other user content —
  * The server host and its per-platform localhost caveats live in feed-api-base.ts.
  */
-
-/** Public dictionary metadata sent alongside the word (none of it user-authored). */
-export type FeedWordMeta = {
-    definition?: string;
-    partOfSpeech?: string;
-    phonetic?: string;
-};
 
 /**
  * Fire-and-forget POST that contributes a single word to the external words feed,

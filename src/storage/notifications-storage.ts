@@ -2,19 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { getJSON, setJSON } from "@/storage/storage";
 
+import type { RoundSize } from "@/models/round-size";
+import type { ReminderTime } from "@/models/reminder-time";
+
 // Saves and restores the Memory tab's daily practice reminder settings
-
-export type ReminderTime = { hour: number, minute: number }
-
-// How many words a Memory round can be — any positive count, or "all" for
-// every word in the pool. 
-export type RoundSize = number | "all";
-export const ROUND_SIZE_OPTIONS: { value: RoundSize; label: string }[] = [
-    { value: 5, label: "5" },
-    { value: 10, label: "10" },
-    { value: 20, label: "20" },
-    { value: "all", label: "All" },
-];
 
 const NOTIFICATIONS_ENABLED_KEY = "daily_reminder_enabled";
 const REMINDER_TIME_KEY = "daily_reminder_time";

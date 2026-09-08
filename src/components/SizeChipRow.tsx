@@ -4,12 +4,12 @@ import { Pressable, Text, View } from "react-native";
 
 import { useColorScheme } from "@/context/theme-context";
 
-import { ROUND_SIZE_OPTIONS, type RoundSize } from "@/storage/notifications-storage";
-
 import { Colors } from "@/styles/global";
 
 import Chip from "@/components/Chip";
 import ClearableTextInput from "@/components/ClearableTextInput";
+
+import { ROUND_SIZE_OPTIONS, type RoundSize } from "@/models/round-size";
 
 type SizeChipRowProps = {
     value: RoundSize;

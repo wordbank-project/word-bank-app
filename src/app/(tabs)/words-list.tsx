@@ -7,8 +7,8 @@ import { Link, useFocusEffect, useIsFocused } from "expo-router";
 import { useColorScheme } from "@/context/theme-context";
 import { useFlatListScroll } from "@/hooks/use-scroll-registration";
 
-import { getAllWords, type WordWithBook } from "@/storage/read-list-storage";
-import { getSortMode, setSortMode as saveSortMode, SORT_MODES, type SortMode } from "@/storage/words-list-storage";
+import { getAllWords } from "@/storage/read-list-storage";
+import { getSortMode, setSortMode as saveSortMode } from "@/storage/words-list-storage";
 
 import { ACCENT, Colors } from "@/styles/global";
 
@@ -21,6 +21,9 @@ import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
 
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
+
+import type { WordWithBook } from "@/models/word-entry";
+import { SortMode, SORT_MODES } from "@/models/sort-mode";
 
 // Labels for the sort modes (saved choice lives in @/storage/words-list-storage).
 const SORT_LABELS: Record<SortMode, string> = {
