@@ -51,7 +51,6 @@ export default function CustomBookScreen() {
     const [author, setAuthor] = useState<string>('');
     const [year, setYear] = useState<string>('');
     const [coverUri, setCoverUri] = useState<string | null>(null);
-    const [titleError, setTitleError] = useState<string>('');
     const [readStatus, setReadStatus] = useState<ReadStatus>('want');
 
     // Restores the saved dictionary language from AsyncStorage on mount.
@@ -117,7 +116,6 @@ export default function CustomBookScreen() {
         setAuthor('');
         setYear('');
         setCoverUri(null);
-        setTitleError('');
         setReadStatus('want');
     }
 
@@ -161,7 +159,7 @@ export default function CustomBookScreen() {
                     <View className="gap-1.5">
                         <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Title</Text>
                         <ClearableTextInput
-                            className={`rounded-lg border bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg ${titleError ? "border-error" : "border-border-input"}`}
+                            className={`rounded-lg border bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg border-border-input`}
                             placeholder={typedPlaceholder || "Pride and Prejudice"}
                             placeholderTextColor={placeholderColor}
                             value={title}
