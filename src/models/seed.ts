@@ -16,12 +16,6 @@ export type SeedAmount = {
     maxWords: number;
 };
 
-export type SeedBook = {
-    title: string;
-    author: string;
-    year: string;
-};
-
 export type SeedWord = {
     word: string;
     partOfSpeech: string;

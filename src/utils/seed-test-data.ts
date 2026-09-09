@@ -6,7 +6,8 @@ import { READ_STATUS_ORDER } from "@/models/read-list-book";
 import type { ReadListBook } from "@/models/read-list-book";
 import type { WordEntry } from "@/models/word-entry";
 import type { WordStat } from "@/models/word-stat";
-import type { SeedAmount, SeedAnalysis, SeedBook, SeedResult, SeedSize, SeedWord } from "@/models/seed";
+import type { SeedAmount, SeedAnalysis, SeedResult, SeedSize, SeedWord } from "@/models/seed";
+import { SuggestedBook } from "@/models/suggestion";
 
 import { clearAllBookData, setReadList } from "@/storage/read-list-storage";
 import { setAnalysisHistory } from "@/storage/analysis-storage";
@@ -30,7 +31,7 @@ const SEED_SIZES: Record<SeedSize, SeedAmount> = {
 // Public-domain-style title/author pairs — enough variety to not feel
 // mechanical; repeats (with a unique key suffix) once a preset needs more
 // books than this list has entries.
-const SEED_BOOKS: SeedBook[] = [
+const SEED_BOOKS: SuggestedBook[] = [
     { title: "Pride and Prejudice", author: "Jane Austen", year: "1813" },
     { title: "Moby-Dick", author: "Herman Melville", year: "1851" },
     { title: "Frankenstein", author: "Mary Shelley", year: "1818" },
