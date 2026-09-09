@@ -16,7 +16,7 @@ export type TypewriterPlaceholder = {
 export function useTypewriterPlaceholder(
     words: string[],
     active: boolean = true,
-    { typeMs = 130 }: TypewriterOptions = {},
+    { typeMs = 50 }: TypewriterOptions = {},
 ): TypewriterPlaceholder {
     const [text, setText] = useState<string>("");
     const [word, setWord] = useState<string>("");
