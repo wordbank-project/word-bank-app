@@ -86,8 +86,9 @@ export default function SupportScreen() {
     const handleShare = async () => {
         try {
             await Share.share({ message: `${SHARE_MESSAGE} ${SITE_URL}` });
-        } catch {
-            // Dismissed or unavailable — nothing to do.
+        } catch (error) {
+            // Dismissed or unavailable — not a real failure, logged for visibility only.
+            console.error(error);
         }
     };
 
