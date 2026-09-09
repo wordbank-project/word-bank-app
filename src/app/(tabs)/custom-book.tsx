@@ -24,6 +24,7 @@ import { Colors } from '@/styles/global';
 import { openBook } from '@/utils/open-book';
 import { pickCoverImage } from '@/utils/pick-cover-image';
 import { fetchSuggestions } from '@/utils/suggestions-api';
+import { digitsOnly } from '@/utils/numeric-text-input';
 
 import { useIsFocused } from '@react-navigation/native';
 
@@ -120,6 +121,20 @@ export default function CustomBookScreen() {
         setReadStatus('want');
     }
 
+    /**
+     * Validates the typed year input, allowing only digits and ensuring (party reused from SizeChipRow.tsx)
+     * that the year is a valid number (or empty, to allow clearing the field).
+     * @param {string} inputCandidate The text typed in the input field.
+     * @returns {void} Returns nothing. If the input is valid, updates the year state; otherwise, does nothing.
+     * 
+     */
+    function validateCustomInput(inputCandidate: string): void {
+        const allowedInput: string = digitsOnly(inputCandidate);
+        if (allowedInput === "" || parseInt(allowedInput)) {
+            setYear(allowedInput);
+        }
+    }
+
     return (
         <React.Fragment>
             {/* KeyboardAwareScrollView is third-party (no className) — wrap it for the bg. */}
@@ -175,7 +190,7 @@ export default function CustomBookScreen() {
                             placeholder={matchedSuggestion?.year || "1813"}
                             placeholderTextColor={placeholderColor}
                             value={year}
-                            onChangeText={setYear}
+                            onChangeText={validateCustomInput}
                             keyboardType="number-pad"
                             maxLength={4}
                             returnKeyType="done"

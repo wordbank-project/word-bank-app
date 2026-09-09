@@ -11,6 +11,8 @@ import ClearableTextInput from "@/components/ClearableTextInput";
 
 import { ROUND_SIZE_OPTIONS, type RoundSize } from "@/models/round-size";
 
+import { digitsOnly } from "@/utils/numeric-text-input";
+
 type SizeChipRowProps = {
     value: RoundSize;
     onChange: (value: RoundSize) => void;
@@ -54,7 +56,7 @@ export default function SizeChipRow({ value, onChange, maxAllowedInputValue }: S
      *
      */
     function validateCustomInput(inputCandidate: string): void {
-        const allowedInput: string = inputCandidate.replace(/[^0-9]/g, "");
+        const allowedInput: string = digitsOnly(inputCandidate);
         if (allowedInput === "" || parseInt(allowedInput) <= maxAllowedInputValue) {
             setCustomText(allowedInput);
         }
