@@ -188,7 +188,16 @@ function handleImportData(): void {
     );
 }
 
-function handleDeleteAll(): void {
+async function handleDeleteAll(): Promise<void> {
+    // No need to show the action sheet if there is no data to delete
+    if (!(await hasExistingData())) {
+        alertDialog(
+            "No data to delete",
+            "You haven't saved any books or analyzed any sentences yet, so there's nothing to delete."
+        );
+        return
+    }
+
     showActionSheet(
         "Delete all data?",
         "This permanently deletes every book and all analyzed sentences. This cannot be undone!",
