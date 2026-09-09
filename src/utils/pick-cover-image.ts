@@ -50,14 +50,15 @@ export function pickCoverImage(hasExisting = false): Promise<string | null> {
     const title = hasExisting ? 'Change cover image' : 'Add cover image';
 
     return new Promise((resolve) => {
-        const buttons: ActionSheetButton[] = [
-            // Camera capture isn't reliable on web — only offer it on native.
-            ...(Platform.OS !== 'web'
-                ? [{ text: 'Take Photo', onPress: () => resolve(takePhoto()) }]
-                : []),
+        const buttons: ActionSheetButton[] = [];
+        // Camera capture isn't reliable on web — only offer it on native.
+        if (Platform.OS !== 'web') {
+            buttons.push({ text: 'Take Photo', onPress: () => resolve(takePhoto()) });
+        }
+        buttons.push(
             { text: 'Choose from Library', onPress: () => resolve(pickFromLibrary()) },
             { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },
-        ];
+        );
         showActionSheet(title, undefined, buttons);
     });
 }
