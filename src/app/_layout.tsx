@@ -3,6 +3,7 @@ import '../../global.css';
 import ActionSheetBridge from '@/components/ActionSheetBridge';
 import AlertDialogBridge from '@/components/AlertDialogBridge';
 import NotificationResponseBridge from '@/components/NotificationResponseBridge';
+import { AppLanguageProvider } from '@/context/language-context';
 import { AppThemeProvider, useTheme } from '@/context/theme-context';
 import { ActionSheetProvider } from '@expo/react-native-action-sheet';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
@@ -29,10 +30,12 @@ export default function RootLayout() {
             <ActionSheetProvider>
                 <KeyboardProvider>
                     <AppThemeProvider>
-                        <ActionSheetBridge />
-                        <AlertDialogBridge />
-                        <ThemedStack />
-                        <NotificationResponseBridge />
+                        <AppLanguageProvider>
+                            <ActionSheetBridge />
+                            <AlertDialogBridge />
+                            <ThemedStack />
+                            <NotificationResponseBridge />
+                        </AppLanguageProvider>
                     </AppThemeProvider>
                 </KeyboardProvider>
             </ActionSheetProvider>

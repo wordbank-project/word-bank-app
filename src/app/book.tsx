@@ -32,7 +32,7 @@ import { translateWord } from "@/utils/translate-api";
 import { fetchDefinition } from "@/utils/words-api";
 import { postWordToFeed } from "@/utils/words-feed-api";
 
-import { useSavedLanguage } from "@/hooks/use-saved-language";
+import { useSavedLanguage } from "@/context/language-context";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 

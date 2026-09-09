@@ -7,6 +7,7 @@ import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withDelay, wi
 import { useIsFocused } from "expo-router";
 
 import { useColorScheme } from "@/context/theme-context";
+import { useSavedLanguage } from "@/context/language-context";
 
 import { useBackTo } from "@/hooks/use-back-to";
 import { useSavedLanguage } from "@/hooks/use-saved-language";

@@ -4,7 +4,7 @@ import { useIsFocused } from "@react-navigation/native";
 
 import { useColorScheme } from "@/context/theme-context";
 
-import { useSavedLanguage } from "@/hooks/use-saved-language";
+import { useSavedLanguage } from "@/context/language-context";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
 import { Colors } from "@/styles/global";
