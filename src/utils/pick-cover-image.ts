@@ -12,21 +12,33 @@ const PICKER_OPTIONS: ImagePicker.ImagePickerOptions = {
 };
 
 async function takePhoto(): Promise<string | null> {
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-        alertDialog(
-            'Camera permission needed',
-            'Enable camera access in Settings to take a photo.',
-        );
+    try {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+            alertDialog(
+                'Camera permission needed',
+                'Enable camera access in Settings to take a photo.',
+            );
+            return null;
+        }
+        const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
+        return result.canceled ? null : result.assets[0].uri;
+    } catch (error) {
+        console.error(error);
+        alertDialog('Something went wrong', 'Could not take a photo. Please try again.');
         return null;
     }
-    const result = await ImagePicker.launchCameraAsync(PICKER_OPTIONS);
-    return result.canceled ? null : result.assets[0].uri;
 }
 
 async function pickFromLibrary(): Promise<string | null> {
-    const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
-    return result.canceled ? null : result.assets[0].uri;
+    try {
+        const result = await ImagePicker.launchImageLibraryAsync(PICKER_OPTIONS);
+        return result.canceled ? null : result.assets[0].uri;
+    } catch (error) {
+        console.error(error);
+        alertDialog('Something went wrong', 'Could not open your photo library. Please try again.');
+        return null;
+    }
 }
 
 /**
