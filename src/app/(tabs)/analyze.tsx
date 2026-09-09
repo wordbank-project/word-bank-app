@@ -314,7 +314,7 @@ export default function AnalyzeScreen() {
                     </View>
                 ) : null}
 
-                {!analysis && !loading ? (
+                {!analysis && !loading && suggestionSentences ? (
                     <View className="gap-2">
                         <Text className="text-[11px] mt-7 mb-2 font-semibold uppercase tracking-[0.5px] text-muted">
                             Try one sentence ({suggestionSentences.length})
