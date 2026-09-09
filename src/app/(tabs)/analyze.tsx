@@ -26,6 +26,7 @@ import { ACCENT, Colors } from "@/styles/global";
 
 import AnalysisResult from "@/components/AnalysisResult";
 import ClearableTextInput from "@/components/ClearableTextInput";
+import ExampleSentenceSkeletons from "@/components/skeletons/ExampleSentenceSkeletons";
 import LanguageModal from "@/components/LanguageModal";
 import SearchButton from "@/components/SearchButton";
 
@@ -311,6 +312,15 @@ export default function AnalyzeScreen() {
                                 ]}
                             />
                         ) : null}
+                    </View>
+                ) : null}
+
+                {!analysis && !loading && suggestionSentences === null ? (
+                    <View className="gap-2">
+                        <Text className="text-[11px] mt-7 mb-2 font-semibold uppercase tracking-[0.5px] text-muted">
+                            Try one sentence
+                        </Text>
+                        <ExampleSentenceSkeletons />
                     </View>
                 ) : null}
 
