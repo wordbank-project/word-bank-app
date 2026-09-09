@@ -10,7 +10,7 @@ import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
 
 import { Colors } from "@/styles/global";
 
-import { fetchSuggestions } from "@/utils/suggestions-api";
+import { fetchSuggestions } from "@/utils/api/suggestions-api";
 
 import { Keyboard, View } from "react-native";
 
