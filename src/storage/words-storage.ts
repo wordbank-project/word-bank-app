@@ -35,7 +35,8 @@ export async function getWordCounts(bookKeys: string[]): Promise<Record<string, 
     pairs.forEach(([, raw], i) => {
         try {
             counts[bookKeys[i]] = raw ? (JSON.parse(raw) as unknown[]).length : 0;
-        } catch {
+        } catch (error) {
+            console.error(`[words-storage] Failed to read word count for "${bookKeys[i]}":`, error);
             counts[bookKeys[i]] = 0;
         }
     });

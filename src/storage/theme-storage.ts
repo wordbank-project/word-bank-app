@@ -11,7 +11,8 @@ export async function getTheme(): Promise<ColorScheme | null> {
     try {
         const saved = await AsyncStorage.getItem(THEME_KEY);
         return saved === "light" || saved === "dark" ? saved : null;
-    } catch {
+    } catch (error) {
+        console.error(error);
         return null;
     }
 }

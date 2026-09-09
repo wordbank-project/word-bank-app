@@ -21,7 +21,8 @@ const REMINDER_WORD_COUNT_KEY = "daily_reminder_word_count";
 export async function areNotificationsEnabled(): Promise<boolean> {
     try {
         return (await AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY)) === "true";
-    } catch {
+    } catch (error) {
+        console.error(error);
         return false;
     }
 }

@@ -48,7 +48,8 @@ export function postWordToFeed(word: string, meta: FeedWordMeta = {}): void {
         })
             .catch(() => { })
             .finally(() => clearTimeout(timeout));
-    } catch {
+    } catch (error) {
         // Swallow everything (e.g. a synchronous fetch/JSON failure) — must never throw.
+        console.error(error);
     }
 }

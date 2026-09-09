@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 
 import type { WordDefinition, WordEntry } from '@/models/word-entry';
 import { timedFetch } from '@/utils/dict-utils';
+import { isAbortError } from '@/utils/is-abort-error';
 
 /**
  * Base URL of the self-hosted wiktapi.dev instance (https://github.com/TheAlexLichter/wiktapi.dev).
@@ -267,7 +268,10 @@ export async function fetchWordSuggestions(
             }
         }
         return words;
-    } catch {
+    } catch (error) {
+        if (!isAbortError(error)) {
+            console.error(error);
+        }
         return []; // includes AbortError — callers check their own signal before applying
     } finally {
         clearTimeout(timer);

@@ -26,7 +26,8 @@ export async function setLanguageCode(code: string): Promise<void> {
 export async function getLanguageCode(): Promise<string | null> {
     try {
         return await AsyncStorage.getItem(LANGUAGE_KEY);
-    } catch {
+    } catch (error) {
+        console.error(error);
         return null;
     }
 }
@@ -55,7 +56,8 @@ export async function setTranslationLanguageCode(code: string): Promise<void> {
 export async function getTranslationLanguageCode(): Promise<string | null> {
     try {
         return await AsyncStorage.getItem(TRANSLATION_LANGUAGE_KEY);
-    } catch {
+    } catch (error) {
+        console.error(error);
         return null;
     }
 }

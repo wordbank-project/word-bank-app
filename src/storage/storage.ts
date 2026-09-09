@@ -8,7 +8,8 @@ export async function getJSON<T>(key: string, fallback: T): Promise<T> {
     try {
         const raw = await AsyncStorage.getItem(key);
         return raw ? (JSON.parse(raw) as T) : fallback;
-    } catch {
+    } catch (error) {
+        console.error(`[storage] Failed to read "${key}":`, error);
         return fallback;
     }
 }

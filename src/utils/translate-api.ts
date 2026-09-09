@@ -5,6 +5,8 @@
 // keyed alternatives. It's undocumented, so treat every response as best
 // effort — never throw, resolve to null on any failure.
 
+import { isAbortError } from '@/utils/is-abort-error';
+
 const TRANSLATE_TIMEOUT_MS = 4000;
 
 type TranslateSegment = [translated: string, original: string, ...rest: unknown[]];
@@ -47,7 +49,10 @@ export async function translateWord(
             return null; // empty or just echoed the input back — no real translation
         }
         return translated;
-    } catch {
+    } catch (error) {
+        if (!isAbortError(error)) {
+            console.error(error);
+        }
         return null; // includes AbortError
     } finally {
         clearTimeout(timer);

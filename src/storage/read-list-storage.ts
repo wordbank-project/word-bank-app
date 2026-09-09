@@ -134,7 +134,8 @@ export async function getReadListFilter(): Promise<ReadListFilter | null> {
     try {
         const saved = await AsyncStorage.getItem(READ_LIST_FILTER_KEY);
         return READ_LIST_FILTERS.includes(saved as ReadListFilter) ? (saved as ReadListFilter) : null;
-    } catch {
+    } catch (error) {
+        console.error(error);
         return null;
     }
 }

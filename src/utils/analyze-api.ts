@@ -1,6 +1,7 @@
 import type { SentenceAnalysis } from '@/models/sentence-analysis';
 
 import { FEED_API_BASE_URL } from '@/utils/feed-api-base';
+import { isAbortError } from '@/utils/is-abort-error';
 
 // Asks the Word Bank server to analyze a sentence, returning the AI's explanation of it.
 
@@ -89,7 +90,10 @@ export async function analyzeSentence(
             clearTimeout(timeout);
             signal?.removeEventListener('abort', onAbort);
         }
-    } catch {
+    } catch (error) {
+        if (!isAbortError(error)) {
+            console.error(error);
+        }
         return null;
     }
 }

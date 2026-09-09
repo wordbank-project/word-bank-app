@@ -15,7 +15,8 @@ export async function getSortMode(): Promise<SortMode | null> {
     try {
         const saved = await AsyncStorage.getItem(SORT_MODE_KEY);
         return SORT_MODES.includes(saved as SortMode) ? (saved as SortMode) : null;
-    } catch {
+    } catch (error) {
+        console.error(error);
         return null;
     }
 }
