@@ -169,7 +169,7 @@ export default function CustomBookScreen() {
                     <View className="gap-1.5">
                         <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Title</Text>
                         <ClearableTextInput
-                            className={`rounded-lg border bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg border-border-input`}
+                            className="rounded-lg border bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg border-border-input"
                             placeholder={typedPlaceholder || "Loading..."}
                             placeholderTextColor={placeholderColor}
                             value={title}
