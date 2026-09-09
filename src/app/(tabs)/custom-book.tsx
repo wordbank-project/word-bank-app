@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
