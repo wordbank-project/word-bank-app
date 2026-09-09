@@ -11,6 +11,7 @@ import ReadStatusSelector from '@/components/ReadStatusSelector';
 
 import { useColorScheme } from '@/context/theme-context';
 
+import { useResolvedSuggestions } from '@/hooks/use-resolved-suggestions';
 import { useSavedLanguage } from '@/context/language-context';
 import { useTypewriterPlaceholder } from '@/hooks/use-typewriter-placeholder';
 
@@ -55,30 +56,31 @@ export default function CustomBookScreen() {
     // Restores the saved dictionary language from AsyncStorage on mount.
     const { language, languageReady } = useSavedLanguage();
 
-    // Live AI-generated book (title/author/year) suggestions replace the static list once available.
-    const [suggestions, setSuggestions] = useState<SuggestedBook[]>(RANDOM_BOOKS_WITH_AUTHORS_AND_YEARS);
-    useEffect(() => {
-        if (!languageReady) {
-            return;
-        }
-        fetchSuggestions(language.code).then(({ books }) => {
-            if (books.length > 0) {
-                setSuggestions(books);
-            }
-        });
-    }, [languageReady, language.code]);
+    // Waits for AI-generated book (title/author/year) suggestions to settle, then
+    // commits to them (or the static fallback list, if they fail/time out/come back
+    // empty) once and for all — see useResolvedSuggestions. `null` while still waiting.
+    const suggestions = useResolvedSuggestions(
+        () => fetchSuggestions(language.code).then((s) => s.books),
+        RANDOM_BOOKS_WITH_AUTHORS_AND_YEARS,
+        language.code,
+        languageReady,
+    );
 
     // Gives back an array of the titles from the suggested books object
     // useMemo, because we only want to redo it when the suggestions array changes
-    const suggestionTitles = useMemo(() => suggestions.map((suggestion) => suggestion.title), [suggestions]);
+    const suggestionTitles = useMemo(() => (suggestions ?? []).map((suggestion) => suggestion.title), [suggestions]);
 
-    // Types out one example title while the field is empty and the tab is focused.
-    // `word` is the placeholder title, accepted on Enter when the field is empty.
+    // Types out one example title while the field is empty, the tab is focused, and
+    // a suggestion source has been resolved. `word` is the placeholder title,
+    // accepted on Enter when the field is empty.
     const isFocused = useIsFocused();
-    const { text: typedPlaceholder, word: placeHolderTitle } = useTypewriterPlaceholder(suggestionTitles, isFocused && !title);
+    const { text: typedPlaceholder, word: placeHolderTitle } = useTypewriterPlaceholder(
+        suggestionTitles,
+        isFocused && !title && suggestions !== null,
+    );
 
     // We find the author and year that is linked to the suggested title
-    const matchedSuggestion = suggestions.find((suggestion) => suggestion.title === placeHolderTitle);
+    const matchedSuggestion = (suggestions ?? []).find((suggestion) => suggestion.title === placeHolderTitle);
 
     async function handlePickImage(): Promise<void> {
         const uri = await pickCoverImage(coverUri !== null);

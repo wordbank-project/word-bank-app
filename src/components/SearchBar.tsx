@@ -6,6 +6,7 @@ import { useColorScheme } from "@/context/theme-context";
 
 import { useSavedLanguage } from "@/context/language-context";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
+import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
 
 import { Colors } from "@/styles/global";
 
@@ -48,26 +49,24 @@ export default function SearchBar({ onSearch, loading }: SearchBarProps) {
     // Restores the saved dictionary language from AsyncStorage on mount.
     const { language, languageReady } = useSavedLanguage();
 
-    // Live AI-generated book-title suggestions replace the static list once available.
-    const [suggestionTitles, setSuggestionTitles] = useState<string[]>(RANDOM_BOOK_TITLES);
+    // Waits for AI-generated book-title suggestions to settle, then commits to
+    // them (or the static fallback list, if they fail/time out/come back empty)
+    // once and for all — see useResolvedSuggestions. `null` while still waiting.
+    const suggestionTitles = useResolvedSuggestions(
+        () => fetchSuggestions(language.code).then((s) => s.books.map((book) => book.title)),
+        RANDOM_BOOK_TITLES,
+        language.code,
+        languageReady,
+    );
 
-    useEffect(() => {
-        if (!languageReady) {
-            return;
-        }
-        fetchSuggestions(language.code).then(({ books }) => {
-            if (books.length > 0) {
-                // The server sends a title/author/year object.
-                // We only need the title of the book here.
-                setSuggestionTitles(books.map((book) => book.title));
-            }
-        });
-    }, [languageReady, language.code]);
-
-    // Types out one example title while the field is empty and the tab is focused.
-    // `word` is the full suggestion, accepted on Enter when the field is empty.
+    // Types out one example title while the field is empty, the tab is focused, and
+    // a suggestion source has been resolved. `word` is the full suggestion, accepted
+    // on Enter when the field is empty.
     const isFocused = useIsFocused();
-    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(suggestionTitles, isFocused && !query);
+    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(
+        suggestionTitles ?? [],
+        isFocused && !query && suggestionTitles !== null,
+    );
 
     function handleSearch(): void {
         Keyboard.dismiss();

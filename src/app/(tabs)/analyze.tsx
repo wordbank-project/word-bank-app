@@ -10,7 +10,7 @@ import { useColorScheme } from "@/context/theme-context";
 import { useSavedLanguage } from "@/context/language-context";
 
 import { useBackTo } from "@/hooks/use-back-to";
-import { useSavedLanguage } from "@/hooks/use-saved-language";
+import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 
@@ -76,22 +76,23 @@ export default function AnalyzeScreen() {
     // Restores the saved dictionary language from AsyncStorage on mount.
     const { language, languageReady, setLanguage } = useSavedLanguage();
 
-    // Get from the api the live AI-generated example sentences, which replace the static list once available.
-    const [suggestionSentences, setSuggestionSentences] = useState<string[]>(RANDOM_EXAMPLE_SENTENCES);
-    useEffect(() => {
-        if (!languageReady) {
-            return;
-        }
-        fetchSuggestions(language.code).then(({ sentences }: { sentences: string[] }) => {
-            if (sentences.length > 0) {
-                setSuggestionSentences(sentences);
-            }
-        });
-    }, [languageReady, language.code]);
+    // Waits for AI-generated example sentences to settle, then commits to them (or
+    // the static fallback list, if they fail/time out/come back empty) once and for
+    // all — see useResolvedSuggestions. `null` while still waiting.
+    const suggestionSentences = useResolvedSuggestions(
+        () => fetchSuggestions(language.code).then((s) => s.sentences),
+        RANDOM_EXAMPLE_SENTENCES,
+        language.code,
+        languageReady,
+    );
 
-    // Placeholder typewriter effect — shows one of the example sentences while the field is empty and the tab is focused.
+    // Placeholder typewriter effect — shows one of the example sentences while the
+    // field is empty, the tab is focused, and a suggestion source has been resolved.
     const isFocused = useIsFocused();
-    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(suggestionSentences, isFocused && !sentence);
+    const { text: typedPlaceholder, word } = useTypewriterPlaceholder(
+        suggestionSentences ?? [],
+        isFocused && !sentence && suggestionSentences !== null,
+    );
 
     // Scroll to top button
     const { ref: scrollRef, onScroll, scrollEventThrottle } = useScrollViewScroll<KeyboardAwareScrollViewRef>();

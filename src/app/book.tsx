@@ -32,6 +32,7 @@ import { translateWord } from "@/utils/translate-api";
 import { fetchDefinition } from "@/utils/words-api";
 import { postWordToFeed } from "@/utils/words-feed-api";
 
+import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
 import { useSavedLanguage } from "@/context/language-context";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 import { useWordSuggestions } from "@/hooks/use-word-suggestions";
@@ -134,25 +135,24 @@ export default function BookDetail() {
     const [translations, setTranslations] = useState<Record<string, string | null>>({});
     const [translatingWord, setTranslatingWord] = useState<string | null>(null);
 
-    // AI-generated example words for the current dictionary language, used as a placeholder in the add-word field.
-    const [suggestionWords, setSuggestionWords] = useState<string[]>(RANDOM_DICTIONARY_WORDS);
-    useEffect(() => {
-        if (!languageReady) {
-            return;
-        }
-        fetchSuggestions(language.code).then(({ words }) => {
-            if (words.length > 0) {
-                setSuggestionWords(words);
-            }
-        });
-    }, [languageReady, language.code]);
+    // Waits for AI-generated example words for the current dictionary language to
+    // settle, then commits to them (or the static fallback list, if they fail/time
+    // out/come back empty) once and for all — see useResolvedSuggestions. `null`
+    // while still waiting.
+    const suggestionWords = useResolvedSuggestions(
+        () => fetchSuggestions(language.code).then((s) => s.words),
+        RANDOM_DICTIONARY_WORDS,
+        language.code,
+        languageReady,
+    );
 
     // Types out one example word while the add-word field is empty, the screen is
-    // focused, and we're not editing. `suggestedWord` is added on Enter when empty.
+    // focused, we're not editing, and a suggestion source has been resolved.
+    // `suggestedWord` is added on Enter when empty.
     const isFocused = useIsFocused();
     const { text: typedWordPlaceholder, word: suggestedWord } = useTypewriterPlaceholder(
-        suggestionWords,
-        isFocused && !input && !editingWord,
+        suggestionWords ?? [],
+        isFocused && !input && !editingWord && suggestionWords !== null,
     );
 
     // As-you-type dictionary suggestions (debounced): real words from Datamuse
