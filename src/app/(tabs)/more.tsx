@@ -12,6 +12,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import IconSymbol from "@/components/ui/IconSymbol";
 
 import { license, version } from "../../../package.json";
+import { hasExistingData } from "@/storage/export-import";
 
 // The services that power the app. `future` providers are placeholders for a future
 type SourceProvider = { name: string; future?: boolean };
