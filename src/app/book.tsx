@@ -39,7 +39,7 @@ import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 
 import { ACCENT, Colors, Fonts } from "@/styles/global";
 
-import { LanguageModalSkeleton, NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/BookDetailSkeletons";
+import { LanguageModalSkeleton, NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/skeletons/BookDetailSkeletons";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import CoverImage from "@/components/CoverImage";
 import CoverPlaceholder from "@/components/CoverPlaceholder";
