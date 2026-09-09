@@ -69,7 +69,8 @@ export default function ReadListScreen() {
      */
     function selectFilter(next: ReadListFilter): void {
         setFilter(next);
-        setReadListFilter(next);
+        setReadListFilter(next)
+            .catch((error) => (console.error(error)));
     }
 
     // Reload the books every time the tab comes into focus, so changes made

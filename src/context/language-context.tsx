@@ -44,7 +44,8 @@ export function AppLanguageProvider({ children }: { children: ReactNode }) {
      */
     function setLanguage(language: Language): void {
         setLanguageState(language);
-        setLanguageCode(language.code);
+        setLanguageCode(language.code)
+            .catch((error) => (console.error(error)));
     }
 
     return (

@@ -83,7 +83,8 @@ export async function alertDialog(title: string, message?: string, options?: Ale
             checkboxLabel: options?.dontShowAgain?.checkboxLabel,
             onDismiss: ({ confirmed, checked }) => {
                 if (checked && options?.dontShowAgain) {
-                    void dismissAlert(options.dontShowAgain.id);
+                    dismissAlert(options.dontShowAgain.id)
+                        .catch((error) => (console.error(error)));
                 }
                 if (confirmed) {
                     options?.onAcknowledge?.();

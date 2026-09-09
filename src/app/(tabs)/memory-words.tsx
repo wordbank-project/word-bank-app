@@ -154,7 +154,14 @@ export default function MemoryWordsScreen() {
     function finishRound(finalKnewCount: number): void {
         setKnewCount(finalKnewCount);
         setPhase("summary");
-        rescheduleDailyReminder(notificationsEnabled, finalKnewCount, deck.length, reminderHour, reminderMinute).catch(() => { });
+        rescheduleDailyReminder(
+            notificationsEnabled,
+            finalKnewCount,
+            deck.length,
+            reminderHour,
+            reminderMinute
+        )
+            .catch((error) => (console.error(error)));
     }
 
     /**
@@ -241,7 +248,8 @@ export default function MemoryWordsScreen() {
         const minute: number = selectedDate.getMinutes();
         setReminderHour(hour);
         setReminderMinute(minute);
-        persistReminderTime(hour, minute);
+        persistReminderTime(hour, minute)
+            .catch((error) => (console.error(error)));
         if (notificationsEnabled) {
             scheduleDailyReminder(defaultReminderBody(reminderWordCount), hour, minute)
                 .catch((err) => (console.error(err)));

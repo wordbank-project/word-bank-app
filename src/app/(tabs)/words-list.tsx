@@ -154,7 +154,8 @@ export default function WordsListScreen() {
                 text: `${sortMode === mode ? '✓ ' : ''}${SORT_LABELS[mode]}`,
                 onPress: () => {
                     setSortMode(mode);
-                    saveSortMode(mode);
+                    saveSortMode(mode)
+                        .catch((error) => (console.error(error)));
                 },
             })),
             { text: 'Cancel', style: 'cancel' as const },

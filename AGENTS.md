@@ -187,6 +187,59 @@ Shared with the sibling `word-bank-server` and `word-bank-site` repos:
   like `if (x) return null;`. Enforced by ESLint's `curly: ["error", "all"]` rule in
   [`eslint.config.js`](eslint.config.js); run `npm run lint` before committing.
 - **JSDoc on every function** — see "Code comment style" below for the exact shape.
+- **A fire-and-forget promise gets `.catch((error) => (console.error(error)))` whenever
+  the callee can actually reject** (this app specifically — a UI/React Native
+  convention, not necessarily shared with the sibling repos). Simply put: if you call an
+  async function without `await`-ing it, chain `.catch(console.error)` onto it unless
+  that function is documented to never fail on its own — otherwise a real failure there
+  just vanishes with nobody, not even the logs, ever seeing it. For a call to an async
+  storage/utility function that a UI event handler doesn't need to block on, that's the
+  default — never a bare `someAsyncCall();` and never `void someAsyncCall();` for it,
+  since a bare or `void`-marked call behaves identically to a `.catch()`'d one at
+  runtime (none of the three ever block or surface anything to the user) — the only
+  difference `.catch()` adds is that a failure actually gets logged instead of silently
+  vanishing with no trace, and a bare call in particular is also ambiguous to a future
+  reader (forgotten `await`, or deliberate?). See `persistRoundSize`/`recordRating` in
+  [memory-words.tsx](src/app/(tabs)/memory-words.tsx) for the canonical (logged) shape.
+  The one case to skip it: a callee documented as "never throws" (it already swallows
+  its own errors and resolves instead of rejecting — `translate-api.ts`,
+  `words-api.ts`, `suggestions-api.ts`, `analyze-api.ts`, `words-feed-api.ts`, and every
+  `get*` storage function built on [storage.ts](src/storage/storage.ts)'s `getJSON`).
+  **`set*`/write storage functions are not on that list** — none of them wrap their
+  `AsyncStorage` call in a try/catch (`setJSON` itself doesn't either), so every one of
+  them can genuinely reject and needs a `.catch()` at its fire-and-forget call sites.
+  Nothing can ever reach a `.catch()` on a true never-throws callee, so adding one there
+  is dead code, not caution — check the callee's own contract, not how important a
+  hypothetical failure would feel, to decide.
+- **No bare `catch {}` either — always `catch (error)`, and always log it**, same
+  reasoning as the rule above, just for the `await`-inside-`try/catch` shape instead of
+  the fire-and-forget one. This matters most for the "never throws" utility functions
+  (`translate-api.ts`, `words-api.ts`, `suggestions-api.ts`, `analyze-api.ts`,
+  `words-feed-api.ts`, and every `get*` storage function built on
+  [storage.ts](src/storage/storage.ts)'s `getJSON`) — their `catch` block is
+  the *only* place a real failure could ever be observed, since they're deliberately
+  built to swallow it and resolve to a safe fallback instead of rejecting. A bare
+  `catch {}` there doesn't just skip logging, it makes that failure permanently
+  invisible — no caller, no matter how carefully it's written, could ever see it
+  either. See `getJSON` in [storage.ts](src/storage/storage.ts) for the canonical shape.
+  (`set*`/write storage functions don't get this treatment at all — they have no
+  `catch` block of their own, per the rule above.)
+- **Logging a caught error is not the same decision as showing the user one — don't
+  reach for both by default.** Always `console.error` (the rule above). Only *also* show
+  a user-facing error (`alertDialog`, an inline error message, etc.) when **both**: (1)
+  the failure is the direct result of something the user just did and is actively
+  waiting on, and (2) there isn't already a graceful, silent fallback covering for it.
+  `pick-cover-image.ts`'s `takePhoto`/`pickFromLibrary` clear both bars — the user just
+  tapped a button expecting something to happen now, so their `catch` does
+  `console.error` *and* `alertDialog`. Most storage reads (`getTheme`, `getSortMode`,
+  `getReadListFilter`, `areNotificationsEnabled`, ...) clear only the first — they run
+  automatically (app launch, a screen mounting), nobody consciously triggered them, and
+  each already degrades to a sensible default (system theme, alphabetical sort, no
+  filter) — so an alert there would be an intrusive dialog about something the user
+  never asked for, over a failure that's already invisible on its own. `export-format.ts`'s
+  `parseImportFile` does both too, just structured differently: it logs and throws, and
+  `importData()` — the layer that actually knows an import is in progress — is what
+  shows the user the message, via the thrown error's own text.
 
 ## Code comment style
 

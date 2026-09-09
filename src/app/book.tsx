@@ -369,7 +369,8 @@ export default function BookDetail() {
 
     function handleSelectTranslateToLanguage(language: Language): void {
         setTranslateToLanguage(language);
-        setTranslationLanguageCode(language.code);
+        setTranslationLanguageCode(language.code)
+            .catch((error) => (console.error(error)));
     }
 
     // Fetches (or re-fetches) a word's translation and caches it, keyed by the

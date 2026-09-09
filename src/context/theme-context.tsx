@@ -48,7 +48,9 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
     function toggleTheme(): void {
         const next: ColorScheme = colorScheme === "light" ? "dark" : "light";
         setColorScheme(next);
-        setTheme(next); // persist the choice to device storage
+        // persist the choice to device storage
+        setTheme(next)
+            .catch((error) => (console.error(error)));
     }
 
     return (
