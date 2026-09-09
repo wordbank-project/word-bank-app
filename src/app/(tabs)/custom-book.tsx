@@ -23,7 +23,7 @@ import { Colors } from '@/styles/global';
 
 import { openBook } from '@/utils/open-book';
 import { pickCoverImage } from '@/utils/pick-cover-image';
-import { fetchSuggestions } from '@/utils/suggestions-api';
+import { fetchSuggestions } from '@/utils/api/suggestions-api';
 import { digitsOnly } from '@/utils/numeric-text-input';
 
 import { useIsFocused } from '@react-navigation/native';

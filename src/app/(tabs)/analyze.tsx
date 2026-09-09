@@ -18,9 +18,9 @@ import type { AnalysisHistoryEntry, SentenceAnalysis } from "@/models/sentence-a
 
 import { addAnalysis, getAnalysisHistory, removeAnalysis } from "@/storage/analysis-storage";
 
-import { MAX_SENTENCE_LENGTH, analyzeSentence } from "@/utils/analyze-api";
+import { MAX_SENTENCE_LENGTH, analyzeSentence } from "@/utils/api/analyze-api";
 import { showActionSheet } from "@/utils/show-action-sheet";
-import { fetchSuggestions } from "@/utils/suggestions-api";
+import { fetchSuggestions } from "@/utils/api/suggestions-api";
 
 import { ACCENT, Colors } from "@/styles/global";
 

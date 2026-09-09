@@ -1,4 +1,4 @@
-import { FEED_API_BASE_URL, FEED_REQUEST_TIMEOUT_MS } from '@/utils/feed-api-base';
+import { FEED_API_BASE_URL, FEED_REQUEST_TIMEOUT_MS } from '@/utils/api/feed-api-base';
 import type { FeedWordMeta } from '@/models/feed-word-meta';
 
 /**

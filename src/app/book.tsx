@@ -27,10 +27,10 @@ import { coverUri as coverImageUri } from "@/utils/cover-uri";
 import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
 import { showActionSheet } from "@/utils/show-action-sheet";
-import { fetchSuggestions } from "@/utils/suggestions-api";
-import { translateWord } from "@/utils/translate-api";
-import { fetchDefinition } from "@/utils/words-api";
-import { postWordToFeed } from "@/utils/words-feed-api";
+import { fetchSuggestions } from "@/utils/api/suggestions-api";
+import { translateWord } from "@/utils/api/translate-api";
+import { fetchDefinition } from "@/utils/api/words-api";
+import { postWordToFeed } from "@/utils/api/words-feed-api";
 
 import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
 import { useSavedLanguage } from "@/context/language-context";

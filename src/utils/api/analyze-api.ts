@@ -1,6 +1,6 @@
 import type { SentenceAnalysis } from '@/models/sentence-analysis';
 
-import { FEED_API_BASE_URL } from '@/utils/feed-api-base';
+import { FEED_API_BASE_URL } from '@/utils/api/feed-api-base';
 import { isAbortError } from '@/utils/is-abort-error';
 
 // Asks the Word Bank server to analyze a sentence, returning the AI's explanation of it.

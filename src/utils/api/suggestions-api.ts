@@ -1,4 +1,4 @@
-import { FEED_API_BASE_URL } from '@/utils/feed-api-base';
+import { FEED_API_BASE_URL } from '@/utils/api/feed-api-base';
 
 import { SuggestedBook, Suggestions } from "@/models/suggestion";
 
@@ -6,7 +6,7 @@ import { SuggestedBook, Suggestions } from "@/models/suggestion";
 // limit) to build this response, so a cold call costs one round trip, not two — but each list
 // is verbose to generate (up to 80 words / 40 books), so keep it close to ANALYZE_TIMEOUT_MS
 // rather than the usual 5s.
-const SUGGESTIONS_TIMEOUT_MS = 20_000;
+const SUGGESTIONS_TIMEOUT_MS = 7_000;
 
 const MAX_WORDS = 80;
 const MAX_BOOKS = 40;
