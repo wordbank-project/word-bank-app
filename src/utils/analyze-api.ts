@@ -45,8 +45,8 @@ function parseAnalysis(data: unknown): SentenceAnalysis | null {
 /**
  * Returns the analysis, `null` when it couldn't be produced (offline, feature disabled
  * server-side, or an unusable reply), or `'rate-limited'` when either this app's own rate
- * limit or Groq's own upstream limit was hit — distinguished from a plain `null` so the screen
- * can show "try again shortly" instead of a generic connection error.
+ * limit or the LLM provider's own upstream limit was hit — distinguished from a plain `null`
+ * so the screen can show "try again shortly" instead of a generic connection error.
  * @param {string} text the sentence to analyze
  * @param {string} lang the language code of the sentence
  * @param {AbortSignal} [signal] optional signal to abort the request (e.g. screen unmount)
