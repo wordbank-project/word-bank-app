@@ -198,8 +198,13 @@ function handleDeleteAll(): void {
                 style: "destructive",
                 onPress: async () => {
                     // Clear all book data, then navigate to the read list screen (which will be empty).
-                    await clearAllBookData();
-                    router.navigate('/(tabs)/read-list');
+                    try {
+                        await clearAllBookData();
+                        router.navigate('/(tabs)/read-list');
+                    } catch (error) {
+                        console.error(error);
+                        alertDialog("Something went wrong", "Could not delete your data. Please try again.");
+                    }
                 },
             },
             { text: "Cancel", style: "cancel" },
@@ -209,19 +214,25 @@ function handleDeleteAll(): void {
 
 /**
  * Runs the seeder for the chosen size, shows a summary of what was written,
- * then navigates to the (now-repopulated) Read List.
+ * then navigates to the (now-repopulated) Read List. On failure, logs the
+ * error and shows the user a generic failure alert instead.
  *
  * @param {SeedSize} size Which preset to generate ("small" | "medium" | "large").
- * @returns {Promise<void>} Resolves once the summary alert has been shown and navigation triggered.
+ * @returns {Promise<void>} Resolves once either the summary alert (success) or the failure alert (error) has been shown.
  *
  */
 async function runSeed(size: SeedSize): Promise<void> {
-    const result = await seedTestData(size);
-    alertDialog(
-        "Test data seeded",
-        `${result.books} books, ${result.words} words, ${result.analyses} analyses, ${result.wordsWithStats} with practice stats.`,
-    );
-    router.navigate('/(tabs)/read-list');
+    try {
+        const result = await seedTestData(size);
+        alertDialog(
+            "Test data seeded",
+            `${result.books} books, ${result.words} words, ${result.analyses} analyses, ${result.wordsWithStats} with practice stats.`,
+        );
+        router.navigate('/(tabs)/read-list');
+    } catch (error) {
+        console.error(error);
+        alertDialog("Something went wrong", "Could not seed test data. Please try again.");
+    }
 }
 
 /**
