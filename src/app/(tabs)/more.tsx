@@ -37,16 +37,34 @@ const SOURCES: BookSource[] = [
     {
         category: 'Definitions:',
         description: 'Where word meanings and example sentences come from.',
-        active: 'Wiktionary & Free Dictionary',
-        providers: [{ name: 'Wiktionary & Free Dictionary' }, { name: 'Urban Dictionary', future: true }],
+        active: 'Wiktionary',
+        providers: [{ name: 'Wiktionary' }, { name: 'Urban Dictionary', future: true }],
+    },
+    {
+        category: 'Suggestions:',
+        description: 'Where the app gets word suggestions.',
+        active: 'Datamuse',
+        providers: [{ name: 'Datamuse' }, { name: 'Typesense', future: true }],
+    },
+    {
+        category: 'Translation:',
+        description: 'The unofficial Google Translate endpoint used for the book screen\'s optional "Translate to" word lookup — free and keyless, but undocumented.',
+        active: 'Google Translate',
+        providers: [{ name: 'Google Translate' }, { name: 'Google Cloud Translation API', future: true }],
     },
 ];
 
 // Developer-facing links to the actual APIs behind the sources above.
+// Wiktionary (wiktapi.dev) covers every language's definitions and phonetic
+// transcriptions (see words-api.ts's fetchPhonetic) — Free Dictionary API
+// isn't called by the app at all anymore. Google Translate has no official
+// docs to link to (see translate-api.ts's header comment) — this one points
+// at the source instead, which is the only real documentation it has.
 const API_LINKS: ApiLink[] = [
     { label: 'Open Library API', href: 'https://openlibrary.org/developers/api' },
-    { label: 'Free Dictionary API', href: 'https://dictionaryapi.dev' },
     { label: 'Wiktionary API (wiktapi.dev)', href: 'https://github.com/wordbank-project/wiktapi.dev' },
+    { label: 'Datamuse API', href: 'https://www.datamuse.com/api/' },
+    { label: 'Google Translate (unofficial — see source)', href: 'https://github.com/wordbank-project/word-bank-app/blob/main/src/utils/translate-api.ts' },
 ];
 
 type RowProps = {
