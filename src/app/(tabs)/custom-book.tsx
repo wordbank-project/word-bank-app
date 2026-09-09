@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { router } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
@@ -82,6 +82,19 @@ export default function CustomBookScreen() {
     // We find the author and year that is linked to the suggested title
     const matchedSuggestion = (suggestions ?? []).find((suggestion) => suggestion.title === placeHolderTitle);
 
+    // When the matched suggestion changes, 
+    // we update the author and year placeholders to match the new suggestion 
+    // from the AI or fallback list array of objects.
+    const [authorPlaceholder, setAuthorPlaceholder] = useState<string>('');
+    const [yearPlaceholder, setYearPlaceholder] = useState<string>('');
+    useEffect(() => {
+        if (!matchedSuggestion) {
+            return;
+        }
+        setAuthorPlaceholder(matchedSuggestion.author);
+        setYearPlaceholder(matchedSuggestion.year);
+    }, [matchedSuggestion]);
+
     async function handlePickImage(): Promise<void> {
         const uri = await pickCoverImage(coverUri !== null);
         if (uri) {
@@ -92,14 +105,11 @@ export default function CustomBookScreen() {
     async function handleCreate(): Promise<void> {
         // if placeholder title is shown use that as the title instead of showing an error for empty title
         const bookTitle = title.trim() || placeHolderTitle;
-        if (!bookTitle) {
-            setTitleError('Please enter a book title.');
-            return;
-        }
+        // if placeholder author or year is shown use that (the sticky placeholder,
+        // not the live matchedSuggestion, so what's actually shown gets saved)
+        const bookAuthor = author.trim() || authorPlaceholder;
+        const bookYear = year.trim() || yearPlaceholder;
         const key = `custom_${Date.now()}`;
-        // if placeholder author or year is shown use that
-        const bookAuthor = author.trim() || matchedSuggestion?.author || '';
-        const bookYear = year.trim() || matchedSuggestion?.year || '';
 
         await upsertReadListBook({
             key,
@@ -160,20 +170,19 @@ export default function CustomBookScreen() {
                         <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Title</Text>
                         <ClearableTextInput
                             className={`rounded-lg border bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg border-border-input`}
-                            placeholder={typedPlaceholder || "Pride and Prejudice"}
+                            placeholder={typedPlaceholder || "Loading..."}
                             placeholderTextColor={placeholderColor}
                             value={title}
-                            onChangeText={(t) => { setTitle(t); setTitleError(''); }}
+                            onChangeText={setTitle}
                             returnKeyType="next"
                         />
-                        {titleError ? <Text className="text-[13px] text-error">{titleError}</Text> : null}
                     </View>
 
                     <View className="gap-1.5">
                         <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Author</Text>
                         <ClearableTextInput
                             className="rounded-lg border border-border-input bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg"
-                            placeholder={matchedSuggestion?.author || "Jane Austen"}
+                            placeholder={authorPlaceholder || "Loading..."}
                             placeholderTextColor={placeholderColor}
                             value={author}
                             onChangeText={setAuthor}
@@ -185,7 +194,7 @@ export default function CustomBookScreen() {
                         <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Year</Text>
                         <ClearableTextInput
                             className="rounded-lg border border-border-input bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg"
-                            placeholder={matchedSuggestion?.year || "1813"}
+                            placeholder={yearPlaceholder || "Loading..."}
                             placeholderTextColor={placeholderColor}
                             value={year}
                             onChangeText={validateCustomInput}
