@@ -9,3 +9,28 @@ export type SeedResult = {
     analyses: number;
     wordsWithStats: number;
 };
+
+export type SeedAmount = {
+    amountOfbooks: number;
+    minWords: number;
+    maxWords: number;
+};
+
+export type SeedBook = {
+    title: string;
+    author: string;
+    year: string;
+};
+
+export type SeedWord = {
+    word: string;
+    partOfSpeech: string;
+    definition: string;
+    phonetic?: string;
+    exampleSentence?: string;
+};
+
+export type SeedAnalysis = {
+    text: string;
+    meaning: string;
+};

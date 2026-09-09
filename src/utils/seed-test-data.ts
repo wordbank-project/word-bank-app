@@ -6,7 +6,7 @@ import { READ_STATUS_ORDER } from "@/models/read-list-book";
 import type { ReadListBook } from "@/models/read-list-book";
 import type { WordEntry } from "@/models/word-entry";
 import type { WordStat } from "@/models/word-stat";
-import type { SeedResult, SeedSize } from "@/models/seed";
+import type { SeedAmount, SeedAnalysis, SeedBook, SeedResult, SeedSize, SeedWord } from "@/models/seed";
 
 import { clearAllBookData, setReadList } from "@/storage/read-list-storage";
 import { setAnalysisHistory } from "@/storage/analysis-storage";
@@ -21,16 +21,16 @@ import { pick, randomInt, shuffle } from "@/utils/random";
 // (via clearAllBookData, which also clears memory stats) so repeated runs
 // are reproducible instead of accumulating.
 
-const SEED_SIZES: Record<SeedSize, { books: number; minWords: number; maxWords: number }> = {
-    small: { books: 10, minWords: 3, maxWords: 10 },
-    medium: { books: 50, minWords: 5, maxWords: 20 },
-    large: { books: 200, minWords: 10, maxWords: 30 },
+const SEED_SIZES: Record<SeedSize, SeedAmount> = {
+    small: { amountOfbooks: 10, minWords: 3, maxWords: 10 },
+    medium: { amountOfbooks: 50, minWords: 5, maxWords: 20 },
+    large: { amountOfbooks: 200, minWords: 10, maxWords: 30 },
 };
 
 // Public-domain-style title/author pairs — enough variety to not feel
 // mechanical; repeats (with a unique key suffix) once a preset needs more
 // books than this list has entries.
-const SEED_BOOKS: { title: string; author: string; year: string }[] = [
+const SEED_BOOKS: SeedBook[] = [
     { title: "Pride and Prejudice", author: "Jane Austen", year: "1813" },
     { title: "Moby-Dick", author: "Herman Melville", year: "1851" },
     { title: "Frankenstein", author: "Mary Shelley", year: "1818" },
@@ -67,7 +67,7 @@ const SEED_BOOKS: { title: string; author: string; year: string }[] = [
 // (see utils/part-of-speech.ts's POS_ORDER) that the Words List's POS filter
 // has real variety. Phonetic/exampleSentence are only on some entries, same
 // as real dictionary data.
-const SEED_WORDS: { word: string; partOfSpeech: string; definition: string; phonetic?: string; exampleSentence?: string }[] = [
+const SEED_WORDS: SeedWord[] = [
     { word: "serendipity", partOfSpeech: "noun", definition: "The occurrence of finding something good without looking for it.", phonetic: "/ˌserənˈdɪpɪti/", exampleSentence: "Finding this old photograph was pure serendipity." },
     { word: "ephemeral", partOfSpeech: "adjective", definition: "Lasting for a very short time.", phonetic: "/ɪˈfɛmərəl/", exampleSentence: "The beauty of cherry blossoms is ephemeral." },
     { word: "melancholy", partOfSpeech: "noun", definition: "A deep, pensive, long-lasting sadness.", exampleSentence: "A quiet melancholy settled over the empty house." },
@@ -135,10 +135,10 @@ const SEED_WORDS: { word: string; partOfSpeech: string; definition: string; phon
     { word: "wearily", partOfSpeech: "adverb", definition: "In a tired manner.", phonetic: "/ˈwɪrəli/", exampleSentence: "She wearily climbed the last flight of stairs." },
 ];
 
-const SEED_LANGUAGES = ["en", "en", "en", "en", "nl", "es", "fr"]; // mostly English, a few others in the mix
+const SEED_LANGUAGES: string[] = ["en", "en", "en", "en", "nl", "es", "fr"]; // mostly English, a few others in the mix
 
 // Curated sentence + plain-language meaning pairs for the Analyze history.
-const SEED_ANALYSES: { text: string; meaning: string }[] = [
+const SEED_ANALYSES: SeedAnalysis[] = [
     { text: "It was the best of times, it was the worst of times.", meaning: "Life held both great joy and great hardship at once." },
     { text: "He was drowning in time, and the shore kept moving.", meaning: "He felt overwhelmed and unable to catch up, no matter how hard he tried." },
     { text: "She had a habit of speaking in half-finished thoughts.", meaning: "She often trailed off before completing what she meant to say." },
@@ -300,7 +300,7 @@ export async function seedTestData(size: SeedSize): Promise<SeedResult> {
     const allWordTexts = new Set<string>();
     let totalWords = 0;
 
-    for (let i = 0; i < config.books; i++) {
+    for (let i = 0; i < config.amountOfbooks; i++) {
         const book = buildSeedBook(i);
         books.push(book);
 
