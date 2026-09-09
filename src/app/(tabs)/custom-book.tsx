@@ -170,7 +170,7 @@ export default function CustomBookScreen() {
                     </View>
 
                     <View className="gap-1.5">
-                        <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Author <Text className="text-xs font-normal normal-case text-muted">(optional)</Text></Text>
+                        <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Author</Text>
                         <ClearableTextInput
                             className="rounded-lg border border-border-input bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg"
                             placeholder={matchedSuggestion?.author || "Jane Austen"}
@@ -182,7 +182,7 @@ export default function CustomBookScreen() {
                     </View>
 
                     <View className="gap-1.5">
-                        <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Year <Text className="text-xs font-normal normal-case text-muted">(optional)</Text></Text>
+                        <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Year</Text>
                         <ClearableTextInput
                             className="rounded-lg border border-border-input bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg"
                             placeholder={matchedSuggestion?.year || "1813"}
