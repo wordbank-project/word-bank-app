@@ -197,7 +197,6 @@ function buildSeedBook(index: number): ReadListBook {
             book.bookNotes = "Recommended by a friend; check the ending again.";
         }
     }
-
     return book;
 }
 
