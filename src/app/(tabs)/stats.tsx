@@ -30,7 +30,7 @@ type StruggleRow = {
 
 export default function StatsScreen() {
     const [words, setWords] = useState<WordWithBook[]>([]);
-    const [stats, setStats] = useState<Record<string, WordStat>>({});
+    const [stats, setStats] = useState<WordStat[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     // Opened from either the Memory tab or More,
@@ -58,11 +58,11 @@ export default function StatsScreen() {
     // useMemo is used because we only redo the rated words count if it changes
     const allRatedWords: StruggleRow[] = useMemo((): StruggleRow[] => {
         return words
-            // map() loops through the array and does the same action for each entry and returns a new array. 
-            // Here it checks for each saved word if it has a stat
+            // map() loops through the array and does the same action for each entry and returns a new array.
+            // Here it checks for each saved word if it has a stat, by scanning stats for a matching word using find().
             .map((word: WordWithBook): StruggleRow | null => {
-                const stat = stats[word.word.trim().toLowerCase()];
-                // Word with stat exists? We return the object otherwise return null
+                const stat = stats.find((s: WordStat) => s.word === word.word.trim().toLowerCase());
+                // Word with stat exists? We return the object with word and statm, otherwise return null
                 return stat ? { word, stat } : null;
             })
             // filter() runs a test on each entry and keeps only the ones where it returns true — here, "not null"
@@ -110,12 +110,9 @@ export default function StatsScreen() {
                 style: "destructive",
                 onPress: async () => {
                     await removeMemoryStat(word);
-                    // Reload the stats
-                    setStats((prev: Record<string, WordStat>) => {
-                        const next = { ...prev };
-                        delete next[word.trim().toLowerCase()];
-                        return next;
-                    });
+                    // Reload the stats state after removal
+                    const key = word.trim().toLowerCase();
+                    setStats((prev: WordStat[]) => prev.filter((stat: WordStat) => stat.word !== key));
                 },
             },
             { text: "Cancel", style: "cancel" },

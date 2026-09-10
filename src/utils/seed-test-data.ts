@@ -243,11 +243,11 @@ function buildSeedWords(count: number): WordEntry[] {
  * never-practiced words rather than every single word having history.
  *
  * @param {Set<string>} words Every seeded word's lowercased, trimmed text, across all books.
- * @returns {Record<string, WordStat>} Stats for roughly half of `words`, keyed the same way memory-stats-storage.ts does.
+ * @returns {WordStat[]} Stats for roughly half of `words`.
  *
  */
-function buildSeedMemoryStats(words: Set<string>): Record<string, WordStat> {
-    const stats: Record<string, WordStat> = {};
+function buildSeedMemoryStats(words: Set<string>): WordStat[] {
+    const stats: WordStat[] = [];
     for (const word of words) {
         // Only some words have been practiced at all — most real words haven't yet.
         if (Math.random() >= 0.5) {
@@ -255,12 +255,13 @@ function buildSeedMemoryStats(words: Set<string>): Record<string, WordStat> {
         }
         const total = randomInt(1, 8);
         const knewIt = randomInt(0, total);
-        stats[word] = {
+        stats.push({
+            word,
             knewIt,
             stillLearning: total - knewIt,
             // More recent than addedAt's 180-day spread — practice happens after adding.
             lastReviewedAt: Date.now() - randomInt(0, 14) * 24 * 60 * 60 * 1000,
-        };
+        });
     }
     return stats;
 }
@@ -327,6 +328,6 @@ export async function seedTestData(size: SeedSize): Promise<SeedResult> {
         books: books.length,
         words: totalWords,
         analyses: analyses.length,
-        wordsWithStats: Object.keys(memoryStats).length,
+        wordsWithStats: memoryStats.length,
     };
 }

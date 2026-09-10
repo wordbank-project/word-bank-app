@@ -6,23 +6,21 @@ import { getJSON, setJSON } from "@/storage/storage";
 // in-memory-only and resets on app restart). Lightweight counters only — no
 // interval/ease-factor/due-date scheduling, no spaced repetition.
 
-export type WordStat = {
-    stillLearning: number;
-    knewIt: number;
-    lastReviewedAt: number;
-};
+import type { WordStat } from "@/models/word-stat";
 
 const MEMORY_STATS_KEY = "memory_word_stats";
 
 /**
  * Reads back every word's saved practice counters.
  *
- * @returns {Promise<Record<string, WordStat>>} A map of lowercased word text to its
- * counters, or `{}` if nothing has been recorded yet or the value is unreadable.
+ * @returns {Promise<WordStat[]>} Every word's counters, or `[]` if nothing has
+ * been recorded yet, the value is unreadable, or it's still in the old
+ * (pre-array) stored shape — no migration, it's simply treated as empty.
  *
  */
-export async function getMemoryStats(): Promise<Record<string, WordStat>> {
-    return getJSON<Record<string, WordStat>>(MEMORY_STATS_KEY, {});
+export async function getMemoryStats(): Promise<WordStat[]> {
+    const raw = await getJSON<unknown>(MEMORY_STATS_KEY, []);
+    return Array.isArray(raw) ? (raw as WordStat[]) : [];
 }
 
 /**
@@ -30,11 +28,11 @@ export async function getMemoryStats(): Promise<Record<string, WordStat>> {
  * to generate realistic stats in bulk; `recordRating` is the incremental,
  * one-word-at-a-time counterpart used during real practice.
  *
- * @param {Record<string, WordStat>} stats The full map of lowercased word text to its counters.
+ * @param {WordStat[]} stats Every word's counters to save.
  * @returns {Promise<void>} Resolves once the value has been written.
  *
  */
-export async function setMemoryStats(stats: Record<string, WordStat>): Promise<void> {
+export async function setMemoryStats(stats: WordStat[]): Promise<void> {
     await setJSON(MEMORY_STATS_KEY, stats);
 }
 
@@ -51,22 +49,30 @@ export async function setMemoryStats(stats: Record<string, WordStat>): Promise<v
 export async function recordRating(word: string, knew: boolean): Promise<void> {
     const key = word.trim().toLowerCase();
     const memoryStats = await getMemoryStats();
+    const index = memoryStats.findIndex((stat) => stat.word === key);
 
-    // existing word stat object, we check if it exists already otherwise start at 0 everything
-    const existingWordStat: WordStat = memoryStats[key] ?? { stillLearning: 0, knewIt: 0, lastReviewedAt: 0 };
+    // existing word stat entry, we check if it exists already otherwise start at 0 everything
+    const existingWordStat: WordStat = index === -1 ? { word: key, stillLearning: 0, knewIt: 0, lastReviewedAt: 0 } : memoryStats[index];
 
-    // We create a new memory stats object and save it.
+    // We build the updated entry and save it.
     // Logic:
     // Exactly one counter goes up by 1 per call, based on which answer was given —
-    // the other counter gets +0, i.e. is left exactly as it was. 
+    // the other counter gets +0, i.e. is left exactly as it was.
     // Neither counter is ever decreased; both only ever climb or hold steady over time.
     //   knew = true  -> knewIt +1,        stillLearning +0 (unchanged)
     //   knew = false -> knewIt +0 (unchanged), stillLearning +1
-    memoryStats[key] = {
+    const updatedWordStat: WordStat = {
+        word: key,
         stillLearning: existingWordStat.stillLearning + (knew ? 0 : 1),
         knewIt: existingWordStat.knewIt + (knew ? 1 : 0),
         lastReviewedAt: Date.now(),
     };
+
+    if (index === -1) {
+        memoryStats.push(updatedWordStat);
+    } else {
+        memoryStats[index] = updatedWordStat;
+    }
     await setJSON(MEMORY_STATS_KEY, memoryStats);
 }
 
@@ -79,9 +85,8 @@ export async function recordRating(word: string, knew: boolean): Promise<void> {
  */
 export async function removeMemoryStat(word: string): Promise<void> {
     const key = word.trim().toLowerCase();
-    const memoryStats: Record<string, WordStat> = await getMemoryStats();
-    delete memoryStats[key];
-    await setJSON(MEMORY_STATS_KEY, memoryStats);
+    const memoryStats = await getMemoryStats();
+    await setJSON(MEMORY_STATS_KEY, memoryStats.filter((stat) => stat.word !== key));
 }
 
 /**
@@ -92,5 +97,5 @@ export async function removeMemoryStat(word: string): Promise<void> {
  *
  */
 export async function clearMemoryStats(): Promise<void> {
-    await setJSON(MEMORY_STATS_KEY, {});
+    await setJSON(MEMORY_STATS_KEY, []);
 }
