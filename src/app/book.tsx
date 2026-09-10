@@ -20,8 +20,8 @@ import {
     getTranslationLanguageCode,
     setTranslationLanguageCode,
 } from "@/storage/language-storage";
-import { getReadList, setReadBookStatus as persistReadStatus, upsertReadListBook } from "@/storage/read-list-storage";
-import { getWords, setWords } from "@/storage/words-storage";
+import { getReadList, removeReadListBook, setReadBookStatus as persistReadStatus, upsertReadListBook } from "@/storage/read-list-storage";
+import { getWords, removeWords, setWords } from "@/storage/words-storage";
 
 import { coverUri as coverImageUri } from "@/utils/cover-uri";
 import { pickCoverImage } from "@/utils/pick-cover-image";
@@ -47,6 +47,7 @@ import DefinitionModal from "@/components/modal/DefinitionModal";
 import LanguageModal from "@/components/modal/LanguageModal";
 import ReadStatusSelector from "@/components/ReadStatusSelector";
 import StarRating from "@/components/StarRating";
+import { alertDialog } from "@/utils/alert-dialog";
 
 const RANDOM_DICTIONARY_WORDS = [
     "serendipity",
@@ -353,13 +354,53 @@ export default function BookDetail() {
         await upsertReadListBook(buildReadListEntry({ cover_i: uri }));
     }
 
+    /**
+     * Deletes the book from the read list and removes all words associated with it.
+     * @param key
+     * @returns {Promise<void>} Nothing. Resolves when the book and its words have been removed.
+     * 
+     */
+    async function handleDeleteReadListBook(key: string): Promise<void> {
+        await removeReadListBook(key);
+        await removeWords([key]); // Clear all words associated with the book
+    }
+
+    /**
+     * Saves the book metadata (title, author, year) to the read list. If all three fields are cleared, it prompts the user to delete the book instead.
+     * @returns {Promise<void>} Nothing. Resolves when the metadata has been saved or the book has been deleted.
+     * 
+     */
     async function handleSaveMeta(): Promise<void> {
         const trimmedTitle = draftTitle.trim();
-        if (!trimmedTitle) {
-            return;
-        }
         const trimmedAuthor = draftAuthor.trim();
         const trimmedYear = draftYear.trim();
+        if (!trimmedTitle && !trimmedAuthor && !trimmedYear) {
+            // A book can't be saved simultaneously without a title, author and a year, 
+            // so if the user clears all three fields, delete the book instead of saving it. 
+            // Title is not required anymore so optional (placeholder title is used for new books if nothing is entered)
+            // Delete and go back to the read list after confirmation from the user
+            showActionSheet(
+                "Delete this book?",
+                "This permanently deletes this book and all words associated with it. This cannot be undone!",
+                [
+                    {
+                        text: "Delete book and its words",
+                        style: "destructive",
+                        onPress: async () => {
+                            try {
+                                await handleDeleteReadListBook(key!);
+                                router.navigate('/(tabs)/read-list');
+                            } catch (error) {
+                                console.error(error);
+                                alertDialog("Something went wrong", "Could not delete your book. Please try again.");
+                            }
+                        },
+                    },
+                    { text: "Cancel", style: "cancel" },
+                ],
+            );
+            return;
+        }
         await upsertReadListBook(buildReadListEntry({
             title: trimmedTitle,
             author: trimmedAuthor,
@@ -724,7 +765,7 @@ export default function BookDetail() {
                                         className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
                                         value={draftTitle}
                                         onChangeText={setDraftTitle}
-                                        placeholder="Title"
+                                        placeholder="Title (optional)" // Title is optional now, so users can create a book without a title. Placeholder title will be used for new books if nothing is entered.
                                         placeholderTextColor={placeholderColor}
                                         returnKeyType="next"
                                     />
