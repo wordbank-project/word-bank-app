@@ -43,8 +43,8 @@ import { LanguageModalSkeleton, NoteCardSkeleton, ReadStatusSkeleton, SaveButton
 import ClearableTextInput from "@/components/ClearableTextInput";
 import CoverImage from "@/components/CoverImage";
 import CoverPlaceholder from "@/components/CoverPlaceholder";
-import DefinitionModal from "@/components/DefinitionModal";
-import LanguageModal from "@/components/LanguageModal";
+import DefinitionModal from "@/components/modal/DefinitionModal";
+import LanguageModal from "@/components/modal/LanguageModal";
 import ReadStatusSelector from "@/components/ReadStatusSelector";
 import StarRating from "@/components/StarRating";
 

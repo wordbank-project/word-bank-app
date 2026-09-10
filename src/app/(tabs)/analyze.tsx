@@ -27,7 +27,7 @@ import { ACCENT, Colors } from "@/styles/global";
 import AnalysisResult from "@/components/AnalysisResult";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import ExampleSentenceSkeletons from "@/components/skeletons/ExampleSentenceSkeletons";
-import LanguageModal from "@/components/LanguageModal";
+import LanguageModal from "@/components/modal/LanguageModal";
 import SearchButton from "@/components/SearchButton";
 
 const RANDOM_EXAMPLE_SENTENCES = [
