@@ -100,7 +100,7 @@ export default function DefinitionModal({ visible, onClose, word, definitions, s
                                                 {row.def.definition}
                                             </Text>
                                             {row.def.exampleSentence ? (
-                                                <Text className="text-[13px] italic leading-5 text-muted">“{row.def.exampleSentence}”</Text>
+                                                <Text className="text-[13px] mt-3 italic leading-5 text-muted">“{row.def.exampleSentence}”</Text>
                                             ) : null}
                                         </View>
                                         {active && <Text className="mt-0.5 text-sm font-bold text-accent">✓</Text>}
