@@ -4,6 +4,7 @@ import type { SeedSize } from "@/models/seed";
 import { clearAllBookData } from "@/storage/read-list-storage";
 import { Colors } from "@/styles/global";
 import { alertDialog } from "@/utils/alert-dialog";
+import { exportData, importData } from "@/utils/export-import-flow";
 import { seedTestData } from "@/utils/seed-test-data";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { Link, router, type Href } from "expo-router";
@@ -184,7 +185,7 @@ function handleExportData(): void {
         "This saves your books, words, and analyses to a JSON file on your device, which you can then share or save anywhere you like.",
         {
             dontShowAgain: { id: "export-data", checkboxLabel: "Don't show this again" },
-            onAcknowledge: () => void exportData(),
+            onAcknowledge: exportData
         },
     );
 }
@@ -202,7 +203,7 @@ function handleImportData(): void {
         "This opens your device's file picker so you can choose a Word Bank backup file (.json) to import.",
         {
             dontShowAgain: { id: "import-data", checkboxLabel: "Don't show this again" },
-            onAcknowledge: () => void importData(),
+            onAcknowledge: importData
         },
     );
 }
@@ -302,8 +303,8 @@ export default function MoreScreen() {
             </Section>
 
             <Section title="Your data">
-                <Row label="Export Data" icon="square.and.arrow.up" chevron first onPress={exportData} />
-                <Row label="Import Data" icon="square.and.arrow.down" chevron onPress={importData} />
+                <Row label="Export Data" icon="square.and.arrow.up" chevron first onPress={handleExportData} />
+                <Row label="Import Data" icon="square.and.arrow.down" chevron onPress={handleImportData} />
                 <Row label="Delete all data" icon="trash.fill" danger onPress={handleDeleteAll} />
             </Section>
 

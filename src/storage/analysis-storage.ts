@@ -64,3 +64,15 @@ export async function clearAnalysisHistory(): Promise<AnalysisHistoryEntry[]> {
     await AsyncStorage.removeItem(ANALYSES_KEY);
     return [];
 }
+
+/**
+ * Overwrites the whole analysis history. Used by data import to restore a
+ * backup's analyses, merged or otherwise, without going through addAnalysis.
+ *
+ * @param {AnalysisHistoryEntry[]} entries The full history to store (newest first, already capped).
+ * @returns {Promise<void>} Resolves once the write completes.
+ *
+ */
+export async function setAnalysisHistory(entries: AnalysisHistoryEntry[]): Promise<void> {
+    await setJSON(ANALYSES_KEY, entries);
+}
