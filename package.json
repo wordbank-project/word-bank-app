@@ -9,7 +9,6 @@
     "ios": "APP_VARIANT=development expo run:ios",
     "web": "expo start --web",
     "export:web": "expo export --platform web",
-    "deploy:web:oracle": "bash scripts/deploy-web-oracle.sh",
     "dev": "APP_VARIANT=development npx expo start --dev-client --clear --android --ios",
     "dev-client:physical": "APP_VARIANT=development expo start --dev-client --clear",
     "dev-client:android": "APP_VARIANT=development expo start --dev-client --android --clear",
