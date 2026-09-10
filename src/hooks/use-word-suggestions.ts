@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { fetchWordSuggestions } from '@/utils/words-api';
+import { fetchWordSuggestions } from '@/utils/api/words-api';
 
 const DEBOUNCE_MS = 250;
 const MIN_CHARS = 2;
