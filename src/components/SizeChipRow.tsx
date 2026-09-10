@@ -39,10 +39,15 @@ export default function SizeChipRow({ value, onChange, maxAllowedInputValue }: S
     const placeholderColor = Colors[useColorScheme()].textPlaceholder;
 
     // Whether the current value is one of the fixed presets, or a custom
-    // number instead — drives whether the "Custom" chip shows as selected
-    // (and shows the actual number) and whether its input starts open.
+    // number instead — drives the "Custom" chip's label/selected state and
+    // what the input is pre-filled with the first time it's opened.
     const isPreset = ROUND_SIZE_OPTIONS.some((option) => option.value === value);
-    const [showCustomInput, setShowCustomInput] = useState<boolean>(!isPreset);
+    // Starts closed regardless of `value` — even an already-custom value is
+    // shown via the "Custom" chip's own label, so the input should only open
+    // when the user actually taps it (never just because this component
+    // happens to (re)mount with a custom value already committed, e.g. when
+    // memory-words.tsx unmounts/remounts this row across the "playing" phase).
+    const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
     const [customText, setCustomText] = useState<string>(isPreset ? "" : String(value));
 
     /**
