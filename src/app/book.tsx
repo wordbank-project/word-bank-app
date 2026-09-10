@@ -92,6 +92,14 @@ export default function BookDetail() {
     const [loadingWords, setLoadingWords] = useState<boolean>(true);
     const [loadingEntry, setLoadingEntry] = useState<boolean>(true);
 
+    // Whether this screen's own AsyncStorage reads (words + read-list entry)
+    // have resolved — used to keep the language rows' skeletons visually in
+    // sync with the rest of the screen, since languageReady/translateToLanguageReady
+    // can resolve much earlier (languageReady in particular comes from the
+    // app-root language context, not a book.tsx-local read) and would
+    // otherwise pop in before everything else finishes loading.
+    const screenDataReady = !loadingWords && !loadingEntry;
+
     const [input, setInput] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>("");
@@ -649,12 +657,12 @@ export default function BookDetail() {
 
                 {error ? <Text className="mx-3 my-1 text-[13px] text-error">{error}</Text> : null}
 
-                {languageReady ? (
+                {languageReady && screenDataReady ? (
                     <LanguageModal selected={language} onSelect={handleSelectLanguage} />
                 ) : (
                     <LanguageModalSkeleton />
                 )}
-                {translateToLanguageReady ? (
+                {translateToLanguageReady && screenDataReady ? (
                     <LanguageModal selected={translateToLanguage} onSelect={handleSelectTranslateToLanguage} label="Translate to" />
                 ) : (
                     <LanguageModalSkeleton label="Translate to" />
