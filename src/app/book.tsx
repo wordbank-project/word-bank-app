@@ -108,10 +108,25 @@ export default function BookDetail() {
     // Which word's definition picker is open (null = none).
     const [definitionPickerWord, setDefinitionPickerWord] = useState<string | null>(null);
 
+    // The book's current, authoritative title/author/year — seeded from the route
+    // params for an instant first paint, then corrected from the persisted
+    // read-list entry once that loads (see the getReadList effect below), and
+    // kept in sync by handleSaveMeta on every save. Never touched by Cancel —
+    // that's what draftTitle/draftAuthor/draftYear are for.
     const [editingMeta, setEditingMeta] = useState<boolean>(false);
     const [metaTitle, setMetaTitle] = useState<string>(title ?? '');
     const [metaAuthor, setMetaAuthor] = useState<string>(author ?? '');
     const [metaYear, setMetaYear] = useState<string>(year ?? '');
+
+    // The live edit-form buffer, only meaningful while editingMeta is true —
+    // seeded from metaTitle/metaAuthor/metaYear each time the editor opens (see
+    // the "Edit details" press handler) and discarded on Cancel/Save. Kept
+    // separate from metaTitle/etc. so a deliberately cleared Author/Year (an
+    // empty string) can't be confused with "not yet loaded" — a plain `||`
+    // fallback to the last-known value can't tell those two apart.
+    const [draftTitle, setDraftTitle] = useState<string>('');
+    const [draftAuthor, setDraftAuthor] = useState<string>('');
+    const [draftYear, setDraftYear] = useState<string>('');
 
     const [wordAdded, setWordAdded] = useState<boolean>(false);
 
@@ -254,6 +269,14 @@ export default function BookDetail() {
                 setReview(entry.review ?? '');
                 setBookNotes(entry.bookNotes ?? '');
                 setRating(entry.rating ?? 0);
+                // The persisted entry is the authoritative title/author/year —
+                // corrects the route-params snapshot metaTitle/metaAuthor/metaYear
+                // started from, e.g. a just-created custom book whose
+                // placeholder-accepted author/year settled into storage a render
+                // after the title did.
+                setMetaTitle(entry.title);
+                setMetaAuthor(entry.author);
+                setMetaYear(entry.year);
             }
         }).finally(() => setLoadingEntry(false));
     }, [key]);
@@ -263,9 +286,9 @@ export default function BookDetail() {
     function buildReadListEntry(overrides?: Partial<Omit<ReadListBook, 'addedAt'>>): Omit<ReadListBook, 'addedAt'> {
         return {
             key: key!,
-            title: metaTitle || (title ?? ''),
-            author: metaAuthor || (author ?? ''),
-            year: metaYear || (year ?? ''),
+            title: metaTitle,
+            author: metaAuthor,
+            year: metaYear,
             cover_i: coverUri ?? '',
             status: readStatus,
             review: review || undefined,
@@ -331,15 +354,23 @@ export default function BookDetail() {
     }
 
     async function handleSaveMeta(): Promise<void> {
-        const trimmedTitle = metaTitle.trim();
+        const trimmedTitle = draftTitle.trim();
         if (!trimmedTitle) {
             return;
         }
+        const trimmedAuthor = draftAuthor.trim();
+        const trimmedYear = draftYear.trim();
         await upsertReadListBook(buildReadListEntry({
             title: trimmedTitle,
-            author: metaAuthor.trim(),
-            year: metaYear.trim(),
+            author: trimmedAuthor,
+            year: trimmedYear,
         }));
+        // Commit the draft as the new current value immediately — a cleared
+        // Author/Year needs to actually read as cleared (an empty string), not
+        // fall back to whatever the old value was.
+        setMetaTitle(trimmedTitle);
+        setMetaAuthor(trimmedAuthor);
+        setMetaYear(trimmedYear);
         setEditingMeta(false);
     }
 
@@ -592,7 +623,7 @@ export default function BookDetail() {
         <React.Fragment>
             <Stack.Screen
                 options={{
-                    title: metaTitle || (title ?? "Book Detail"),
+                    title: metaTitle || "Book Detail",
                     headerShown: true,
                     headerBackVisible: true,
                     // iOS: disable the long-press back menu so it can't bypass the read-list redirect. Related to the usePreventRemove hook
@@ -691,24 +722,24 @@ export default function BookDetail() {
                                 <React.Fragment>
                                     <TextInput
                                         className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
-                                        value={metaTitle}
-                                        onChangeText={setMetaTitle}
+                                        value={draftTitle}
+                                        onChangeText={setDraftTitle}
                                         placeholder="Title"
                                         placeholderTextColor={placeholderColor}
                                         returnKeyType="next"
                                     />
                                     <TextInput
                                         className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
-                                        value={metaAuthor}
-                                        onChangeText={setMetaAuthor}
+                                        value={draftAuthor}
+                                        onChangeText={setDraftAuthor}
                                         placeholder="Author (optional)"
                                         placeholderTextColor={placeholderColor}
                                         returnKeyType="next"
                                     />
                                     <TextInput
                                         className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
-                                        value={metaYear}
-                                        onChangeText={setMetaYear}
+                                        value={draftYear}
+                                        onChangeText={setDraftYear}
                                         placeholder="Year (optional)"
                                         placeholderTextColor={placeholderColor}
                                         keyboardType="number-pad"
@@ -720,21 +751,16 @@ export default function BookDetail() {
                                         <Pressable className="rounded-md bg-accent px-3.5 py-1.5" onPress={handleSaveMeta}>
                                             <Text className="text-[13px] font-semibold text-white">Save</Text>
                                         </Pressable>
-                                        <Pressable onPress={() => {
-                                            setMetaTitle(title ?? '');
-                                            setMetaAuthor(author ?? '');
-                                            setMetaYear(year ?? '');
-                                            setEditingMeta(false);
-                                        }}>
+                                        <Pressable onPress={() => setEditingMeta(false)}>
                                             <Text className="text-[13px] font-medium text-muted">Cancel</Text>
                                         </Pressable>
                                     </View>
                                 </React.Fragment>
                             ) : (
                                 <React.Fragment>
-                                    <Text className="text-xl font-bold text-fg" numberOfLines={3}>{metaTitle || title}</Text>
-                                    {(metaAuthor || author) ? <Text className="text-base text-secondary">{metaAuthor || author}</Text> : null}
-                                    {(metaYear || year) ? <Text className="text-sm text-muted">{metaYear || year}</Text> : null}
+                                    <Text className="text-xl font-bold text-fg" numberOfLines={3}>{metaTitle}</Text>
+                                    {metaAuthor ? <Text className="text-base text-secondary">{metaAuthor}</Text> : null}
+                                    {metaYear ? <Text className="text-sm text-muted">{metaYear}</Text> : null}
                                     {loadingWords ? (
                                         <WordCountSkeleton />
                                     ) : (
@@ -743,7 +769,21 @@ export default function BookDetail() {
                                         </Text>
                                     )}
                                     {isCustomBook && (
-                                        <Pressable onPress={() => setEditingMeta(true)} hitSlop={8} className="mt-0.5 self-start">
+                                        <Pressable
+                                            onPress={() => {
+                                                // Seed the edit form from the current, authoritative values
+                                                // every time it opens — a plain copy, not a `||` fallback, so
+                                                // a deliberately empty Author/Year (cleared on a previous
+                                                // save) opens the form empty instead of resurrecting the old
+                                                // value.
+                                                setDraftTitle(metaTitle);
+                                                setDraftAuthor(metaAuthor);
+                                                setDraftYear(metaYear);
+                                                setEditingMeta(true);
+                                            }}
+                                            hitSlop={8}
+                                            className="mt-0.5 self-start"
+                                        >
                                             <Text className="text-[13px] font-medium text-accent">Edit details</Text>
                                         </Pressable>
                                     )}
