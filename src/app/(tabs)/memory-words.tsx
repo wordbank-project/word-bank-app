@@ -341,11 +341,7 @@ export default function MemoryWordsScreen() {
                 </View>
             ) : null}
 
-            {(phase === "start" || phase === "summary") && wordPool.length > 0 ? (
-                <Link href={{ pathname: "/stats", params: { from: "memory" } }} className="mb-2 self-center text-sm text-accent">
-                    View your stats ›
-                </Link>
-            ) : null}
+
 
             {wordPool.length === 0 ? (
                 <View className="mt-16 items-center gap-2.5 px-8">
@@ -355,7 +351,7 @@ export default function MemoryWordsScreen() {
                     </Link>
                 </View>
             ) : phase === "start" ? (
-                <View className="mt-8 items-center gap-4 px-8">
+                <View className="my-8 items-center gap-4 px-8">
                     <Text className="text-lg font-semibold text-fg">
                         {roundSize === "all"
                             ? `${wordPool.length} ${wordPool.length === 1 ? "word" : "words"} ready to practice`
@@ -379,7 +375,7 @@ export default function MemoryWordsScreen() {
                 </View>
                 // Finish summary
             ) : (
-                <View className="mt-8 items-center gap-4 px-8">
+                <View className="my-8 items-center gap-4 px-8">
                     <Text className="text-2xl font-bold text-fg">Round complete!</Text>
                     <Text className="text-lg text-body">
                         You knew {knewCount}/{deck.length} words
@@ -389,6 +385,11 @@ export default function MemoryWordsScreen() {
                     </Pressable>
                 </View>
             )}
+            {(phase === "start" || phase === "summary") && wordPool.length > 0 ? (
+                <Link href={{ pathname: "/stats", params: { from: "memory" } }} className="mb-2 self-center text-sm text-accent">
+                    View your stats ›
+                </Link>
+            ) : null}
         </View>
     );
 }
