@@ -57,7 +57,16 @@ module.exports = {
             favicon: "./assets/favicon.png"
         },
         plugins: [
-            "expo-router",
+            // `origin` is the hosted web URL — required for expo-router/head's <Head>
+            // to work on native (iOS handoff/universal-link support); without it,
+            // <Head> throws at runtime asking for this. This is a native config
+            // change, so it needs a rebuild (npm run android/ios), not just a
+            // Metro reload.
+            // TODO: replace with the real custom domain once it's bought at
+            // Cloudflare and pointed at Netlify — same TODO as the API URL
+            // placeholders in eas.json/netlify.toml, all three need updating
+            // together once the domains are live.
+            ["expo-router", { origin: "https://word-bank-web.netlify.app" }],
             [
                 "expo-image-picker",
                 {

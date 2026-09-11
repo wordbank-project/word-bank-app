@@ -43,6 +43,14 @@ npm run update:preview   # eas update, no rebuild
 ```
 Only for JS/UI changes on builds already made for that channel. Native changes (step 2) need a new build.
 
+## 6. Web build → Netlify
+```bash
+npm run export:web   # → dist/ (static export, one HTML file per route)
+```
+`netlify.toml` pins the build for Netlify: command (`npm run export:web`), publish directory (`dist`), the Node version, and the `EXPO_PUBLIC_*` API URLs for the web bundle (same vars as `eas.json`'s `env`, since they're inlined at build time either way — update the placeholders once the API has a real domain). `web.output: "static"` in `app.config.js` means this is a real static site, not a single-page app, so no catch-all/SPA redirect rule is needed.
+
+The `netlify.toml` file only controls *how* Netlify builds once it's already watching this repo — the initial link between the Netlify site and this GitHub repo/branch is a one-time dashboard step (Site settings → Build & deploy → Continuous deployment), not something a repo file can set up.
+
 ## Quick decision: local vs cloud
 | Goal | Use |
 |---|---|
@@ -57,6 +65,7 @@ Only for JS/UI changes on builds already made for that channel. Native changes (
 - **Dev** → `.env.local` LAN IP (run the server with `HOST=0.0.0.0`, same Wi-Fi).
 - **Local preview APK** → pass HTTPS inline at build time.
 - **EAS builds** → `eas.json` `env` (deployed HTTPS URL).
+- **Web build (Netlify)** → `netlify.toml` `build.environment` (deployed HTTPS URL).
 - Release/standalone builds **block cleartext HTTP** — anything non-dev must be HTTPS.
 
 # NPM Scripts

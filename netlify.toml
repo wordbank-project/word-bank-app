@@ -1,0 +1,19 @@
+[build]
+  command = "npm run export:web"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # Public API endpoints inlined into the web bundle at build time (same
+  # EXPO_PUBLIC_* vars eas.json's production profile sets for native builds).
+  # Update these once the DigitalOcean-hosted word-bank-server has a real domain.
+  EXPO_PUBLIC_DICT_API_URL = "https://your-api.example.com"
+  EXPO_PUBLIC_WORDS_FEED_API_URL = "https://your-words-server.example.com"
+
+# Static export (web.output: "static") is a real static site, not an SPA —
+# Expo's own docs confirm no catch-all/SPA redirect is needed. Just cache the
+# hashed, immutable JS/CSS chunks aggressively.
+[[headers]]
+  for = "/_expo/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
