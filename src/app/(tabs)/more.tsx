@@ -65,7 +65,7 @@ const API_LINKS: ApiLink[] = [
     { label: 'Open Library API', href: 'https://openlibrary.org/developers/api' },
     { label: 'Wiktionary API (wiktapi.dev)', href: 'https://github.com/wordbank-project/wiktapi.dev' },
     { label: 'Datamuse API', href: 'https://www.datamuse.com/api/' },
-    { label: 'Google Translate (unofficial — see source)', href: 'https://github.com/wordbank-project/word-bank-app/blob/main/src/utils/translate-api.ts' },
+    { label: 'Google Translate (unofficial — see source)', href: 'https://github.com/wordbank-project/word-bank-app/blob/main/src/utils/api/translate-api.ts' },
 ];
 
 type RowProps = {
