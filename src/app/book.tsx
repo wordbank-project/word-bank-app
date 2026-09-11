@@ -762,7 +762,7 @@ export default function BookDetail() {
                             {editingMeta ? (
                                 <React.Fragment>
                                     <ClearableTextInput
-                                        className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
+                                        className="rounded-md border border-border-input bg-input text-sm p-3 android:leading-[21px] text-fg"
                                         value={draftTitle}
                                         onChangeText={setDraftTitle}
                                         placeholder="Title (optional)" // Title is optional now, so users can create a book without a title. Placeholder title will be used for new books if nothing is entered.
@@ -770,7 +770,7 @@ export default function BookDetail() {
                                         returnKeyType="next"
                                     />
                                     <ClearableTextInput
-                                        className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
+                                        className="rounded-md border border-border-input bg-input text-sm p-3 android:leading-[21px] text-fg"
                                         value={draftAuthor}
                                         onChangeText={setDraftAuthor}
                                         placeholder="Author (optional)"
@@ -778,7 +778,7 @@ export default function BookDetail() {
                                         returnKeyType="next"
                                     />
                                     <ClearableTextInput
-                                        className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
+                                        className="rounded-md border border-border-input bg-input text-sm p-3 android:leading-[21px] text-fg"
                                         value={draftYear}
                                         onChangeText={setDraftYear}
                                         placeholder="Year (optional)"
