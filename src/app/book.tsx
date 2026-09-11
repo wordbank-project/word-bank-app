@@ -761,7 +761,7 @@ export default function BookDetail() {
                         <View className="flex-1 justify-center gap-1.5">
                             {editingMeta ? (
                                 <React.Fragment>
-                                    <TextInput
+                                    <ClearableTextInput
                                         className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
                                         value={draftTitle}
                                         onChangeText={setDraftTitle}
@@ -769,7 +769,7 @@ export default function BookDetail() {
                                         placeholderTextColor={placeholderColor}
                                         returnKeyType="next"
                                     />
-                                    <TextInput
+                                    <ClearableTextInput
                                         className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
                                         value={draftAuthor}
                                         onChangeText={setDraftAuthor}
@@ -777,7 +777,7 @@ export default function BookDetail() {
                                         placeholderTextColor={placeholderColor}
                                         returnKeyType="next"
                                     />
-                                    <TextInput
+                                    <ClearableTextInput
                                         className="rounded-md border border-border-input bg-input px-2 py-1.5 text-sm text-fg"
                                         value={draftYear}
                                         onChangeText={setDraftYear}
