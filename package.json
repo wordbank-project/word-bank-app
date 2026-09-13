@@ -24,7 +24,10 @@
     "build:apk:local:dev": "APP_VARIANT=development expo prebuild --platform android --clean && (cd android && ./gradlew assembleDebug) && mkdir -p builds/dev && cp android/app/build/outputs/apk/debug/app-debug.apk builds/dev/ && echo '\\nAPK: builds/dev/app-debug.apk'",
     "build:apk:local:preview": "APP_VARIANT=preview expo prebuild --platform android --clean && (cd android && ./gradlew assembleRelease) && mkdir -p builds/preview && cp android/app/build/outputs/apk/release/app-release.apk builds/preview/ && APP_VARIANT=development expo prebuild --platform android --clean --no-install && echo '\\nAPK: builds/preview/app-release.apk'",
     "build:apk:local:all": "npm run build:apk:local:dev && npm run build:apk:local:preview",
-    "update:preview": "eas update --branch preview --auto"
+    "update:preview": "eas update --branch preview --auto",
+    "deploy:web:main": "git checkout main && git merge test && git push origin main && open-cli https://word-bank-web.netlify.app",
+    "deploy:web:test": "git checkout test && git merge main && git push origin test && git checkout main && open-cli https://test--word-bank-web.netlify.app",
+    "deploy:web:all": "git checkout main && git push origin main && git push origin main:test && open-cli https://word-bank-web.netlify.app && open-cli https://test--word-bank-web.netlify.app"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.1.1",
@@ -75,7 +78,8 @@
     "postcss": "^8.5.15",
     "sharp": "^0.35.2",
     "tailwindcss": "^4.3.1",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "open-cli": "^9.0.0"
   },
   "overrides": {
     "lightningcss": "1.30.1"

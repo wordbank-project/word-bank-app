@@ -4,11 +4,27 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # Public API endpoints inlined into the web bundle at build time (same
-  # EXPO_PUBLIC_* vars eas.json's production profile sets for native builds).
-  # Update these once the DigitalOcean-hosted word-bank-server has a real domain.
+
+# Public API endpoints inlined into the web bundle at build time (same
+# EXPO_PUBLIC_* vars eas.json's production profile sets for native builds).
+# Update the production URLs once the DigitalOcean-hosted word-bank-server has
+# a real domain; point the branch-deploy ones at a staging URL instead if a
+# separate staging backend ever exists — same placeholders as production for
+# now since there isn't one yet.
+#
+# EXPO_PUBLIC_DEPLOY_CONTEXT tags which Netlify context built this bundle.
+# Currently drives more.tsx's SEED_DATA_ENABLED (only "test" shows the Seed
+# test data row); reuse this same var for any other test-only-on-web behavior
+# rather than adding a new single-purpose flag per feature.
+[context.production.environment]
   EXPO_PUBLIC_DICT_API_URL = "https://your-api.example.com"
   EXPO_PUBLIC_WORDS_FEED_API_URL = "https://your-words-server.example.com"
+  EXPO_PUBLIC_DEPLOY_CONTEXT = "production"
+
+[context.branch-deploy.environment]
+  EXPO_PUBLIC_DICT_API_URL = "https://your-api.example.com"
+  EXPO_PUBLIC_WORDS_FEED_API_URL = "https://your-words-server.example.com"
+  EXPO_PUBLIC_DEPLOY_CONTEXT = "test"
 
 # Static export (web.output: "static") is a real static site, not an SPA —
 # Expo's own docs confirm no catch-all/SPA redirect is needed. Just cache the
