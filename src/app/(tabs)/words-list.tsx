@@ -16,6 +16,7 @@ import { openBook } from "@/utils/open-book";
 import { normalizePos, POS_ORDER, posColor, posLabel } from "@/utils/part-of-speech";
 import { showActionSheet } from "@/utils/show-action-sheet";
 
+import StreakBar from "@/components/StreakBar";
 import WordListItem from "@/components/WordListItem";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
@@ -184,7 +185,10 @@ export default function WordsListScreen() {
 
     return (
         <View className="flex-1 bg-background">
-            <View className="px-4 pb-2 pt-3">
+            <View className="pt-3">
+                <StreakBar timestamps={allWords.map((w) => w.addedAt).filter((ts): ts is number => typeof ts === 'number')} />
+            </View>
+            <View className="px-4 pb-2">
                 <ClearableTextInput
                     containerClassName="mb-2"
                     className="rounded-lg border border-border-input bg-input p-3 text-[14px] android:leading-[21px] text-fg"
