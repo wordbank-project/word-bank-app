@@ -16,11 +16,13 @@ import { pick, randomInt, shuffle } from "@/utils/random";
 
 // Dev-only: generates large amounts of realistic-shaped test data (books,
 // words, sentence analyses, Memory-tab practice stats) for stress-testing
-// lists/filters/sort/Memory/export-import with real volume. Only ever
-// reachable from More → Developer's __DEV__-gated "Seed test data" row —
-// never runs in a production build. Always wipes existing book data first
-// (via clearAllBookData, which also clears memory stats) so repeated runs
-// are reproducible instead of accumulating.
+// lists/filters/sort/Memory/export-import with real volume — including real
+// cover images (SEED_BOOKS' coverId, real OpenLibrary cover ids), so seeded
+// books render exactly like a real search-added book instead of the "no
+// cover" placeholder. Only ever reachable from More → Developer's "Seed test
+// data" row — never runs in a production build. Always wipes existing book
+// data first (via clearAllBookData, which also clears memory stats) so
+// repeated runs are reproducible instead of accumulating.
 
 const SEED_SIZES: Record<SeedSize, SeedAmount> = {
     small: { amountOfbooks: 10, minWords: 3, maxWords: 10 },
@@ -28,40 +30,47 @@ const SEED_SIZES: Record<SeedSize, SeedAmount> = {
     large: { amountOfbooks: 200, minWords: 10, maxWords: 30 },
 };
 
+// A SuggestedBook plus its real OpenLibrary cover id, so seeded books show an
+// actual cover image the same way a real search-added book would (see
+// utils/cover-uri.ts — a bare numeric id, not a URI, becomes an OpenLibrary
+// covers.openlibrary.org URL at render time).
+type SeedBookSource = SuggestedBook & { coverId: number };
+
 // Public-domain-style title/author pairs — enough variety to not feel
 // mechanical; repeats (with a unique key suffix) once a preset needs more
-// books than this list has entries.
-const SEED_BOOKS: SuggestedBook[] = [
-    { title: "Pride and Prejudice", author: "Jane Austen", year: "1813" },
-    { title: "Moby-Dick", author: "Herman Melville", year: "1851" },
-    { title: "Frankenstein", author: "Mary Shelley", year: "1818" },
-    { title: "Dracula", author: "Bram Stoker", year: "1897" },
-    { title: "The Adventures of Sherlock Holmes", author: "Arthur Conan Doyle", year: "1892" },
-    { title: "Great Expectations", author: "Charles Dickens", year: "1861" },
-    { title: "Jane Eyre", author: "Charlotte Brontë", year: "1847" },
-    { title: "Wuthering Heights", author: "Emily Brontë", year: "1847" },
-    { title: "The Picture of Dorian Gray", author: "Oscar Wilde", year: "1890" },
-    { title: "Crime and Punishment", author: "Fyodor Dostoevsky", year: "1866" },
-    { title: "War and Peace", author: "Leo Tolstoy", year: "1869" },
-    { title: "Anna Karenina", author: "Leo Tolstoy", year: "1877" },
-    { title: "The Odyssey", author: "Homer", year: "-800" },
-    { title: "Don Quixote", author: "Miguel de Cervantes", year: "1605" },
-    { title: "Alice's Adventures in Wonderland", author: "Lewis Carroll", year: "1865" },
-    { title: "The Time Machine", author: "H. G. Wells", year: "1895" },
-    { title: "The War of the Worlds", author: "H. G. Wells", year: "1898" },
-    { title: "A Tale of Two Cities", author: "Charles Dickens", year: "1859" },
-    { title: "Oliver Twist", author: "Charles Dickens", year: "1837" },
-    { title: "The Count of Monte Cristo", author: "Alexandre Dumas", year: "1844" },
-    { title: "The Three Musketeers", author: "Alexandre Dumas", year: "1844" },
-    { title: "Little Women", author: "Louisa May Alcott", year: "1868" },
-    { title: "The Scarlet Letter", author: "Nathaniel Hawthorne", year: "1850" },
-    { title: "Heart of Darkness", author: "Joseph Conrad", year: "1899" },
-    { title: "Treasure Island", author: "Robert Louis Stevenson", year: "1883" },
-    { title: "The Strange Case of Dr Jekyll and Mr Hyde", author: "Robert Louis Stevenson", year: "1886" },
-    { title: "Gulliver's Travels", author: "Jonathan Swift", year: "1726" },
-    { title: "The Wonderful Wizard of Oz", author: "L. Frank Baum", year: "1900" },
-    { title: "Peter Pan", author: "J. M. Barrie", year: "1911" },
-    { title: "The Legend of Sleepy Hollow", author: "Washington Irving", year: "1820" },
+// books than this list has entries. coverId values are real OpenLibrary
+// cover ids for each edition, looked up once against openlibrary.org/search.json.
+const SEED_BOOKS: SeedBookSource[] = [
+    { title: "Pride and Prejudice", author: "Jane Austen", year: "1813", coverId: 14348537 },
+    { title: "Moby-Dick", author: "Herman Melville", year: "1851", coverId: 10544254 },
+    { title: "Frankenstein", author: "Mary Shelley", year: "1818", coverId: 12356249 },
+    { title: "Dracula", author: "Bram Stoker", year: "1897", coverId: 12216503 },
+    { title: "The Adventures of Sherlock Holmes", author: "Arthur Conan Doyle", year: "1892", coverId: 6717853 },
+    { title: "Great Expectations", author: "Charles Dickens", year: "1861", coverId: 13322313 },
+    { title: "Jane Eyre", author: "Charlotte Brontë", year: "1847", coverId: 8235363 },
+    { title: "Wuthering Heights", author: "Emily Brontë", year: "1847", coverId: 12818862 },
+    { title: "The Picture of Dorian Gray", author: "Oscar Wilde", year: "1890", coverId: 14314858 },
+    { title: "Crime and Punishment", author: "Fyodor Dostoevsky", year: "1866", coverId: 9411873 },
+    { title: "War and Peace", author: "Leo Tolstoy", year: "1869", coverId: 12621906 },
+    { title: "Anna Karenina", author: "Leo Tolstoy", year: "1877", coverId: 2560652 },
+    { title: "The Odyssey", author: "Homer", year: "-800", coverId: 9045853 },
+    { title: "Don Quixote", author: "Miguel de Cervantes", year: "1605", coverId: 14428305 },
+    { title: "Alice's Adventures in Wonderland", author: "Lewis Carroll", year: "1865", coverId: 10527843 },
+    { title: "The Time Machine", author: "H. G. Wells", year: "1895", coverId: 9009316 },
+    { title: "The War of the Worlds", author: "H. G. Wells", year: "1898", coverId: 36314 },
+    { title: "A Tale of Two Cities", author: "Charles Dickens", year: "1859", coverId: 13301713 },
+    { title: "Oliver Twist", author: "Charles Dickens", year: "1837", coverId: 13300802 },
+    { title: "The Count of Monte Cristo", author: "Alexandre Dumas", year: "1844", coverId: 14566393 },
+    { title: "The Three Musketeers", author: "Alexandre Dumas", year: "1844", coverId: 11929973 },
+    { title: "Little Women", author: "Louisa May Alcott", year: "1868", coverId: 8775559 },
+    { title: "The Scarlet Letter", author: "Nathaniel Hawthorne", year: "1850", coverId: 5654516 },
+    { title: "Heart of Darkness", author: "Joseph Conrad", year: "1899", coverId: 12307847 },
+    { title: "Treasure Island", author: "Robert Louis Stevenson", year: "1883", coverId: 13859660 },
+    { title: "The Strange Case of Dr Jekyll and Mr Hyde", author: "Robert Louis Stevenson", year: "1886", coverId: 295773 },
+    { title: "Gulliver's Travels", author: "Jonathan Swift", year: "1726", coverId: 12717083 },
+    { title: "The Wonderful Wizard of Oz", author: "L. Frank Baum", year: "1900", coverId: 552443 },
+    { title: "Peter Pan", author: "J. M. Barrie", year: "1911", coverId: 8237052 },
+    { title: "The Legend of Sleepy Hollow", author: "Washington Irving", year: "1820", coverId: 8243083 },
 ];
 
 // Curated word pool — enough spread across the four main parts of speech
@@ -183,7 +192,9 @@ function buildSeedBook(index: number): ReadListBook {
         title: source.title,
         author: source.author,
         year: source.year,
-        cover_i: "",
+        // A bare numeric id (not a URI) — coverUri() turns this into a real
+        // covers.openlibrary.org URL, same as a book added via search.
+        cover_i: String(source.coverId),
         status,
         addedAt,
     };
