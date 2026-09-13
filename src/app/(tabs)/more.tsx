@@ -264,11 +264,18 @@ async function runSeed(size: SeedSize): Promise<void> {
     }
 }
 
+// Shown in native dev builds (__DEV__), and also on the `test` branch's web
+// deploy via EXPO_PUBLIC_DEPLOY_CONTEXT (set per Netlify build context in
+// netlify.toml, "production" vs "test") — lets that staging deploy be seeded
+// with demo data for a quick look. Never true for the production web deploy
+// or a native release build.
+const SEED_DATA_ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEPLOY_CONTEXT === 'test';
+
 /**
- * Dev-only: prompts for a seed size, then replaces all book data with
+ * Dev/staging-only: prompts for a seed size, then replaces all book data with
  * generated test data — for stress-testing lists/filters/sort/Memory/
- * export-import with real volume. Only reachable via the `__DEV__`-gated row
- * below — never rendered in a production build.
+ * export-import with real volume. Only reachable via the `SEED_DATA_ENABLED`-
+ * gated row below — never rendered in a production build.
  *
  * @returns {void} Returns nothing — the action sheet's choice drives `runSeed`.
  *
@@ -331,7 +338,7 @@ export default function MoreScreen() {
                 {API_LINKS.map((link: ApiLink, i: number) => (
                     <Row key={link.href} label={link.label} href={link.href as Href} chevron first={i === 0} external />
                 ))}
-                {__DEV__ ? <Row label="Seed test data" chevron onPress={handleSeedTestData} /> : null}
+                {SEED_DATA_ENABLED ? <Row label="Seed test data" chevron onPress={handleSeedTestData} /> : null}
             </Section>
         </ScrollView>
     );

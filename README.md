@@ -83,6 +83,10 @@ The app talks to the network only for the features you use, and sends only what 
 
 The community feed and AI features (analysis + suggestions) all talk to the same word-bank-server instance, resolved via `EXPO_PUBLIC_WORDS_FEED_API_URL` at build time — without it configured, those features degrade gracefully (a "couldn't analyze" state, or static fallback suggestions) rather than break. There are no analytics, crash reporters, or ad SDKs in the app.
 
+## Test branch
+Web version (same as native code wise, in more tab there is a seed data test button):
+https://test--word-bank-web.netlify.app/
+
 ## Contributing
 
 Issues and pull requests are welcome. Run `npm run lint` before submitting, and use [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`, `docs:` …) for commit messages — see [`AGENTS.md`](./AGENTS.md) for the architecture and dev/build flow.
