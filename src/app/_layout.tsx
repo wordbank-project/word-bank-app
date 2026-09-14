@@ -12,7 +12,24 @@ import Head from 'expo-router/head';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { enableScreens } from 'react-native-screens';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+// react-native-screens defaults `screensEnabled()` to false on web (only
+// ios/android/windows count as "native platform supported"), and nothing in
+// expo-router/React Navigation's own init ever calls this — so on web,
+// @react-navigation/bottom-tabs' MaybeScreen falls back to a plain View with
+// NO visibility-hiding logic at all for inactive tabs. Every visited tab's
+// Screen (and its own separate Header) stays permanently mounted, told apart
+// only by zIndex, never display:none — confirmed via direct DOM inspection:
+// switching tabs left both the old and new header's title text simultaneously
+// present and visible. Enabling screens routes inactive tabs through
+// Screen.web.tsx's NativeScreen, which correctly applies display:none.
+// Module-level (not inside a component) so it runs once, before anything
+// renders — safe to call unconditionally, no-ops don't apply here since this
+// flag isn't platform-gated internally, only its (skipped) native-module
+// validation is.
+enableScreens(true);
 
 // React Navigation's own theme.colors.background (DefaultTheme/DarkTheme's
 // stock screen-container backdrop) has the same build-time-baked-wrong

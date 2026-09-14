@@ -8,7 +8,7 @@ import { Colors } from '@/styles/global';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Tabs } from 'expo-router';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
@@ -30,12 +30,22 @@ export default function TabLayout() {
                         headerStyle: {
                             backgroundColor: 'transparent',
                         },
-                        headerTitleStyle: {
-                            color: C.text,
-                            fontWeight: 'bold',
-                            fontVariant: ['small-caps'],
-                            fontSize: 20,
-                        },
+                        // Title color moved off headerTitleStyle (a literal RN style ->
+                        // literal DOM style attribute) onto a NativeWind className instead —
+                        // on the web static export, a plain JS color value here gets baked
+                        // into the pre-rendered markup at build time and then permanently
+                        // stuck: React DOM's hydration adopts the SSR-baked attribute
+                        // without patching it, and since colorScheme is correct from the
+                        // very first client render onward, no later render ever produces a
+                        // prop diff to trigger a real DOM update. className is CSS-driven
+                        // (global.css's [data-theme] rules) and needs no React reconciliation
+                        // at all, so it's correct from paint 0 regardless of hydration —
+                        // same fix already applied to headerStyle/tabBarStyle's background.
+                        headerTitle: ({ children }: { children: string }) => (
+                            <Text className="text-fg" style={{ fontWeight: 'bold', fontVariant: ['small-caps'], fontSize: 20 }}>
+                                {children}
+                            </Text>
+                        ),
                         headerTitleAlign: 'center',
                         headerRight: () => <ThemeToggle />,
                         tabBarStyle: {
