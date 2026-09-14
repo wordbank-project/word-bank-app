@@ -16,12 +16,19 @@ export default function TabLayout() {
 
     return (
         <ScrollProvider>
-            <View style={{ flex: 1 }}>
+            {/* bg-background (CSS, not JS) shows through the header/tab-bar below,
+                which are made transparent instead of colored via C.background —
+                a web static export bakes the wrong color into their inline
+                styles at build time (no visitor-specific window at build time),
+                and no pre-hydration script can repaint an already-rendered
+                node's own inline style. className is already correct from the
+                very first frame, same as every other themed element. */}
+            <View style={{ flex: 1 }} className="bg-background">
                 <Tabs
                     screenOptions={{
                         headerShown: true,
                         headerStyle: {
-                            backgroundColor: C.background,
+                            backgroundColor: 'transparent',
                         },
                         headerTitleStyle: {
                             color: C.text,
@@ -32,7 +39,7 @@ export default function TabLayout() {
                         headerTitleAlign: 'center',
                         headerRight: () => <ThemeToggle />,
                         tabBarStyle: {
-                            backgroundColor: C.background,
+                            backgroundColor: 'transparent',
                             borderTopColor: C.border,
                             paddingBottom: 50,
                             height: 105,
