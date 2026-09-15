@@ -25,6 +25,8 @@
     --color-border-edit: #ddddee;
     --color-cover-placeholder: #dddddd;
     --color-remove-icon: #aaaaaa;
+    --color-tab-active: #208aef;
+    --color-tab-inactive: #687076;
 }
 
 /* Dark tokens are needed in TWO places (a media-query token system can't share
@@ -58,6 +60,8 @@
     --color-border-edit: #2d3438;
     --color-cover-placeholder: #2d3438;
     --color-remove-icon: #555555;
+    --color-tab-active: #ffffff;
+    --color-tab-inactive: #9ba1a6;
 }
 
 /* Web: manual light — force light even when the OS is dark (overrides the
@@ -77,6 +81,8 @@
     --color-border-edit: #ddddee;
     --color-cover-placeholder: #dddddd;
     --color-remove-icon: #aaaaaa;
+    --color-tab-active: #208aef;
+    --color-tab-inactive: #687076;
 }
 
 /* OS + native dark (plain :root — see note above). */
@@ -96,5 +102,7 @@
         --color-border-edit: #2d3438;
         --color-cover-placeholder: #2d3438;
         --color-remove-icon: #555555;
+        --color-tab-active: #ffffff;
+        --color-tab-inactive: #9ba1a6;
     }
 }
