@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { useIsFocused, usePreventRemove } from "@react-navigation/native";
 
-import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
 import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,6 +24,7 @@ import { getReadList, removeReadListBook, setReadBookStatus as persistReadStatus
 import { getWords, removeWords, setWords } from "@/storage/words-storage";
 
 import { coverUri as coverImageUri } from "@/utils/cover-uri";
+import { digitsOnly } from "@/utils/numeric-text-input";
 import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
 import { showActionSheet } from "@/utils/show-action-sheet";
@@ -363,6 +364,27 @@ export default function BookDetail() {
     async function handleDeleteReadListBook(key: string): Promise<void> {
         await removeReadListBook(key);
         await removeWords([key]); // Clear all words associated with the book
+    }
+
+    /**
+     * Validates the typed draft-year input, allowing only digits plus a
+     * leading "-" (a negative year is a BC year, e.g. "-400"), capping the
+     * year itself at 4 digits regardless of sign (the "-" doesn't count
+     * against that limit), and ensuring the result is a valid number (or
+     * empty, to allow clearing the field, or a bare "-", to allow a BC year
+     * to be typed digit by digit).
+     * @param {string} inputCandidate The text typed in the input field.
+     * @returns {void} Returns nothing. If the input is valid, updates the draft year state; otherwise, does nothing.
+     *
+     */
+    function validateDraftYear(inputCandidate: string): void {
+        const digitsAndSign: string = digitsOnly(inputCandidate, true);
+        const isNegative = digitsAndSign.startsWith("-");
+        const digits = (isNegative ? digitsAndSign.slice(1) : digitsAndSign).slice(0, 4);
+        const allowedInput = isNegative ? `-${digits}` : digits;
+        if (allowedInput === "" || allowedInput === "-" || parseInt(allowedInput)) {
+            setDraftYear(allowedInput);
+        }
     }
 
     /**
@@ -780,11 +802,16 @@ export default function BookDetail() {
                                     <ClearableTextInput
                                         className="rounded-md border border-border-input bg-input text-sm p-3 android:leading-[21px] text-fg"
                                         value={draftYear}
-                                        onChangeText={setDraftYear}
+                                        onChangeText={validateDraftYear}
                                         placeholder="Year (optional)"
                                         placeholderTextColor={placeholderColor}
-                                        keyboardType="number-pad"
-                                        maxLength={4}
+                                        // "number-pad" has no minus key on either platform, so a BC
+                                        // year (e.g. "-400") needs a keyboard that actually offers
+                                        // one. "numbers-and-punctuation" is iOS-only; RN silently
+                                        // falls back to the default keyboard elsewhere, which
+                                        // still has a "-" key.
+                                        keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
+                                        maxLength={5}
                                         returnKeyType="done"
                                         onSubmitEditing={handleSaveMeta}
                                     />
