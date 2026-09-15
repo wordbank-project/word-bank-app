@@ -24,7 +24,7 @@ import { Colors } from '@/styles/global';
 import { openBook } from '@/utils/open-book';
 import { pickCoverImage } from '@/utils/pick-cover-image';
 import { fetchSuggestions } from '@/utils/api/suggestions-api';
-import { digitsOnly } from '@/utils/numeric-text-input';
+import { sanitizeYearInput } from '@/utils/numeric-text-input';
 
 import { useIsFocused } from '@react-navigation/native';
 
@@ -130,21 +130,16 @@ export default function CustomBookScreen() {
     }
 
     /**
-     * Validates the typed year input, allowing only digits plus a leading "-"
-     * (a negative year is a BC year, e.g. "-400"), capping the year itself at
-     * 4 digits regardless of sign (the "-" doesn't count against that limit),
-     * and ensuring the result is a valid number (or empty, to allow clearing
-     * the field, or a bare "-", to allow a BC year to be typed digit by digit).
+     * Validates the typed year input via sanitizeYearInput, updating the
+     * year state only when the candidate is a valid intermediate or final
+     * value (empty, a bare "-", or a real — optionally BC — year).
      * @param {string} inputCandidate The text typed in the input field.
      * @returns {void} Returns nothing. If the input is valid, updates the year state; otherwise, does nothing.
      *
      */
     function validateCustomInput(inputCandidate: string): void {
-        const digitsAndSign: string = digitsOnly(inputCandidate, true);
-        const isNegative = digitsAndSign.startsWith("-");
-        const digits = (isNegative ? digitsAndSign.slice(1) : digitsAndSign).slice(0, 4);
-        const allowedInput = isNegative ? `-${digits}` : digits;
-        if (allowedInput === "" || allowedInput === "-" || parseInt(allowedInput)) {
+        const allowedInput = sanitizeYearInput(inputCandidate);
+        if (allowedInput !== null) {
             setYear(allowedInput);
         }
     }

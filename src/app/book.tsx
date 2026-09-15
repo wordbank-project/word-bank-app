@@ -24,7 +24,7 @@ import { getReadList, removeReadListBook, setReadBookStatus as persistReadStatus
 import { getWords, removeWords, setWords } from "@/storage/words-storage";
 
 import { coverUri as coverImageUri } from "@/utils/cover-uri";
-import { digitsOnly } from "@/utils/numeric-text-input";
+import { sanitizeYearInput } from "@/utils/numeric-text-input";
 import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
 import { showActionSheet } from "@/utils/show-action-sheet";
@@ -367,22 +367,16 @@ export default function BookDetail() {
     }
 
     /**
-     * Validates the typed draft-year input, allowing only digits plus a
-     * leading "-" (a negative year is a BC year, e.g. "-400"), capping the
-     * year itself at 4 digits regardless of sign (the "-" doesn't count
-     * against that limit), and ensuring the result is a valid number (or
-     * empty, to allow clearing the field, or a bare "-", to allow a BC year
-     * to be typed digit by digit).
+     * Validates the typed draft-year input via sanitizeYearInput, updating
+     * the draft year state only when the candidate is a valid intermediate
+     * or final value (empty, a bare "-", or a real — optionally BC — year).
      * @param {string} inputCandidate The text typed in the input field.
      * @returns {void} Returns nothing. If the input is valid, updates the draft year state; otherwise, does nothing.
      *
      */
     function validateDraftYear(inputCandidate: string): void {
-        const digitsAndSign: string = digitsOnly(inputCandidate, true);
-        const isNegative = digitsAndSign.startsWith("-");
-        const digits = (isNegative ? digitsAndSign.slice(1) : digitsAndSign).slice(0, 4);
-        const allowedInput = isNegative ? `-${digits}` : digits;
-        if (allowedInput === "" || allowedInput === "-" || parseInt(allowedInput)) {
+        const allowedInput = sanitizeYearInput(inputCandidate);
+        if (allowedInput !== null) {
             setDraftYear(allowedInput);
         }
     }

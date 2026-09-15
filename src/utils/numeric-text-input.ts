@@ -19,3 +19,25 @@ export function digitsOnly(inputCandidate: string, isNegativeAllowed: boolean = 
     const isNegative = inputCandidate.trim().startsWith("-");
     return isNegative ? `-${digits}` : digits;
 }
+
+/**
+ * Sanitizes a typed book-year candidate: digits only, plus an optional
+ * leading "-" for a BC year (e.g. "-400"), capped at 4 digits regardless of
+ * sign (the "-" doesn't count against that limit) — shared by every year
+ * field that accepts a BC year (custom-book.tsx's Year field, book.tsx's
+ * "Edit details" year field).
+ *
+ * @param {string} inputCandidate The text typed in the input field.
+ * @returns {string | null} The sanitized year — `""` to clear the field, a bare `"-"` to allow a BC year to be typed digit by digit, or a valid year — or `null` if the candidate is neither of those and should be rejected (the caller should keep the field's previous value).
+ *
+ */
+export function sanitizeYearInput(inputCandidate: string): string | null {
+    const digitsAndSign = digitsOnly(inputCandidate, true);
+    const isNegative = digitsAndSign.startsWith("-");
+    const digits = (isNegative ? digitsAndSign.slice(1) : digitsAndSign).slice(0, 4);
+    const sanitized = isNegative ? `-${digits}` : digits;
+    if (sanitized === "" || sanitized === "-" || parseInt(sanitized)) {
+        return sanitized;
+    }
+    return null;
+}
