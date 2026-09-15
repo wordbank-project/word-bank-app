@@ -18,6 +18,7 @@ import { showActionSheet } from "@/utils/show-action-sheet";
 
 import StreakBar from "@/components/StreakBar";
 import WordListItem from "@/components/WordListItem";
+import WordOfTheDayCard from "@/components/WordOfTheDayCard";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
 
@@ -260,6 +261,12 @@ export default function WordsListScreen() {
                 scrollEventThrottle={scrollEventThrottle}
                 onScroll={onScroll}
                 keyboardShouldPersistTaps="handled"
+                // Daily surprise word — only on the pre-search state (moved here
+                // from the Search tab, since this is the tab many users open
+                // straight into; the reveal itself is shared, date-keyed
+                // AsyncStorage, see engagement-storage.ts, so it's the same
+                // state regardless of where it's rendered).
+                ListHeaderComponent={!search ? <WordOfTheDayCard /> : null}
                 ListEmptyComponent={
                     allWords.length === 0 ? (
                         <View className="mt-2 items-center gap-2.5 px-8">

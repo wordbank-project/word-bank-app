@@ -3,7 +3,6 @@ import { Text, View } from "react-native";
 import { useBookSearch } from "@/hooks/use-book-search";
 import BooksList from "@/components/BooksList";
 import SearchBar from "@/components/SearchBar";
-import WordOfTheDayCard from "@/components/WordOfTheDayCard";
 
 export default function HomeScreen() {
     const {
@@ -20,8 +19,6 @@ export default function HomeScreen() {
     const header = (
         <View>
             <SearchBar onSearch={search} loading={loading} />
-            {/* Daily surprise word — only on the pre-search home state. */}
-            {!searched && <WordOfTheDayCard />}
         </View>
     );
 
