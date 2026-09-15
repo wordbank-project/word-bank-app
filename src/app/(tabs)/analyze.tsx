@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { Keyboard, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView, type KeyboardAwareScrollViewRef } from "react-native-keyboard-controller";
-import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 
 import { useIsFocused } from "expo-router";
 
@@ -10,6 +10,7 @@ import { useColorScheme } from "@/context/theme-context";
 import { useSavedLanguage } from "@/context/language-context";
 
 import { useBackTo } from "@/hooks/use-back-to";
+import { HIGHLIGHT_BORDER_STYLE, useHighlightFlash } from "@/hooks/use-highlight-flash";
 import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
 import { useScrollViewScroll } from "@/hooks/use-scroll-registration";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
@@ -22,7 +23,7 @@ import { MAX_SENTENCE_LENGTH, analyzeSentence } from "@/utils/api/analyze-api";
 import { showActionSheet } from "@/utils/show-action-sheet";
 import { fetchSuggestions } from "@/utils/api/suggestions-api";
 
-import { ACCENT, Colors } from "@/styles/global";
+import { Colors } from "@/styles/global";
 
 import AnalysisResult from "@/components/AnalysisResult";
 import ClearableTextInput from "@/components/ClearableTextInput";
@@ -54,10 +55,7 @@ export default function AnalyzeScreen() {
     const requestRef = useRef<AbortController | null>(null);
 
     // Highlight effect when a past result is selected from the history list.
-    const [showHighlight, setShowHighlight] = useState<boolean>(false);
-    const highlightOpacity = useSharedValue(0);
-    const highlightStyle = useAnimatedStyle(() => ({ opacity: highlightOpacity.value }));
-    const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const highlight = useHighlightFlash();
 
     // Live countdown shown in the rate-limited error message (see startRateLimitCountdown).
     const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -67,9 +65,6 @@ export default function AnalyzeScreen() {
         getAnalysisHistory().then((entries: AnalysisHistoryEntry[]) => setHistory(entries));
         return () => {
             requestRef.current?.abort();
-            if (highlightTimer.current) {
-                clearTimeout(highlightTimer.current);
-            }
             clearRateLimitCountdown();
         };
     }, []);
@@ -99,25 +94,12 @@ export default function AnalyzeScreen() {
     const { ref: scrollRef, onScroll, scrollEventThrottle } = useScrollViewScroll<KeyboardAwareScrollViewRef>();
 
 
-    /** Scroll to top and highlight 
+    /** Scroll to top and highlight
     * @returns {void} nothing — the highlight is a visual effect
     */
     function triggerHighlight(): void {
         scrollRef.current?.scrollTo({ y: 0, animated: true });
-
-        setShowHighlight(true);
-
-        highlightOpacity.value = 1;
-        highlightOpacity.value = withDelay(
-            1200,
-            withTiming(0, { duration: 500, reduceMotion: ReduceMotion.Never }),
-            ReduceMotion.Never,
-        );
-        // Unmount the overlay once the fade has finished.
-        if (highlightTimer.current) {
-            clearTimeout(highlightTimer.current);
-        }
-        highlightTimer.current = setTimeout(() => setShowHighlight(false), 1800);
+        highlight.trigger();
     }
 
     /** Stops the in-progress rate-limit countdown, if one is running.
@@ -302,14 +284,10 @@ export default function AnalyzeScreen() {
                     <View className="relative">
                         <AnalysisResult sentence={analyzed} analysis={analysis} />
                         {/* Shows a highlight around the analyzed sentence when it's selected */}
-                        {showHighlight ? (
+                        {highlight.activeKey ? (
                             <Animated.View
                                 pointerEvents="none"
-                                style={[
-                                    StyleSheet.absoluteFill,
-                                    { borderWidth: 2, borderColor: ACCENT, borderRadius: 10 },
-                                    highlightStyle,
-                                ]}
+                                style={[StyleSheet.absoluteFill, HIGHLIGHT_BORDER_STYLE, highlight.style]}
                             />
                         ) : null}
                     </View>

@@ -4,7 +4,7 @@ import { useIsFocused, usePreventRemove } from "@react-navigation/native";
 
 import { ActivityIndicator, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
-import Animated, { FadeOut, ReduceMotion, ZoomIn, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import Animated, { FadeOut, ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Stack, router, useLocalSearchParams } from "expo-router";
@@ -33,12 +33,13 @@ import { translateWord } from "@/utils/api/translate-api";
 import { fetchDefinition } from "@/utils/api/words-api";
 import { postWordToFeed } from "@/utils/api/words-feed-api";
 
+import { HIGHLIGHT_BORDER_STYLE, useHighlightFlash } from "@/hooks/use-highlight-flash";
 import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
 import { useSavedLanguage } from "@/context/language-context";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 
-import { ACCENT, Colors, Fonts } from "@/styles/global";
+import { Colors, Fonts } from "@/styles/global";
 
 import { LanguageModalSkeleton, NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/skeletons/BookDetailSkeletons";
 import ClearableTextInput from "@/components/ClearableTextInput";
@@ -246,16 +247,7 @@ export default function BookDetail() {
     // A word tapped on the Words List: scroll to its card once layout is known, then
     // flash it. Held in a ref so it only ever fires once per visit.
     const pendingFocusWord = useRef<string | null>(focusWord ?? null);
-    const [highlightedWord, setHighlightedWord] = useState<string | null>(null);
-    const highlightOpacity = useSharedValue(0);
-    const highlightStyle = useAnimatedStyle(() => ({ opacity: highlightOpacity.value }));
-    const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(() => () => {
-        if (highlightTimer.current) {
-            clearTimeout(highlightTimer.current);
-        }
-    }, []);
+    const highlight = useHighlightFlash();
 
     // On mount, restore the "translate to" language the user picked last time.
     useEffect(() => {
@@ -636,21 +628,7 @@ export default function BookDetail() {
         pendingFocusWord.current = null; // consume: only once per visit
 
         scrollCardIntoView(wordsContainerY.current + cardYs.current[word]);
-
-        setHighlightedWord(word);
-        // Show at full strength immediately — a plain assignment, so no accessibility
-        // setting can skip it — then fade out. ReduceMotion.Never throughout: with the
-        // default (System) a device with "Remove animations" / battery saver snaps
-        // animations to their end value, which left the outline invisible on Android.
-        // Same reason SearchButton's loading dots opt out.
-        highlightOpacity.value = 1;
-        highlightOpacity.value = withDelay(
-            1200,
-            withTiming(0, { duration: 500, reduceMotion: ReduceMotion.Never }),
-            ReduceMotion.Never,
-        );
-        // Unmount the overlay once the fade has finished.
-        highlightTimer.current = setTimeout(() => setHighlightedWord(null), 1800);
+        highlight.trigger(word);
     }
 
     // Keep a growing multiline input's bottom above the keyboard while editing.
@@ -920,14 +898,10 @@ export default function BookDetail() {
                                         {/* Brief accent outline marking the word we scrolled to.
                                             Absolutely positioned so it can't shift the card's layout
                                             (a real border would nudge every card by 2px). */}
-                                        {highlightedWord === item.word ? (
+                                        {highlight.activeKey === item.word ? (
                                             <Animated.View
                                                 pointerEvents="none"
-                                                style={[
-                                                    StyleSheet.absoluteFill,
-                                                    { borderWidth: 2, borderColor: ACCENT, borderRadius: 10 },
-                                                    highlightStyle,
-                                                ]}
+                                                style={[StyleSheet.absoluteFill, HIGHLIGHT_BORDER_STYLE, highlight.style]}
                                             />
                                         ) : null}
 

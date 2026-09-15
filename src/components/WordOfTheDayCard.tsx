@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useColorScheme } from '@/context/theme-context';
+
+import { HIGHLIGHT_BORDER_STYLE, useHighlightFlash } from '@/hooks/use-highlight-flash';
 
 import type { WordEntry } from '@/models/word-entry';
 import { getWordOfTheDay, setWordOfTheDay } from '@/storage/engagement-storage';
@@ -61,6 +63,11 @@ export default function WordOfTheDayCard() {
     const [revealed, setRevealed] = useState<boolean>(false);
     const [entry, setEntry] = useState<WordEntry | null>(null);
     const [loadingDef, setLoadingDef] = useState<boolean>(false);
+
+    // Reveal glow: a brief accent-border flash around the card, shared with
+    // book.tsx's scroll-to-focused-word highlight and analyze.tsx's result
+    // highlight (see use-highlight-flash.ts).
+    const glow = useHighlightFlash();
 
     // Resolve today's word once: reuse the stored pick for today, otherwise
     // choose deterministically from the most-saved-words feed (or the fallback pool).
@@ -126,10 +133,11 @@ export default function WordOfTheDayCard() {
         }
         setRevealed(true);
         void setWordOfTheDay({ date: dayKey(Date.now()), word, revealed: true });
+        glow.trigger();
     }
 
     return (
-        <View className="mb-2 rounded-[10px] bg-card p-3.5">
+        <View className="relative mb-2 rounded-[10px] bg-card p-3.5">
             <View className="flex-row items-center justify-between">
                 <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">
                     Word of the day
@@ -143,6 +151,12 @@ export default function WordOfTheDayCard() {
                     <Ionicons name="information-circle-outline" size={16} color={iconColor} />
                 </Pressable>
             </View>
+            {glow.activeKey ? (
+                <Animated.View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFill, HIGHLIGHT_BORDER_STYLE, glow.style]}
+                />
+            ) : null}
             {revealed ? (
                 <Animated.View entering={FadeIn.duration(250)} className="mt-1.5 gap-1">
                     <View className="flex-row flex-wrap items-center gap-2">
