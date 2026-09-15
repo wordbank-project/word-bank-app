@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { router } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 
 import ClearableTextInput from '@/components/ClearableTextInput';
@@ -130,15 +130,21 @@ export default function CustomBookScreen() {
     }
 
     /**
-     * Validates the typed year input, allowing only digits and ensuring (party reused from SizeChipRow.tsx)
-     * that the year is a valid number (or empty, to allow clearing the field).
+     * Validates the typed year input, allowing only digits plus a leading "-"
+     * (a negative year is a BC year, e.g. "-400"), capping the year itself at
+     * 4 digits regardless of sign (the "-" doesn't count against that limit),
+     * and ensuring the result is a valid number (or empty, to allow clearing
+     * the field, or a bare "-", to allow a BC year to be typed digit by digit).
      * @param {string} inputCandidate The text typed in the input field.
      * @returns {void} Returns nothing. If the input is valid, updates the year state; otherwise, does nothing.
-     * 
+     *
      */
     function validateCustomInput(inputCandidate: string): void {
-        const allowedInput: string = digitsOnly(inputCandidate);
-        if (allowedInput === "" || parseInt(allowedInput)) {
+        const digitsAndSign: string = digitsOnly(inputCandidate, true);
+        const isNegative = digitsAndSign.startsWith("-");
+        const digits = (isNegative ? digitsAndSign.slice(1) : digitsAndSign).slice(0, 4);
+        const allowedInput = isNegative ? `-${digits}` : digits;
+        if (allowedInput === "" || allowedInput === "-" || parseInt(allowedInput)) {
             setYear(allowedInput);
         }
     }
@@ -198,8 +204,12 @@ export default function CustomBookScreen() {
                             placeholderTextColor={placeholderColor}
                             value={year}
                             onChangeText={validateCustomInput}
-                            keyboardType="number-pad"
-                            maxLength={4}
+                            // "number-pad" has no minus key on either platform, so a BC year
+                            // (e.g. "-400") needs a keyboard that actually offers one.
+                            // "numbers-and-punctuation" is iOS-only; RN silently falls back to
+                            // the default keyboard elsewhere, which still has a "-" key.
+                            keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
+                            maxLength={5}
                             returnKeyType="done"
                             onSubmitEditing={handleCreate}
                         />
