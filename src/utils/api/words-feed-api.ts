@@ -2,11 +2,15 @@ import { FEED_API_BASE_URL, FEED_REQUEST_TIMEOUT_MS } from '@/utils/api/feed-api
 import type { FeedWordMeta } from '@/models/feed-word-meta';
 
 /**
- * Contributes words users add to the external "floating words" feed, which powers
- * the live floating-words background on the marketing site and currently saved words
- * (word-bank-site). Only the word and its *public dictionary* values (definition / part of speech / IPA)
- * are ever sent — no book, language, sentence, notes, or any other user content —
- * The server host and its per-platform localhost caveats live in feed-api-base.ts.
+ * The two operations on the external "floating words" feed resource
+ * (word-bank-server's `/v1/words`, via feed-api-base.ts): contributing a word
+ * (postWordToFeed) and reading back the most-saved words (fetchMostSavedWords,
+ * for WordOfTheDayCard.tsx to pick from). Contributing powers the live
+ * floating-words background on the marketing site and currently saved words
+ * (word-bank-site). Only the word and its *public dictionary* values
+ * (definition / part of speech / IPA) are ever sent — no book, language,
+ * sentence, notes, or any other user content. The server host and its
+ * per-platform localhost caveats live in feed-api-base.ts.
  */
 
 /**
@@ -51,5 +55,44 @@ export function postWordToFeed(word: string, meta: FeedWordMeta = {}): void {
     } catch (error) {
         // Swallow everything (e.g. a synchronous fetch/JSON failure) — must never throw.
         console.error(error);
+    }
+}
+
+type WordRow = { word: string; count: number };
+
+/**
+ * Returns the most-saved words (an all-time cumulative count, most-frequent
+ * first — not a recency-weighted "trending" signal), or `[]` on any failure.
+ *
+ * Privacy: this only READS the public, aggregate top-words list — no user data
+ * is involved. It is offline-first: any failure (unset env, network error,
+ * timeout, bad response) silently resolves to `[]`, and callers fall back to
+ * their own hardcoded word list, so the UI is never affected. Never throws.
+ *
+ * @param {number} [limit] How many words to return, most-saved first. Defaults to 50.
+ * @returns {Promise<string[]>} The most-saved words, or `[]` on any failure.
+ *
+ */
+export async function fetchMostSavedWords(limit = 50): Promise<string[]> {
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), FEED_REQUEST_TIMEOUT_MS);
+        try {
+            const res: Response = await fetch(
+                `${FEED_API_BASE_URL}/words?order=top&limit=${limit}`,
+                { signal: controller.signal },
+            );
+            if (!res.ok) {
+                return [];
+            }
+            const data: WordRow[] = (await res.json()) as WordRow[];
+            return Array.isArray(data) ? data.map((row: WordRow) => row.word).filter(Boolean) : [];
+        } finally {
+            clearTimeout(timeout);
+        }
+    } catch (error) {
+        // Network error, abort, or bad JSON — caller keeps its fallback list.
+        console.error(error)
+        return [];
     }
 }
