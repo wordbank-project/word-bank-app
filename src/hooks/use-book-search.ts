@@ -1,4 +1,5 @@
 import type { Book } from '@/models/book';
+import { isAbortError } from '@/utils/is-abort-error';
 import { useRef, useState } from 'react';
 
 const PAGE_SIZE = 20;
@@ -59,7 +60,7 @@ export function useBookSearch(): BookSearchState {
             totalRef.current = data.numFound ?? 0;
             offsetRef.current = results.length;
         } catch (e) {
-            if (e instanceof Error && e.name === 'AbortError') {
+            if (isAbortError(e)) {
                 return;
             }
             setBooks([]);
@@ -81,7 +82,7 @@ export function useBookSearch(): BookSearchState {
             setBooks((prev) => [...prev, ...results]);
             offsetRef.current += results.length;
         } catch (e) {
-            if (e instanceof Error && e.name === 'AbortError') {
+            if (isAbortError(e)) {
                 return;
             }
             setLoadMoreError(true);

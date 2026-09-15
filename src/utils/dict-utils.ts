@@ -1,5 +1,7 @@
 /* Utility functions for working with dictionaries and APIs. */
 
+import { isAbortError } from '@/utils/is-abort-error';
+
 /**
  * Fetches a URL with a timeout.
  * If the request takes longer than 8 seconds, it will be aborted and an error will be thrown.
@@ -11,7 +13,7 @@ export async function timedFetch(url: string, init?: RequestInit): Promise<Respo
     try {
         return await fetch(url, { ...init, signal: abort.signal });
     } catch (e) {
-        if (e instanceof Error && e.name === 'AbortError') {
+        if (isAbortError(e)) {
             throw new Error('Dictionary request timed out. Try again.');
         }
         throw new Error('Could not reach dictionary. Check your connection.');
