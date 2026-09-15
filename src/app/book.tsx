@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { useIsFocused, usePreventRemove } from "@react-navigation/native";
 
-import { ActivityIndicator, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
 import Animated, { FadeOut, ReduceMotion, ZoomIn, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,6 +24,7 @@ import { getReadList, removeReadListBook, setReadBookStatus as persistReadStatus
 import { getWords, removeWords, setWords } from "@/storage/words-storage";
 
 import { coverUri as coverImageUri } from "@/utils/cover-uri";
+import { sanitizeYearInput } from "@/utils/numeric-text-input";
 import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
 import { showActionSheet } from "@/utils/show-action-sheet";
@@ -397,6 +398,21 @@ export default function BookDetail() {
     async function handleDeleteReadListBook(key: string): Promise<void> {
         await removeReadListBook(key);
         await removeWords([key]); // Clear all words associated with the book
+    }
+
+    /**
+     * Validates the typed draft-year input via sanitizeYearInput, updating
+     * the draft year state only when the candidate is a valid intermediate
+     * or final value (empty, a bare "-", or a real — optionally BC — year).
+     * @param {string} inputCandidate The text typed in the input field.
+     * @returns {void} Returns nothing. If the input is valid, updates the draft year state; otherwise, does nothing.
+     *
+     */
+    function validateDraftYear(inputCandidate: string): void {
+        const allowedInput = sanitizeYearInput(inputCandidate);
+        if (allowedInput !== null) {
+            setDraftYear(allowedInput);
+        }
     }
 
     /**
@@ -816,11 +832,16 @@ export default function BookDetail() {
                                     <ClearableTextInput
                                         className="rounded-md border border-border-input bg-input text-sm p-3 android:leading-[21px] text-fg"
                                         value={draftYear}
-                                        onChangeText={setDraftYear}
+                                        onChangeText={validateDraftYear}
                                         placeholder="Year (optional)"
                                         placeholderTextColor={placeholderColor}
-                                        keyboardType="number-pad"
-                                        maxLength={4}
+                                        // "number-pad" has no minus key on either platform, so a BC
+                                        // year (e.g. "-400") needs a keyboard that actually offers
+                                        // one. "numbers-and-punctuation" is iOS-only; RN silently
+                                        // falls back to the default keyboard elsewhere, which
+                                        // still has a "-" key.
+                                        keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
+                                        maxLength={5}
                                         returnKeyType="done"
                                         onSubmitEditing={handleSaveMeta}
                                     />
