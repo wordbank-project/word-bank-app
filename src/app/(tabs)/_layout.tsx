@@ -8,7 +8,7 @@ import { Colors } from '@/styles/global';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Tabs } from 'expo-router';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
@@ -16,19 +16,22 @@ export default function TabLayout() {
 
     return (
         <ScrollProvider>
-            {/* bg-background (CSS, not JS) shows through the header/tab-bar below,
-                which are made transparent instead of colored via C.background —
-                a web static export bakes the wrong color into their inline
-                styles at build time (no visitor-specific window at build time),
-                and no pre-hydration script can repaint an already-rendered
-                node's own inline style. className is already correct from the
-                very first frame, same as every other themed element. */}
+            {/* bg-background (CSS, not JS) shows through the header/tab-bar below on
+                web, which are made transparent there instead of colored via
+                C.background — a web static export bakes the wrong color into their
+                inline styles at build time (no visitor-specific window at build
+                time), and no pre-hydration script can repaint an already-rendered
+                node's own inline style. className is already correct from the very
+                first frame, same as every other themed element. Native has no such
+                build-time-render step, so it keeps using C.background directly below
+                — making it transparent there too made the tab bar genuinely
+                see-through, revealing whatever's behind it. */}
             <View style={{ flex: 1 }} className="bg-background">
                 <Tabs
                     screenOptions={{
                         headerShown: true,
                         headerStyle: {
-                            backgroundColor: 'transparent',
+                            backgroundColor: Platform.OS === 'web' ? 'transparent' : C.background,
                         },
                         // Title color moved off headerTitleStyle (a literal RN style ->
                         // literal DOM style attribute) onto a NativeWind className instead —
@@ -49,7 +52,7 @@ export default function TabLayout() {
                         headerTitleAlign: 'center',
                         headerRight: () => <ThemeToggle />,
                         tabBarStyle: {
-                            backgroundColor: 'transparent',
+                            backgroundColor: Platform.OS === 'web' ? 'transparent' : C.background,
                             borderTopColor: C.border,
                             paddingBottom: 50,
                             height: 105,
