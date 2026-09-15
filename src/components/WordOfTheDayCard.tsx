@@ -1,13 +1,35 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
+
+import { useColorScheme } from '@/context/theme-context';
 
 import type { WordEntry } from '@/models/word-entry';
 import { getWordOfTheDay, setWordOfTheDay } from '@/storage/engagement-storage';
-import { ACCENT, Fonts } from '@/styles/global';
+import { ACCENT, Colors, Fonts } from '@/styles/global';
+import { alertDialog } from '@/utils/alert-dialog';
 import { dayKey } from '@/utils/streak';
-import { fetchTrendingWords } from '@/utils/trending-words';
 import { fetchDefinition } from '@/utils/api/words-api';
+import { fetchMostSavedWords } from '@/utils/api/words-feed-api';
+
+/**
+ * Explains the feature via the app's standard one-time-notice pattern (same
+ * as more.tsx's export/import notices) — shown regardless of reveal state,
+ * since it's also useful before revealing to explain what "Tap to reveal"
+ * even is.
+ *
+ * @returns {void} Returns nothing — shows the dialog (or skips it silently if
+ * already dismissed, per alertDialog's own contract).
+ *
+ */
+function handleInfoPress(): void {
+    alertDialog(
+        "Word of the day",
+        "A new word, picked for you every day from the words other users save most — resets at midnight, your local time. It's not saved to your word bank automatically; look it up in a book to save it.",
+        { dontShowAgain: { id: "word-of-the-day-info", checkboxLabel: "Don't show this again" } },
+    );
+}
 
 // Offline fallback pool — the deterministic daily pick works even without the
 // feed server (mirrors the curated suggestion list used elsewhere).
@@ -27,18 +49,21 @@ function hashDay(key: string): number {
 }
 
 /**
- * The daily surprise: a face-down card on the Search tab that reveals one
- * trending word (from the anonymous community feed, curated fallback offline).
+ * The daily surprise: a face-down card on the Words List that reveals one
+ * most-saved word (from the anonymous community feed, curated fallback offline).
  * The reveal is the reward beat — persisted per day so it stays revealed.
  */
 export default function WordOfTheDayCard() {
+    // Ionicons takes a color value, not a className, so keep it themed here.
+    const iconColor: string = Colors[useColorScheme()].textMuted;
+
     const [word, setWord] = useState<string | null>(null);
     const [revealed, setRevealed] = useState<boolean>(false);
     const [entry, setEntry] = useState<WordEntry | null>(null);
     const [loadingDef, setLoadingDef] = useState<boolean>(false);
 
     // Resolve today's word once: reuse the stored pick for today, otherwise
-    // choose deterministically from the trending feed (or the fallback pool).
+    // choose deterministically from the most-saved-words feed (or the fallback pool).
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -51,8 +76,8 @@ export default function WordOfTheDayCard() {
                 }
                 return;
             }
-            const trending = await fetchTrendingWords(50);
-            const pool = trending.length > 0 ? trending : FALLBACK_WORDS;
+            const mostSaved = await fetchMostSavedWords(50);
+            const pool = mostSaved.length > 0 ? mostSaved : FALLBACK_WORDS;
             const pick = pool[hashDay(today) % pool.length];
             if (!cancelled) {
                 setWord(pick);
@@ -104,14 +129,24 @@ export default function WordOfTheDayCard() {
     }
 
     return (
-        <View className="mb-2 rounded-[10px] border border-border bg-card p-3.5">
-            <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">
-                Word of the day
-            </Text>
+        <View className="mb-2 rounded-[10px] bg-card p-3.5">
+            <View className="flex-row items-center justify-between">
+                <Text className="text-[11px] font-semibold uppercase tracking-[0.5px] text-muted">
+                    Word of the day
+                </Text>
+                <Pressable
+                    onPress={handleInfoPress}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="About the word of the day"
+                >
+                    <Ionicons name="information-circle-outline" size={16} color={iconColor} />
+                </Pressable>
+            </View>
             {revealed ? (
-                <Animated.View entering={FadeIn.duration(250)} className="mt-1.5 gap-0.5">
-                    <View className="flex-row flex-wrap items-baseline gap-2">
-                        <Text className="text-lg font-bold text-fg">{word}</Text>
+                <Animated.View entering={FadeIn.duration(250)} className="mt-1.5 gap-1">
+                    <View className="flex-row flex-wrap items-center gap-2">
+                        <Text className="text-[17px] font-bold text-fg">{word}</Text>
                         {entry?.phonetic ? (
                             <Text className="text-xs text-muted" style={{ fontFamily: Fonts.mono }}>
                                 {entry.phonetic}
@@ -119,11 +154,11 @@ export default function WordOfTheDayCard() {
                         ) : null}
                         {loadingDef ? <ActivityIndicator size="small" color={ACCENT} /> : null}
                     </View>
+                    {entry?.partOfSpeech ? (
+                        <Text className="text-xs italic capitalize text-accent">{entry.partOfSpeech}</Text>
+                    ) : null}
                     {entry ? (
-                        <Text className="text-sm leading-5 text-body">
-                            {entry.partOfSpeech ? <Text className="italic text-muted">{entry.partOfSpeech} · </Text> : null}
-                            {entry.definition}
-                        </Text>
+                        <Text className="text-sm leading-5 text-body">{entry.definition}</Text>
                     ) : !loadingDef ? (
                         <Text className="text-sm text-muted">Look it up in one of your books to save it.</Text>
                     ) : null}
