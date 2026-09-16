@@ -62,7 +62,7 @@ export function posColor(pos: string): string {
  * @returns {string} The capitalised label, or `''` if `pos` normalizes to an empty string.
  *
  */
-export function posLabel(pos: string): string {
+export function capitalizePosLabel(pos: string): string {
     const p = normalizePos(pos);
     return p ? p.charAt(0).toUpperCase() + p.slice(1) : p;
 }
