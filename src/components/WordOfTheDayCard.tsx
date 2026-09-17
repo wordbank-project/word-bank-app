@@ -112,8 +112,10 @@ export default function WordOfTheDayCard() {
                     setEntry(e);
                 }
             })
-            .catch(() => {
-                /* offline / not found — the word alone is still the reveal */
+            .catch((error) => {
+                // offline / not found — the word alone is still the revealed.
+                // error is logged for uniformity.
+                console.error(error);
             })
             .finally(() => {
                 if (!cancelled) {
