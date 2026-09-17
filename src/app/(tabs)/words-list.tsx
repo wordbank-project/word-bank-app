@@ -13,7 +13,7 @@ import { getSortMode, setSortMode as saveSortMode } from "@/storage/words-list-s
 import { ACCENT, Colors } from "@/styles/global";
 
 import { openBook } from "@/utils/open-book";
-import { normalizePos, POS_ORDER, posColor, posLabel } from "@/utils/part-of-speech";
+import { normalizePos, POS_ORDER, posColor, capitalizePosLabel } from "@/utils/part-of-speech";
 import { showActionSheet } from "@/utils/show-action-sheet";
 
 import StreakBar from "@/components/StreakBar";
@@ -235,7 +235,7 @@ export default function WordsListScreen() {
                                     <View className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
                                 )}
                                 <Text className={`text-xs font-semibold ${selected ? "text-white" : "text-fg"}`}>
-                                    {posLabel(pos)}
+                                    {capitalizePosLabel(pos)}
                                 </Text>
                                 <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>
                                     {count}

@@ -25,6 +25,7 @@ import { getWords, removeWords, setWords } from "@/storage/words-storage";
 
 import { coverUri as coverImageUri } from "@/utils/cover-uri";
 import { sanitizeYearInput } from "@/utils/numeric-text-input";
+import { capitalizePosLabel } from "@/utils/part-of-speech";
 import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
 import { showActionSheet } from "@/utils/show-action-sheet";
@@ -930,7 +931,7 @@ export default function BookDetail() {
                                             )}
                                         </View>
 
-                                        <Text className="text-xs italic capitalize text-accent">{item.partOfSpeech}</Text>
+                                        <Text className="text-xs italic text-accent">{capitalizePosLabel(item.partOfSpeech)}</Text>
                                         <Text className="text-sm leading-5 text-body">{item.definition}</Text>
 
                                         {item.definitions && item.definitions.length > 1 ? (

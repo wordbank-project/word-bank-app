@@ -10,7 +10,9 @@ import { HIGHLIGHT_BORDER_STYLE, useHighlightFlash } from '@/hooks/use-highlight
 import type { WordEntry } from '@/models/word-entry';
 import { getWordOfTheDay, setWordOfTheDay } from '@/storage/engagement-storage';
 import { ACCENT, Colors, Fonts } from '@/styles/global';
+
 import { alertDialog } from '@/utils/alert-dialog';
+import { capitalizePosLabel } from '@/utils/part-of-speech';
 import { dayKey } from '@/utils/streak';
 import { fetchDefinition } from '@/utils/api/words-api';
 import { fetchMostSavedWords } from '@/utils/api/words-feed-api';
@@ -169,7 +171,7 @@ export default function WordOfTheDayCard() {
                         {loadingDef ? <ActivityIndicator size="small" color={ACCENT} /> : null}
                     </View>
                     {entry?.partOfSpeech ? (
-                        <Text className="text-xs italic capitalize text-accent">{entry.partOfSpeech}</Text>
+                        <Text className="text-xs italic text-accent">{capitalizePosLabel(entry.partOfSpeech)}</Text>
                     ) : null}
                     {entry ? (
                         <Text className="text-sm leading-5 text-body">{entry.definition}</Text>

@@ -4,6 +4,8 @@ import { Pressable, Text, View } from "react-native";
 
 import { Fonts } from "@/styles/global";
 
+import { capitalizePosLabel } from "@/utils/part-of-speech";
+
 import type { WordWithBook } from "@/models/word-entry";
 
 type WordListItemProps = {
@@ -22,7 +24,7 @@ function WordListItem({ item, onPress }: WordListItemProps) {
                 ) : null}
             </View>
 
-            <Text className="text-xs italic capitalize text-accent">{item.partOfSpeech}</Text>
+            <Text className="text-xs italic text-accent">{capitalizePosLabel(item.partOfSpeech)}</Text>
             <Text className="text-sm leading-5 text-body">{item.definition}</Text>
 
             {item.sentence ? (

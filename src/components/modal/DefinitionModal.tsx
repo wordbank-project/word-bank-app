@@ -7,7 +7,7 @@ import { useColorScheme } from "@/context/theme-context";
 import type { WordDefinition } from "@/models/word-entry";
 
 import { Colors } from "@/styles/global";
-import { posColor } from "@/utils/part-of-speech";
+import { posColor, capitalizePosLabel } from "@/utils/part-of-speech";
 
 type DefinitionModalProps = {
     visible: boolean;
@@ -85,7 +85,7 @@ export default function DefinitionModal({ visible, onClose, word, definitions, s
                                             className="px-4 pb-1 pt-3.5 text-xs font-bold uppercase tracking-[0.5px]"
                                             style={{ color: posColor(row.pos) }}
                                         >
-                                            {row.pos}
+                                            {capitalizePosLabel(row.pos)}
                                         </Text>
                                     );
                                 }
