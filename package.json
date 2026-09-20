@@ -27,7 +27,7 @@
     "update:preview": "eas update --branch preview --auto",
     "deploy:web:main": "git checkout main && git merge test && git push origin main && open-cli https://app.wordbankapp.com/",
     "deploy:web:test": "git checkout test && git merge main && git push origin test && git checkout main && open-cli https://test.app.wordbankapp.com/",
-    "deploy:web:all": "git checkout main && git push origin main && git push origin main:test && open-cli https://app.wordbankapp.com/ && open-cli https://app.wordbankapp.com/"
+    "deploy:web:all": "git checkout main && git push origin main && git push origin main:test && open-cli https://app.wordbankapp.com/ && open-cli https://test.app.wordbankapp.com/"
   },
   "dependencies": {
     "@expo/react-native-action-sheet": "^4.1.1",
