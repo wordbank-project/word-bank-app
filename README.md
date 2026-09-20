@@ -6,9 +6,10 @@ The Word Bank mobile app: track what you read and save every new word with its d
 
 _Part of the [Word Bank](https://github.com/wordbank-project/word-bank) project._
 
-[![Download for Android (beta)](https://img.shields.io/badge/Download-Android%20(beta)-208AEF?logo=android&logoColor=white)](https://word-bank-vault.netlify.app)
+[![Download for Android (beta)](https://img.shields.io/badge/Download-Android%20(beta)-208AEF?logo=android&logoColor=white)](https://wordbankapp.com)
+[![Open the web app](https://img.shields.io/badge/Open-Web%20app-208AEF?logo=googlechrome&logoColor=white)](https://app.wordbankapp.com)
 
-_iOS — coming soon · Web — coming soon · F-Droid — planned_
+_iOS — coming soon · F-Droid — planned_
 
 ## What it is
 
@@ -83,9 +84,21 @@ The app talks to the network only for the features you use, and sends only what 
 
 The community feed and AI features (analysis + suggestions) all talk to the same word-bank-server instance, resolved via `EXPO_PUBLIC_WORDS_FEED_API_URL` at build time — without it configured, those features degrade gracefully (a "couldn't analyze" state, or static fallback suggestions) rather than break. There are no analytics, crash reporters, or ad SDKs in the app.
 
-## Test branch
-Web version (same as native code wise, in more tab there is a seed data test button):
-https://test--word-bank-web.netlify.app/
+## Try it in your browser
+
+The same codebase as the native app, running on the web — no install, no account:
+
+**[app.wordbankapp.com](https://app.wordbankapp.com/)**
+
+There's also a build of the `test` branch at
+**[test.app.wordbankapp.com](https://test.app.wordbankapp.com/)**. Its **More** tab has a
+**Seed test data** button that fills the app with example books and words, so you can explore a
+populated library straight away rather than starting from an empty one. That button is web-only
+and appears only on the test deploy.
+
+Netlify serves the identical build at
+[`test--word-bank-web.netlify.app`](https://test--word-bank-web.netlify.app/) as well — both
+stay live, and neither redirects to the other.
 
 ## Contributing
 
