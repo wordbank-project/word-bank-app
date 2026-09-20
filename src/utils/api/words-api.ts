@@ -1,4 +1,5 @@
 import type { WordDefinition, WordEntry } from '@/models/word-entry';
+import { fetchTypesenseWordSuggestions } from '@/utils/api/typesense-api';
 import { timedFetch } from '@/utils/dict-utils';
 import { isAbortError } from '@/utils/is-abort-error';
 
@@ -242,16 +243,23 @@ export async function fetchDefinition(word: string, language = 'en'): Promise<Wo
 const SUGGESTIONS_TIMEOUT_MS = 3000;
 
 /**
- * Prefix-searches the dictionary for autocomplete. English uses the free
- * Datamuse suggest API (https://www.datamuse.com/api/) since dictionaryapi.dev
- * has no prefix endpoint; every other language uses wiktapi.dev's `/search`
- * route. Resolves to `[]` on ANY failure — timeout, network, non-200, bad
- * JSON — and never throws.
+ * Prefix-searches the dictionary for autocomplete.
  *
- * Non-English suggestions only actually work with EXPO_PUBLIC_DICT_API_URL set
- * to a self-hosted instance — the public instance's `/search` route is
- * currently confirmed non-functional (see docs/dictionary-api.md), so against
- * the public default this always resolves to `[]` after the timeout below.
+ * Tries Typesense first when it's configured (see typesense-api.ts and
+ * docs/typesense.md) — a typo-tolerant index of real dictionary words, which is
+ * why it's preferred over both sources below. Falls back to the original path
+ * whenever Typesense is unconfigured, errors, or simply has no match: English
+ * uses the free Datamuse suggest API (https://www.datamuse.com/api/) since
+ * dictionaryapi.dev has no prefix endpoint; every other language uses
+ * wiktapi.dev's `/search` route. Resolves to `[]` on ANY failure — timeout,
+ * network, non-200, bad JSON — and never throws.
+ *
+ * Without Typesense, non-English suggestions only actually work with
+ * EXPO_PUBLIC_DICT_API_URL set to a self-hosted instance — the public
+ * instance's `/search` route is currently confirmed non-functional (see
+ * docs/dictionary-api.md), so against the public default this always resolves
+ * to `[]` after the timeout below. Pointing the app at a seeded Typesense
+ * instance is the way out of that.
  *
  * @param {string} prefix The characters typed so far.
  * @param {string} language The dictionary language code.
@@ -266,6 +274,17 @@ export async function fetchWordSuggestions(
     limit = 8,
     signal?: AbortSignal,
 ): Promise<string[]> {
+    // Never throws and resolves [] when unconfigured, so an empty result here
+    // just means "fall through to the sources below".
+    const fromTypesense = await fetchTypesenseWordSuggestions(prefix, language, limit, signal);
+    if (fromTypesense.length > 0) {
+        return fromTypesense;
+    }
+    // A superseded request shouldn't start a second round trip on the way out.
+    if (signal?.aborted) {
+        return [];
+    }
+
     // Own timeout + external signal (timedFetch throws and takes no signal;
     // AbortSignal.any isn't reliably available on Hermes).
     const controller = new AbortController();

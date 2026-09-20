@@ -1,9 +1,12 @@
-# Typesense — a future search upgrade path
+# Typesense — search upgrade path
 
-Not integrated anywhere yet. [Typesense](https://github.com/typesense/typesense) is an open-source,
-typo-tolerant search engine (self-hosted or Typesense Cloud) built for sub-50ms search-as-you-type —
-positioned as an easier-to-run alternative to Algolia/Elasticsearch. Three of its own hosted demos map
-almost one-to-one onto shapes this app already has, which is what makes it worth a written-down look:
+[Typesense](https://github.com/typesense/typesense) is an open-source, typo-tolerant search engine
+(self-hosted or Typesense Cloud) built for sub-50ms search-as-you-type — positioned as an easier-to-run
+alternative to Algolia/Elasticsearch.
+
+**Status: (1) word suggestion autocomplete is integrated and opt-in — see below. (2)–(4) are still
+future work.** Three of Typesense's own hosted demos map almost one-to-one onto shapes this app has,
+which is what made it worth pursuing:
 
 - **[spellcheck.typesense.org](https://spellcheck.typesense.org/)** — types out corrected spellings
   from a ~333k-word dictionary as you type, purely via Typesense's built-in typo-tolerance (no custom
@@ -17,19 +20,64 @@ almost one-to-one onto shapes this app already has, which is what makes it worth
 
 ## Where it would actually help here
 
-### 1. Word suggestion autocomplete — closest fit, cheapest to try
+### 1. Word suggestion autocomplete — **integrated (opt-in)**
 
-`useWordSuggestions` → `fetchWordSuggestions` ([src/utils/words-api.ts](../src/utils/words-api.ts))
-backs the add-word suggestion chips on `book.tsx`. Today: Datamuse for English (word-frequency based —
-the code's own comment already flags it as "occasionally containing misspellings"), and wiktapi.dev's
-`/search` for every other language — which [doesn't currently work on the public
-instance](dictionary-api.md#known-limitations-of-the-public-instance), so non-English suggestions are
-effectively dead. This is exactly the spellcheck demo's shape: index each language's word list (already
-obtainable per Wiktionary edition, or any word-frequency list) into one small Typesense collection and
-let its typo-tolerance serve real dictionary words instead of frequency guesses or a broken endpoint.
-Same order of magnitude as the demo (one language ≈ tens of thousands to a few hundred thousand words),
-so it fits on the same class of tiny single-node deployment. Would also let `fetchWordSuggestions` drop
-its dependency on wiktapi.dev's `/search` entirely.
+`useWordSuggestions` → `fetchWordSuggestions` ([src/utils/api/words-api.ts](../src/utils/api/words-api.ts))
+backs the add-word suggestion chips on `book.tsx`. It previously had two sources, both weak: Datamuse
+for English (word-frequency based — the code's own comment flagged it as "occasionally containing
+misspellings"), and wiktapi.dev's `/search` for every other language, which [doesn't work on the public
+instance](dictionary-api.md#known-limitations-of-the-public-instance), leaving non-English suggestions
+effectively dead. This is exactly the spellcheck demo's shape, so Typesense now serves real dictionary
+words with typo tolerance instead of frequency guesses or a broken endpoint.
+
+**How it's wired**
+
+- [src/utils/api/typesense-api.ts](../src/utils/api/typesense-api.ts) — `fetchTypesenseWordSuggestions()`,
+  a plain `fetch` call against Typesense's REST search endpoint. Deliberately **not** the official
+  `typesense` npm client: that ships axios as its transport, while every API client in this app uses raw
+  `fetch` and the app carries no HTTP library at all. One `GET` with one header isn't worth the
+  dependency, its bundle weight, or an axios adapter misbehaving on Hermes.
+- `fetchWordSuggestions` tries Typesense first, then falls back to the Datamuse/wiktapi path whenever
+  Typesense is unconfigured, errors, or has no match. Its signature and `[]`-on-any-failure contract are
+  unchanged, so `useWordSuggestions` and `book.tsx` needed no changes at all.
+- **Opt-in:** with `EXPO_PUBLIC_TYPESENSE_HOST` / `EXPO_PUBLIC_TYPESENSE_SEARCH_KEY` unset, behaviour is
+  byte-for-byte what it was before. There's no default host — unlike wiktapi.dev there's no public shared
+  instance, so "unset" can only mean "off".
+
+**Collection schema** — one collection per language, `words_<code>` (e.g. `words_en`, `words_nl`), with a
+single indexed `word` string field and the word itself as the document `id` (so re-seeding upserts rather
+than duplicates). `LANGUAGES` has 58 entries; seed the ones you actually use, not all 58. One language is
+roughly tens of thousands to a few hundred thousand words — the same order as the spellcheck demo, which
+runs on a single 512MB node.
+
+**Seeding** — [scripts/seed-typesense-words.mjs](../scripts/seed-typesense-words.mjs) creates the
+collection and bulk-imports a newline-delimited word list as JSONL, in batches, idempotently:
+
+```bash
+# A local node to develop against (--enable-cors is only needed for Expo web):
+docker run -p 8108:8108 -v "$(pwd)"/typesense-data:/data \
+  typesense/typesense:30.2 --data-dir /data --api-key=devkey --enable-cors
+
+node scripts/seed-typesense-words.mjs --lang en --file words-en.txt \
+  --host http://localhost:8108 --key devkey
+```
+
+Where the word list itself comes from stays a manual step — a kaikki.org Wiktionary dump, the
+`wiktionary.db` a self-hosted wiktapi.dev already builds (see [dictionary-api.md](dictionary-api.md)), or
+any word-frequency list. A short hand-written list is enough to smoke-test the whole path.
+
+**Keys** — `--key` on the seed script must be an **admin** key (creating collections and writing documents
+are privileged) and stays on your machine. The app only ever gets a **search-only** key, which is safe to
+embed in the bundle by design — the same model InstantSearch/Algolia use, and no different in trust terms
+from this app already calling OpenLibrary/Datamuse directly.
+
+**Verifying** — a typo'd query is the whole point, so test with one:
+
+```bash
+curl -H "X-TYPESENSE-API-KEY: devkey" \
+  "http://localhost:8108/collections/words_en/documents/search?q=ambigous&query_by=word&prefix=true&num_typos=2"
+# -> ambiguous
+```
 
 ### 2. Book search — highest visible impact, highest infra cost
 
@@ -79,7 +127,8 @@ goes through the sibling `word-bank-server`. Any Typesense use would follow the 
 - **Word suggestions & book search (read-only)** — query a Typesense Cloud/self-hosted instance
   **directly from the app**, using a scoped search-only API key embedded in the client. Typesense is
   explicitly designed for this (the same key model InstantSearch/Algolia use) — no different in trust
-  terms from calling OpenLibrary directly today.
+  terms from calling OpenLibrary directly today. *(This is what word suggestions now do, via
+  `typesense-api.ts`.)*
 - **Word wall & federated search (owns a write path)** — route through `word-bank-server`, which
   already owns ingesting the word feed and fronting the AI endpoints so no key ships in the app bundle.
 
@@ -89,10 +138,11 @@ Always Free ARM VM) once/if a real integration is worth running continuously.
 
 ## Recommended priority
 
-1. **Word suggestion autocomplete** — smallest dataset, fixes an already-documented pain point
-   (misspelling-prone Datamuse results, dead non-English `/search`), lowest infra commitment.
-2. **Community word wall search** — small, self-owned dataset; good second integration to learn the
-   pattern on.
+1. ~~**Word suggestion autocomplete**~~ — **done** (opt-in, see above). Smallest dataset, fixed an
+   already-documented pain point (misspelling-prone Datamuse results, dead non-English `/search`),
+   lowest infra commitment.
+2. **Community word wall search** — small, self-owned dataset; good second integration, and the
+   client-side pattern from #1 is now established to build on.
 3. **Book search facets/typo-tolerance** — the biggest visible upgrade, but only worth it once the
    OpenLibrary bulk-import + refresh commitment is something someone's ready to own long-term.
 4. **Federated search** — revisit later, only if a real cross-collection UI need appears.

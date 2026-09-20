@@ -43,6 +43,9 @@ yarn-error.*
 /ios
 /android
 
+# local Typesense dev node data (see docs/typesense.md)
+typesense-data/
+
 # Personal files
 screenshots/
 TODOS.md
