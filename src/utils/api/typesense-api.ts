@@ -88,6 +88,13 @@ export async function fetchTypesenseWordSuggestions(
             prefix: 'true',
             num_typos: String(NUM_TYPOS),
             per_page: String(limit),
+            // Closest match first, then the more common word. Without the rank
+            // tiebreak a big index buries the word you actually meant: measured
+            // on a 235k-word list, "ephem" didn't surface "ephemeral" in the top
+            // 6 and "recieve" put "reliever" above "receive". `rank` is the
+            // word's position in a frequency-ordered list — see
+            // scripts/seed-typesense-words.mjs and docs/typesense.md.
+            sort_by: '_text_match:desc,rank:asc',
         });
         const url = `${TYPESENSE_HOST}/collections/${collectionName(language)}/documents/search?${query}`;
 
