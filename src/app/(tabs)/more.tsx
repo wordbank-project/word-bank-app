@@ -62,10 +62,10 @@ const SOURCES: BookSource[] = [
 // docs to link to (see translate-api.ts's header comment) — this one points
 // at the source instead, which is the only real documentation it has.
 const API_LINKS: ApiLink[] = [
-    { label: 'Open Library API', href: 'https://openlibrary.org/developers/api' },
-    { label: 'Wiktionary API (wiktapi.dev)', href: 'https://github.com/wordbank-project/wiktapi.dev' },
-    { label: 'Datamuse API', href: 'https://www.datamuse.com/api/' },
-    { label: 'Google Translate (unofficial — see source)', href: 'https://github.com/wordbank-project/word-bank-app/blob/main/src/utils/api/translate-api.ts' },
+    { label: 'Open Library API (visit documentation)', href: 'https://openlibrary.org/developers/api' },
+    { label: 'Wiktionary API (visit documentation)', href: 'https://github.com/wordbank-project/wiktapi.dev' },
+    { label: 'Datamuse API (visit documentation)', href: 'https://www.datamuse.com/api/' },
+    { label: 'Google Translate (unofficial — see source code)', href: 'https://github.com/wordbank-project/word-bank-app/blob/main/src/utils/api/translate-api.ts' },
 ];
 
 type RowProps = {

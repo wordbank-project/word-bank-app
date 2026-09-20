@@ -158,9 +158,9 @@ Deploy `dist/` to any static host:
   rewrites.)
 
 > **Two env vars are inlined at build time** — pass both so web lookups *and* the
-> trending-words feed work: `EXPO_PUBLIC_DICT_API_URL` (dictionary, read in
-> [words-api.ts](src/utils/words-api.ts)) and `EXPO_PUBLIC_WORDS_FEED_API_URL` (feed,
-> read in [words-feed-api.ts](src/utils/words-feed-api.ts)). Both must be **HTTPS** and
+> most-saved-words feed work: `EXPO_PUBLIC_DICT_API_URL` (dictionary, read in
+> [words-api.ts](src/utils/api/words-api.ts)) and `EXPO_PUBLIC_WORDS_FEED_API_URL` (feed,
+> read in [words-feed-api.ts](src/utils/api/words-feed-api.ts)). Both must be **HTTPS** and
 > **CORS-allow your web origin** (§5).
 
 ### 6a. Self-host on the Oracle VM (alongside the two APIs)

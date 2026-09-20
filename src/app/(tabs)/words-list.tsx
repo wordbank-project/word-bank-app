@@ -13,10 +13,12 @@ import { getSortMode, setSortMode as saveSortMode } from "@/storage/words-list-s
 import { ACCENT, Colors } from "@/styles/global";
 
 import { openBook } from "@/utils/open-book";
-import { normalizePos, POS_ORDER, posColor, posLabel } from "@/utils/part-of-speech";
+import { normalizePos, POS_ORDER, posColor, capitalizePosLabel } from "@/utils/part-of-speech";
 import { showActionSheet } from "@/utils/show-action-sheet";
 
+import StreakBar from "@/components/StreakBar";
 import WordListItem from "@/components/WordListItem";
+import WordOfTheDayCard from "@/components/WordOfTheDayCard";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import SearchButton from "@/components/SearchButton";
 
@@ -184,7 +186,10 @@ export default function WordsListScreen() {
 
     return (
         <View className="flex-1 bg-background">
-            <View className="px-4 pb-2 pt-3">
+            <View className="pt-3">
+                <StreakBar timestamps={allWords.map((w) => w.addedAt).filter((ts): ts is number => typeof ts === 'number')} />
+            </View>
+            <View className="px-4 pb-2">
                 <ClearableTextInput
                     containerClassName="mb-2"
                     className="rounded-lg border border-border-input bg-input p-3 text-[14px] android:leading-[21px] text-fg"
@@ -230,7 +235,7 @@ export default function WordsListScreen() {
                                     <View className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
                                 )}
                                 <Text className={`text-xs font-semibold ${selected ? "text-white" : "text-fg"}`}>
-                                    {posLabel(pos)}
+                                    {capitalizePosLabel(pos)}
                                 </Text>
                                 <Text className={`text-xs ${selected ? "text-white" : "text-muted"}`}>
                                     {count}
@@ -256,6 +261,12 @@ export default function WordsListScreen() {
                 scrollEventThrottle={scrollEventThrottle}
                 onScroll={onScroll}
                 keyboardShouldPersistTaps="handled"
+                // Daily surprise word — only on the pre-search state (moved here
+                // from the Search tab, since this is the tab many users open
+                // straight into; the reveal itself is shared, date-keyed
+                // AsyncStorage, see engagement-storage.ts, so it's the same
+                // state regardless of where it's rendered).
+                ListHeaderComponent={!search ? <WordOfTheDayCard /> : null}
                 ListEmptyComponent={
                     allWords.length === 0 ? (
                         <View className="mt-2 items-center gap-2.5 px-8">

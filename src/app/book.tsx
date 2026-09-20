@@ -4,7 +4,7 @@ import { useIsFocused, usePreventRemove } from "@react-navigation/native";
 
 import { ActivityIndicator, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { KeyboardAwareScrollView, KeyboardToolbar } from "react-native-keyboard-controller";
-import Animated, { ReduceMotion, useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import Animated, { FadeOut, ZoomIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Stack, router, useLocalSearchParams } from "expo-router";
@@ -25,6 +25,7 @@ import { getWords, removeWords, setWords } from "@/storage/words-storage";
 
 import { coverUri as coverImageUri } from "@/utils/cover-uri";
 import { sanitizeYearInput } from "@/utils/numeric-text-input";
+import { capitalizePosLabel } from "@/utils/part-of-speech";
 import { pickCoverImage } from "@/utils/pick-cover-image";
 import { setPendingReadFilter } from "@/utils/pending-read-filter";
 import { showActionSheet } from "@/utils/show-action-sheet";
@@ -33,12 +34,13 @@ import { translateWord } from "@/utils/api/translate-api";
 import { fetchDefinition } from "@/utils/api/words-api";
 import { postWordToFeed } from "@/utils/api/words-feed-api";
 
+import { HIGHLIGHT_BORDER_STYLE, useHighlightFlash } from "@/hooks/use-highlight-flash";
 import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
 import { useSavedLanguage } from "@/context/language-context";
 import { useTypewriterPlaceholder } from "@/hooks/use-typewriter-placeholder";
 import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 
-import { ACCENT, Colors, Fonts } from "@/styles/global";
+import { Colors, Fonts } from "@/styles/global";
 
 import { LanguageModalSkeleton, NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/skeletons/BookDetailSkeletons";
 import ClearableTextInput from "@/components/ClearableTextInput";
@@ -67,6 +69,38 @@ const RANDOM_DICTIONARY_WORDS = [
     "whimsical",
     "diligent",
 ];
+
+// Short-lived "✓ +1" pop above the add-word row after a successful add — the
+// juice that makes saving a word feel rewarding. `trigger` increments per add,
+// so back-to-back adds each replay the spring-in (keyed remount) and the pop
+// auto-hides via reanimated's exiting fade.
+function AddCelebration({ trigger }: { trigger: number }) {
+    const [visible, setVisible] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (trigger === 0) {
+            return;
+        }
+        setVisible(true);
+        const timeout = setTimeout(() => setVisible(false), 900);
+        return () => clearTimeout(timeout);
+    }, [trigger]);
+
+    if (!visible) {
+        return null;
+    }
+    return (
+        <Animated.View
+            key={trigger}
+            entering={ZoomIn.springify()}
+            exiting={FadeOut.duration(200)}
+            pointerEvents="none"
+            className="absolute -top-4 right-4 z-10 rounded-full bg-accent px-3 py-1"
+        >
+            <Text className="text-[13px] font-bold text-white">✓ +1</Text>
+        </Animated.View>
+    );
+}
 
 export default function BookDetail() {
     const insets = useSafeAreaInsets();
@@ -131,6 +165,8 @@ export default function BookDetail() {
     const [draftYear, setDraftYear] = useState<string>('');
 
     const [wordAdded, setWordAdded] = useState<boolean>(false);
+    // Increments on every successful add; drives the ✓ +1 celebration pop.
+    const [celebrateTick, setCelebrateTick] = useState<number>(0);
 
     // Book-level review and general notes (saved on the read-list entry).
     const [review, setReview] = useState<string>('');
@@ -212,16 +248,7 @@ export default function BookDetail() {
     // A word tapped on the Words List: scroll to its card once layout is known, then
     // flash it. Held in a ref so it only ever fires once per visit.
     const pendingFocusWord = useRef<string | null>(focusWord ?? null);
-    const [highlightedWord, setHighlightedWord] = useState<string | null>(null);
-    const highlightOpacity = useSharedValue(0);
-    const highlightStyle = useAnimatedStyle(() => ({ opacity: highlightOpacity.value }));
-    const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(() => () => {
-        if (highlightTimer.current) {
-            clearTimeout(highlightTimer.current);
-        }
-    }, []);
+    const highlight = useHighlightFlash();
 
     // On mount, restore the "translate to" language the user picked last time.
     useEffect(() => {
@@ -529,6 +556,7 @@ export default function BookDetail() {
                 phonetic: newEntry.phonetic,
             });
             setWordAdded(true);
+            setCelebrateTick((t) => t + 1);
             setInput("");
 
             // Goes to the edit screen of the newly added word to encourage users to add sentence and notes.
@@ -601,21 +629,7 @@ export default function BookDetail() {
         pendingFocusWord.current = null; // consume: only once per visit
 
         scrollCardIntoView(wordsContainerY.current + cardYs.current[word]);
-
-        setHighlightedWord(word);
-        // Show at full strength immediately — a plain assignment, so no accessibility
-        // setting can skip it — then fade out. ReduceMotion.Never throughout: with the
-        // default (System) a device with "Remove animations" / battery saver snaps
-        // animations to their end value, which left the outline invisible on Android.
-        // Same reason SearchButton's loading dots opt out.
-        highlightOpacity.value = 1;
-        highlightOpacity.value = withDelay(
-            1200,
-            withTiming(0, { duration: 500, reduceMotion: ReduceMotion.Never }),
-            ReduceMotion.Never,
-        );
-        // Unmount the overlay once the fade has finished.
-        highlightTimer.current = setTimeout(() => setHighlightedWord(null), 1800);
+        highlight.trigger(word);
     }
 
     // Keep a growing multiline input's bottom above the keyboard while editing.
@@ -693,6 +707,7 @@ export default function BookDetail() {
             <View className="flex-1 bg-background">
                 {!editingWord && (
                     <View className="flex-row gap-2 p-3 pb-1">
+                        <AddCelebration trigger={celebrateTick} />
                         <ClearableTextInput
                             containerClassName="flex-1"
                             className="rounded-lg border border-border-input bg-input p-3 text-[14px] android:leading-[21px] text-fg"
@@ -884,14 +899,10 @@ export default function BookDetail() {
                                         {/* Brief accent outline marking the word we scrolled to.
                                             Absolutely positioned so it can't shift the card's layout
                                             (a real border would nudge every card by 2px). */}
-                                        {highlightedWord === item.word ? (
+                                        {highlight.activeKey === item.word ? (
                                             <Animated.View
                                                 pointerEvents="none"
-                                                style={[
-                                                    StyleSheet.absoluteFill,
-                                                    { borderWidth: 2, borderColor: ACCENT, borderRadius: 10 },
-                                                    highlightStyle,
-                                                ]}
+                                                style={[StyleSheet.absoluteFill, HIGHLIGHT_BORDER_STYLE, highlight.style]}
                                             />
                                         ) : null}
 
@@ -920,7 +931,7 @@ export default function BookDetail() {
                                             )}
                                         </View>
 
-                                        <Text className="text-xs italic capitalize text-accent">{item.partOfSpeech}</Text>
+                                        <Text className="text-xs italic text-accent">{capitalizePosLabel(item.partOfSpeech)}</Text>
                                         <Text className="text-sm leading-5 text-body">{item.definition}</Text>
 
                                         {item.definitions && item.definitions.length > 1 ? (

@@ -21,9 +21,38 @@ const ThemeContext = createContext<ThemeContextType>({
     toggleTheme: () => { },
 });
 
+/**
+ * Picks the color scheme to render with on the very first client render.
+ *
+ * On native this is just the live OS appearance. On web it prefers
+ * `<html data-theme>`, which `src/app/+html.tsx`'s inline script already set
+ * — synchronously, before this component ever ran — over `system`
+ * (`useSystemColorScheme()`). Both usually agree once hydration is actually
+ * running in a real browser, but seeding straight from the pre-set attribute
+ * means `colorScheme` is correct on the very first render, with no later
+ * correction needed — which matters for header/tab-bar text and tint colors
+ * (see (tabs)/_layout.tsx): those are plain JS values, not CSS, so a late
+ * correction doesn't just repaint quietly, it visibly collides with React
+ * Navigation's own header-title transition animation (confirmed: forcing a
+ * remount to pick up a late correction caused overlapping/garbled title text
+ * during a tab switch — reverted in favor of this, which avoids needing a
+ * correction in the first place).
+ *
+ * @param {ColorScheme} system The live OS appearance (`useSystemColorScheme()`).
+ * @returns {ColorScheme} The color scheme to seed `useState` with.
+ *
+ */
+function getInitialColorScheme(system: ColorScheme): ColorScheme {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') {
+        return system;
+    }
+    const fromHtml = document.documentElement.dataset.theme;
+    return fromHtml === 'light' || fromHtml === 'dark' ? fromHtml : system;
+}
+
 export function AppThemeProvider({ children }: { children: ReactNode }) {
     const system: ColorScheme = useSystemColorScheme() === 'dark' ? 'dark' : 'light';
-    const [colorScheme, setColorScheme] = useState<ColorScheme>(system);
+    const [colorScheme, setColorScheme] = useState<ColorScheme>(() => getInitialColorScheme(system));
     useEffect(() => {
         // Restore the saved theme on launch; keep the system default if none saved.
         getTheme().then((saved) => {
