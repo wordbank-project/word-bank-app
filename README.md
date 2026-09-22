@@ -6,7 +6,7 @@ The Word Bank mobile app: track what you read and save every new word with its d
 
 _Part of the [Word Bank](https://github.com/wordbank-project/word-bank) project._
 
-[![Download for Android (beta)](https://img.shields.io/badge/Download-Android%20(beta)-208AEF?logo=android&logoColor=white)](https://wordbankapp.com)
+[![Download for Android (beta)](https://img.shields.io/badge/Download-Android%20(beta)-208AEF?logo=android&logoColor=white)](https://github.com/wordbank-project/word-bank-app/releases/latest)
 [![Open the web app](https://img.shields.io/badge/Open-Web%20app-208AEF?logo=googlechrome&logoColor=white)](https://app.wordbankapp.com)
 
 _iOS — coming soon · F-Droid — planned_
@@ -19,7 +19,9 @@ _iOS — coming soon · F-Droid — planned_
 - **Make words stick** — save each word with the sentence you found it in and your own notes; rate each book with stars and add a review and notes per book.
 - **Translate on demand** — tap-to-reveal translation of a word into your own language; never called automatically.
 - **All your words in one place** — the Words List gathers every word from every book; search, filter by part of speech, and sort A–Z, by book, or by recently added.
-- **Read in your language** — definitions across 100+ languages (Wiktionary data); English and Dutch live today.
+- **Keep the habit** — a streak strip counts consecutive days you've added a word and tracks today's progress toward your daily goal, computed entirely from your own saved words. It stays hidden until you have words, so day one shows no guilt UI.
+- **Word of the day** — a face-down card on the Words List reveals one word each day, drawn from what the community saves most (with an offline fallback list). It resets at midnight, local time, and is never added to your word bank automatically.
+- **Read in your language** — definitions come from Wiktionary data via [wiktapi.dev](https://github.com/TheAlexLichter/wiktapi.dev). The picker offers 58 languages; the hosted instance currently serves **English, Dutch, and French**, and self-hosting unlocks the rest (see below).
 - **Private & offline** · **Dark mode** included.
 - **Analyze a sentence with AI** — paste any sentence and get a plain-language explanation of what it means; user-initiated per sentence, and it's the only feature that sends text you wrote.
 - **AI-generated suggestions** — placeholder book titles, words, and example sentences you can accept with one tap, so search and add fields never start blank.
@@ -28,7 +30,15 @@ _iOS — coming soon · F-Droid — planned_
 
 ## Tech
 
-Expo SDK 55 · React Native · TypeScript · Expo Router · NativeWind (Tailwind v4) · AsyncStorage. Definitions come from the self-hosted [wiktapi.dev](https://github.com/jensrot/wiktapi.dev) (and [dictionaryapi.dev](https://dictionaryapi.dev) for English); book search from [Open Library](https://openlibrary.org); word suggestions from [Datamuse](https://www.datamuse.com/api/) (English) and wiktapi search (other languages).
+Expo SDK 55 (`expo ~55.0.24`) · React Native 0.83 · React 19 · TypeScript · Expo Router · NativeWind v5 (Tailwind v4) · AsyncStorage.
+
+External services:
+
+- **Definitions & IPA** — [wiktapi.dev](https://github.com/TheAlexLichter/wiktapi.dev), for every language including English. Defaults to our own instance at `dict.wordbankapp.com`; override with `EXPO_PUBLIC_DICT_API_URL`.
+- **Book search & covers** — [Open Library](https://openlibrary.org).
+- **As-you-type word suggestions** — [Datamuse](https://www.datamuse.com/api/) for English (it ranks by frequency, which reads far better in an autocomplete), wiktapi's `/search` for other languages.
+- **Translation** — the unofficial, keyless `translate.googleapis.com` endpoint, on tap only.
+- **AI + community feed** — a [word-bank-server](https://github.com/wordbank-project/word-bank-server) instance, via `EXPO_PUBLIC_WORDS_FEED_API_URL`.
 
 ## Run it
 
@@ -39,14 +49,24 @@ npm install
 npm run dev            # start Metro + open the dev client (both platforms)
 # after adding a native package or changing app.config.js:
 npm run android        # or: npm run ios   (rebuild + install the dev client)
+npm run web            # browser, no dev client needed
+npm run lint
 ```
 
 Optional `.env.local` (gitignored) for pointing at your own backends:
 
 ```bash
-EXPO_PUBLIC_DICT_API_URL=http://192.168.x.x:3000        # dictionary API (wiktapi.dev)
-EXPO_PUBLIC_WORDS_FEED_API_URL=http://192.168.x.x:4000/v1  # word bank API
+EXPO_PUBLIC_DICT_API_URL=http://192.168.x.x:3000           # dictionary API (wiktapi.dev)
+EXPO_PUBLIC_WORDS_FEED_API_URL=http://192.168.x.x:4000/v1  # word bank API — mind the /v1
 ```
+
+These are inlined into the bundle at build time, not read live, so restart Metro with
+`--clear` after editing (`npm run dev` already does). A release APK blocks cleartext HTTP,
+so `http://` values only work in a dev/debug build; EAS preview and production builds read
+`eas.json`'s `env` block instead.
+
+Running your own wiktapi instance is also how you get the languages the hosted one doesn't
+serve — see [`docs/dictionary-api.md`](docs/dictionary-api.md).
 
 The full build matrix — dev client vs standalone APK, local Gradle builds, EAS cloud builds, OTA updates, and the per-profile app variants — lives in [`AGENTS.md`](./AGENTS.md).
 
@@ -55,14 +75,23 @@ The full build matrix — dev client vs standalone APK, local Gradle builds, EAS
 ```
 src/
   app/            # expo-router routes (file = route); book.tsx is the book detail
-    (tabs)/       # Search · Words List · Read List · Memory · More  (+ custom-book, about, support, analyze, stats)
+    (tabs)/       # Search · Words · Read · Memory · More  (+ custom-book, about, support, analyze, stats)
   components/     # presentational + small stateful UI
+    modal/        # bottom-sheet pickers (language, definition)
+    skeletons/    # pulsing loading placeholders
+    ui/           # IconSymbol (SF Symbols on iOS, Material elsewhere)
   hooks/          # reusable hooks (search, scroll, placeholder typewriter…)
-  context/        # theme + scroll providers
-  storage/        # AsyncStorage data layer (read list, words, language, theme)
+  context/        # theme, language, and scroll providers
+  storage/        # AsyncStorage data layer (read list, words, stats, settings)
   models/         # TypeScript types + constant data
-  utils/          # API clients + pure helpers
+  utils/          # pure helpers
+    api/          # API clients (dictionary, translate, feed, analyze, suggestions)
 ```
+
+More detail lives in [`docs/`](docs/): [dictionary API](docs/dictionary-api.md),
+[community server](docs/community-server.md), [build & deploy](docs/build-and-deploy.md),
+[notifications](docs/notifications.md), [export/import](docs/export-import.md),
+[keyboard handling](docs/keyboard-handling.md), [cover images](docs/cover-images.md).
 
 See [`AGENTS.md`](./AGENTS.md) for the full architecture, data model, and dev/build flow.
 
@@ -75,14 +104,17 @@ The app talks to the network only for the features you use, and sends only what 
 | Feature | Service | What is sent |
 |---|---|---|
 | Book search & covers | openlibrary.org · covers.openlibrary.org | your search text |
-| Definitions | self-hosted wiktapi.dev · dictionaryapi.dev (English) | the word you look up |
+| Definitions & IPA | dict.wordbankapp.com (wiktapi.dev) | the word you look up |
 | As-you-type suggestions | api.datamuse.com (English) · wiktapi search | the typed prefix |
 | Translate (tap-to-reveal) | translate.googleapis.com (unofficial, keyless) | the word + two language codes — only when you tap |
-| Analyze a sentence (AI) | your [word-bank-server](https://github.com/wordbank-project/word-bank-server) instance | the sentence you type — only when you tap "Analyze"; this is the one call in the app that sends text you wrote |
+| Word of the day | your [word-bank-server](https://github.com/wordbank-project/word-bank-server) instance | nothing — it only reads the most-saved word list |
+| Analyze a sentence (AI) | your word-bank-server instance | the sentence you type — only when you tap "Analyze"; this is the one call in the app that sends text you wrote |
 | AI suggestions (titles/words/example sentences) | your word-bank-server instance | nothing personal — just your dictionary language, to fetch placeholder suggestions |
 | Community word feed (**opt-in**) | your word-bank-server instance | the saved word + its public dictionary data — never your sentences, notes, books, or identity |
 
-The community feed and AI features (analysis + suggestions) all talk to the same word-bank-server instance, resolved via `EXPO_PUBLIC_WORDS_FEED_API_URL` at build time — without it configured, those features degrade gracefully (a "couldn't analyze" state, or static fallback suggestions) rather than break. There are no analytics, crash reporters, or ad SDKs in the app.
+The streak, daily goal, and practice stats are computed and stored entirely on-device — they involve no network call at all.
+
+The community feed and AI features (word of the day, analysis, suggestions) all talk to the same word-bank-server instance, resolved via `EXPO_PUBLIC_WORDS_FEED_API_URL` at build time — without it configured, those features degrade gracefully (a "couldn't analyze" state, or static fallback suggestions and word-of-the-day words) rather than break. There are no analytics, crash reporters, or ad SDKs in the app.
 
 ## Try it in your browser
 
