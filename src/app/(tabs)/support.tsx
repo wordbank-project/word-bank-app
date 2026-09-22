@@ -117,8 +117,11 @@ export default function SupportScreen() {
             <View className="bg-card rounded-[10px] p-4">
                 <Text className="text-[15px] leading-6 text-body">
                     Word Bank is free, open source, and ad-free — and it&apos;s staying that way.
-                    There&apos;s no company behind it, just one developer and a few servers. Donations
-                    cover the dictionary API behind every lookup and keeps new features coming.
+                    There&apos;s no company behind it, just one developer and a few servers. Every
+                    donation goes to infrastructure: the server running the dictionary and
+                    word-feed APIs, and the domain behind them — currently about $6 a month and
+                    $10 a year. The AI features run on free tiers for now; that&apos;s the part
+                    most likely to grow.
                 </Text>
             </View>
 
