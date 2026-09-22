@@ -21,7 +21,7 @@ _iOS — coming soon · F-Droid — planned_
 - **All your words in one place** — the Words List gathers every word from every book; search, filter by part of speech, and sort A–Z, by book, or by recently added.
 - **Keep the habit** — a streak strip counts consecutive days you've added a word and tracks today's progress toward your daily goal, computed entirely from your own saved words. It stays hidden until you have words, so day one shows no guilt UI.
 - **Word of the day** — a face-down card on the Words List reveals one word each day, drawn from what the community saves most (with an offline fallback list). It resets at midnight, local time, and is never added to your word bank automatically.
-- **Read in your language** — definitions come from Wiktionary data via [wiktapi.dev](https://github.com/TheAlexLichter/wiktapi.dev). The picker offers 58 languages; the hosted instance currently serves **English, Dutch, and French**, and self-hosting unlocks the rest (see below).
+- **Read in your language** — definitions come from Wiktionary data via [wiktapi.dev](https://github.com/wordbank-project/wiktapi.dev). The picker offers 58 languages; the hosted instance currently serves **English, Dutch, and French**, and self-hosting unlocks the rest (see below).
 - **Private & offline** · **Dark mode** included.
 - **Analyze a sentence with AI** — paste any sentence and get a plain-language explanation of what it means; user-initiated per sentence, and it's the only feature that sends text you wrote.
 - **AI-generated suggestions** — placeholder book titles, words, and example sentences you can accept with one tap, so search and add fields never start blank.
