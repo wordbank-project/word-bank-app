@@ -33,9 +33,32 @@ Pass an HTTPS API URL: `EXPO_PUBLIC_DICT_API_URL=https://… npm run build:apk:l
 ```bash
 npm run build:apk        # preview APK for internal testers (managed keystore, downloadable)
 npm run build:all        # dev client, both platforms
-eas build --profile production --platform android   # store build
+eas build --profile production --platform android   # public/store build
 ```
-Cloud builds **ignore `.env.local`** — the URL comes from `eas.json` `env` (replace the `https://your-api.example.com` placeholder). Required for **iOS** distribution (signing/TestFlight) and OTA channels.
+Cloud builds **ignore `.env.local`** — the URL comes from `eas.json` `env`, which points at
+the deployed `dict.wordbankapp.com` / `words.wordbankapp.com` services.  Required for
+**iOS** distribution (signing/TestFlight) and OTA channels.
+
+### Two distribution channels, on purpose
+
+|  | Internal testers | The public |
+|---|---|---|
+| Build | `preview` profile (`com.jensrot.wordbank.preview`) | `production` profile (`com.jensrot.wordbank`) |
+| Where | the EAS build page — `expo.dev/accounts/jensrot/projects/word-bank/builds/<id>` | a [GitHub Release](https://github.com/wordbank-project/word-bank-app/releases/latest) |
+| How they install | scan the QR on that page, tap Install | download the APK from the release |
+| Link stability | new UUID per build — fine to paste into a chat, useless in a README | `/releases/latest` never changes |
+
+The build page is **public** (no Expo login needed), which is what makes it a good tester
+channel; the project dashboard itself is not.
+
+Only the `production` package id can later become a Play Store update — `.preview` installs
+as a *separate app*, so a tester's saved books and words do not carry across.  That is why
+the public download is built from the `production` profile even while it is a beta, and why
+that profile carries `"android": { "buildType": "apk" }` (without it EAS emits an AAB, which
+cannot be sideloaded).
+
+The README badge and the site's Download section both point at `/releases/latest`, so
+neither needs editing when a new beta ships.
 
 ## 5. Push a JS-only fix to existing tester builds → OTA
 ```bash
