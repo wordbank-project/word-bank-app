@@ -6,24 +6,26 @@ import { isAbortError } from '@/utils/is-abort-error';
  * Base URL of the wiktapi.dev instance used for every word lookup, including
  * English (https://github.com/TheAlexLichter/wiktapi.dev).
  *
- * Defaults to the public, upstream-hosted instance at wiktapi.dev — no setup
- * required, works out of the box for the 19+ languages it currently covers (see
- * docs/dictionary-api.md's "Endpoint shape" section for the full edition list).
- * Set EXPO_PUBLIC_DICT_API_URL to override per environment (.env.local for local
- * dev against your own server, eas.json `env` for preview/production builds) —
- * useful for full 100+ language coverage beyond the public instance's editions,
- * for your own reliability control, or because `fetchWordSuggestions` still
- * requires a self-hosted override for non-English as-you-type suggestions
- * regardless of the public instance's `/search` route's current health — see
- * docs/dictionary-api.md for the known-limitations detail and reliability
- * history (the public instance has had at least one confirmed multi-hour
- * outage affecting every route, since resolved on its own).
+ * Defaults to our own instance at dict.wordbankapp.com (the DigitalOcean
+ * droplet — see the ecosystem's droplet-deploy.md), which carries the `en`,
+ * `nl` and `fr` editions. Any other language code reaches a real server but has
+ * no edition behind it, so every lookup 404s — indistinguishable here from a
+ * word that genuinely isn't in an edition that does exist, since the API throws
+ * the same 404 for both. `fetchFromWiktapi` surfaces either as "No definition
+ * found".
+ *
+ * Set EXPO_PUBLIC_DICT_API_URL to override per environment (.env.local for
+ * local dev against a server on your LAN, eas.json `env` for preview and
+ * production builds). Pointing it back at the public https://api.wiktapi.dev
+ * trades our three curated editions for that instance's wider edition list,
+ * at the cost of our own reliability control — it has had at least one
+ * confirmed multi-hour outage affecting every route.
  *
  * Running your own server for local dev (simulator, emulator, or physical
  * device) always requires this env var explicitly now — there's no more
  * automatic localhost fallback.
  */
-const PUBLIC_API_BASE_URL = 'https://api.wiktapi.dev';
+const PUBLIC_API_BASE_URL = 'https://dict.wordbankapp.com';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_DICT_API_URL ?? PUBLIC_API_BASE_URL;
 
@@ -122,14 +124,7 @@ type PronunciationsResponse = { pronunciations?: PronunciationEntry[] };
  */
 async function fetchPhonetic(word: string, language: string): Promise<string | undefined> {
     try {
-        // Hosted on the pi for other languages, 
-        // but for English we use the public wiktapi.dev instance since the pi's English edition is incomplete.
-        // TODO: still replace later after everything is hosted on digital ocean
-        let url = `${API_BASE_URL}/v1/${language}/word/${encodeURIComponent(word)}/pronunciations?lang=${encodeURIComponent(language)}`;
-
-        if (language === 'en') {
-            url = `https://api.wiktapi.dev/v1/${language}/word/${encodeURIComponent(word)}/pronunciations?lang=${encodeURIComponent(language)}`;
-        }
+        const url = `${API_BASE_URL}/v1/${language}/word/${encodeURIComponent(word)}/pronunciations?lang=${encodeURIComponent(language)}`;
 
         const res = await timedFetch(url);
         if (!res.ok) {
@@ -163,16 +158,9 @@ async function fetchPhonetic(word: string, language: string): Promise<string | u
  *
  */
 async function fetchFromWiktapi(word: string, language: string): Promise<WordEntry> {
-    // e.g. GET https://api.wiktapi.dev/v1/nl/word/hond/definitions?lang=nl
+    // e.g. GET https://dict.wordbankapp.com/v1/nl/word/hond/definitions?lang=nl
 
-    // Hosted on the pi for other languages, 
-    // but for English we use the public wiktapi.dev instance since the pi's English edition is incomplete.
-    // TODO: still replace later after everything is hosted on digital ocean
-    let url = `${API_BASE_URL}/v1/${language}/word/${encodeURIComponent(word)}/definitions?lang=${encodeURIComponent(language)}`;
-    // const url = `${API_BASE_URL}/v1/${language}/word/${encodeURIComponent(word)}/definitions?lang=${encodeURIComponent(language)}`;
-    if (language === 'en') {
-        url = `https://api.wiktapi.dev/v1/${language}/word/${encodeURIComponent(word)}/definitions?lang=${encodeURIComponent(language)}`;
-    }
+    const url = `${API_BASE_URL}/v1/${language}/word/${encodeURIComponent(word)}/definitions?lang=${encodeURIComponent(language)}`;
 
     const res = await timedFetch(url);
     if (!res.ok) {
@@ -248,10 +236,14 @@ const SUGGESTIONS_TIMEOUT_MS = 3000;
  * route. Resolves to `[]` on ANY failure — timeout, network, non-200, bad
  * JSON — and never throws.
  *
- * Non-English suggestions only actually work with EXPO_PUBLIC_DICT_API_URL set
- * to a self-hosted instance — the public instance's `/search` route is
- * currently confirmed non-functional (see docs/dictionary-api.md), so against
- * the public default this always resolves to `[]` after the timeout below.
+ * English deliberately goes to Datamuse, not to our own `/search`: Datamuse
+ * ranks by frequency (`flo` → flourish, flow, flora), while `/search` returns
+ * raw prefix matches in storage order (`flo` → FLO, FLO/FLO), which reads as
+ * broken in an autocomplete.
+ *
+ * Non-English suggestions now work against the default instance for the
+ * editions it carries (`fr`, `nl`); any other language resolves to `[]`,
+ * since a missing edition matches nothing.
  *
  * @param {string} prefix The characters typed so far.
  * @param {string} language The dictionary language code.
