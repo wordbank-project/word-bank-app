@@ -9,7 +9,7 @@ _Part of the [Word Bank](https://github.com/wordbank-project/word-bank) project.
 [![Download for Android (beta)](https://img.shields.io/badge/Download-Android%20(beta)-208AEF?logo=android&logoColor=white)](https://github.com/wordbank-project/word-bank-app/releases/latest)
 [![Open the web app](https://img.shields.io/badge/Open-Web%20app-208AEF?logo=googlechrome&logoColor=white)](https://app.wordbankapp.com)
 
-_iOS — coming soon · F-Droid — planned_
+_[iOS](https://www.apple.com/benl/app-store/) — coming soon · [F-Droid](https://f-droid.org/) — planned_
 
 ## What it is
 
