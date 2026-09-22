@@ -61,15 +61,18 @@ Same data, rendered by shields.io, no setup:
 
 ## 3. Intent, from the site: PostHog
 
-`word-bank-site` already instruments every link that points at the release. Each carries:
+`word-bank-site` instruments the whole path to a download, in two steps:
 
-```
-data-ph-event="download_click"
-data-ph-platform="android" | "web"
-data-ph-location="hero" | "download_section"
-```
+| Event | Fired by | Means |
+|---|---|---|
+| `download_scroll` | the hero's "Download for Android" button, and the header's "Get the app" CTA (as `cta_get_app_click`) | someone wants the app and jumped to the Download section |
+| `download_click` | the Download section's APK link | someone actually left for the release page |
 
-So PostHog answers a question GitHub cannot: **where on the page people decide to download**, and how many visitors get that far at all. The `data-ph-location` split exists specifically to compare the hero button against the dedicated Download section.
+Both carry `data-ph-platform` (`android` / `web`) and `data-ph-location` (`hero` / `download_section`).
+
+This split matters: the hero button no longer links to the release directly — it scrolls to the Download section, where the QR and the real link live. So **only `download_click` means intent to download**; counting the hero button as one would inflate the number with people who merely scrolled.
+
+The drop-off between the two is the site's own funnel: lots of `download_scroll` with little `download_click` means the Download section isn't converting.
 
 The URLs themselves live in one place — `ANDROID_RELEASE_URL` and `WEB_APP_URL` in `word-bank-site/src/content.ts` — so a new call site should import from there and keep the same `data-ph-*` attributes, or it will silently drop out of these numbers.
 
