@@ -20,8 +20,8 @@
       "channel": "preview",
       "env": {
         "APP_VARIANT": "preview",
-        "EXPO_PUBLIC_DICT_API_URL": "https://your-api.example.com",
-        "EXPO_PUBLIC_WORDS_FEED_API_URL": "https://your-words-server.example.com"
+        "EXPO_PUBLIC_DICT_API_URL": "https://dict.wordbankapp.com",
+        "EXPO_PUBLIC_WORDS_FEED_API_URL": "https://words.wordbankapp.com/v1"
       }
     },
     "production": {
@@ -29,8 +29,8 @@
       "channel": "production",
       "env": {
         "APP_VARIANT": "production",
-        "EXPO_PUBLIC_DICT_API_URL": "https://your-api.example.com",
-        "EXPO_PUBLIC_WORDS_FEED_API_URL": "https://your-words-server.example.com"
+        "EXPO_PUBLIC_DICT_API_URL": "https://dict.wordbankapp.com",
+        "EXPO_PUBLIC_WORDS_FEED_API_URL": "https://words.wordbankapp.com/v1"
       }
     }
   }
