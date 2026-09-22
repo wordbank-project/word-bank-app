@@ -32,7 +32,7 @@ const DONATE_LINKS: { name: string; description: string; href: string }[] = [
 ];
 
 const REPO_URL = "https://github.com/wordbank-project/word-bank";
-const SITE_URL = "https://word-bank-vault.netlify.app";
+const SITE_URL = "https://wordbankapp.com";
 const SHARE_MESSAGE =
     "Word Bank — turn the books you read into vocabulary you keep. Free, open source, offline.";
 
@@ -42,11 +42,13 @@ type LinkRowProps = {
     href?: string;
     onPress?: () => void;
     first?: boolean;
+    external?: boolean; // opens href in a new tab on web; native already opens external URLs in the system browser regardless
 };
 
 // A settings-style row with a title + one-line blurb, leading somewhere (an
 // external URL via expo-router, or an onPress action like the share sheet).
-function LinkRow({ label, description, href, onPress, first }: LinkRowProps) {
+// `external` opts the row into opening in a new tab on web.
+function LinkRow({ label, description, href, onPress, first, external }: LinkRowProps) {
     const inner = (
         <View className={`flex-row items-center gap-2 px-3.5 py-3 ${!first ? "border-t border-border" : ""}`}>
             <View className="flex-1 gap-0.5">
@@ -58,9 +60,15 @@ function LinkRow({ label, description, href, onPress, first }: LinkRowProps) {
     );
 
     if (href) {
+        // `target` on <Link asChild> never reaches the DOM: react-native-web's View only
+        // reads a nested `hrefAttrs` object, but Link's asChild path spreads `target` as a
+        // bare prop instead — so it's passed directly to the Pressable child here instead.
+        // react-native-web reads hrefAttrs off props at runtime but doesn't declare it on
+        // PressableProps, so it needs a cast here.
+        const webLinkProps = external ? ({ hrefAttrs: { target: "_blank" } } as object) : {};
         return (
             <Link href={href as Href} asChild>
-                <Pressable>{inner}</Pressable>
+                <Pressable {...webLinkProps}>{inner}</Pressable>
             </Link>
         );
     }
@@ -142,6 +150,12 @@ export default function SupportScreen() {
                     label="Tell a fellow reader"
                     description="Word Bank grows by word of mouth — share it with someone who reads."
                     onPress={handleShare}
+                />
+                <LinkRow
+                    label="Website"
+                    description="wordbankapp.com — the place to send anyone who wants to know more."
+                    href={SITE_URL}
+                    external
                 />
             </Section>
 
