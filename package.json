@@ -19,7 +19,7 @@
     "build:android": "npx eas build --platform android --profile development",
     "build:ios": "npx eas build --platform ios --profile development",
     "build:apk": "npx eas build --platform android --profile preview",
-    "build:dev": "npx eas build --platform android --profile development",
+    "build:dev:android": "npx eas build --platform android --profile development",
     "build:dev:ios": "npx eas build --platform ios --profile development",
     "build:apk:local:dev": "APP_VARIANT=development expo prebuild --platform android --clean && (cd android && ./gradlew assembleDebug) && mkdir -p builds/dev && cp android/app/build/outputs/apk/debug/app-debug.apk builds/dev/ && echo '\\nAPK: builds/dev/app-debug.apk'",
     "build:apk:local:preview": "APP_VARIANT=preview expo prebuild --platform android --clean && (cd android && ./gradlew assembleRelease) && mkdir -p builds/preview && cp android/app/build/outputs/apk/release/app-release.apk builds/preview/ && APP_VARIANT=development expo prebuild --platform android --clean --no-install && echo '\\nAPK: builds/preview/app-release.apk'",
