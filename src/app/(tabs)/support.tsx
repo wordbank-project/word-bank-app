@@ -9,11 +9,12 @@ import { Pressable, ScrollView, Share, Text, View } from "react-native";
 // (gate via app.config.js `extra`, same seam as the FDROID flag).
 // TODO: confirm the Liberapay / Ko-fi / Buy Me a Coffee handles after registering.
 const DONATE_LINKS: { name: string; description: string; href: string }[] = [
-    {
-        name: "GitHub Sponsors",
-        description: "Recurring or one-time support through your GitHub account — no fees.",
-        href: "https://github.com/sponsors/jensrot",
-    },
+    // Hidden until the account is set up.
+    // {
+    //     name: "GitHub Sponsors",
+    //     description: "Recurring or one-time support through your GitHub account — no fees.",
+    //     href: "https://github.com/sponsors/jensrot",
+    // },
     {
         name: "Liberapay",
         description: "Recurring donations on an open-source platform — no fees.",
@@ -24,11 +25,12 @@ const DONATE_LINKS: { name: string; description: string; href: string }[] = [
         description: "A quick one-off tip — no account needed.",
         href: "https://ko-fi.com/jensrot",
     },
-    {
-        name: "Buy Me a Coffee",
-        description: "Buy a coffee's worth of support in a couple of taps.",
-        href: "https://buymeacoffee.com/jensrot",
-    },
+    // Hidden until the account is set up.
+    // {
+    //     name: "Buy Me a Coffee",
+    //     description: "Buy a coffee's worth of support in a couple of taps.",
+    //     href: "https://buymeacoffee.com/jensrot",
+    // },
 ];
 
 const REPO_URL = "https://github.com/wordbank-project/word-bank";
