@@ -378,7 +378,7 @@ export default function MemoryWordsScreen() {
                 <View className="my-8 items-center gap-4 px-8">
                     <Text className="text-2xl font-bold text-fg">Round complete!</Text>
                     <Text className="text-lg text-body">
-                        You knew {knewCount}/{deck.length} words
+                        {knewCount === deck.length ? "You knew all words" : `You knew ${knewCount}/${deck.length} words`}
                     </Text>
                     <Pressable onPress={startRound} className="mt-2 items-center rounded-xl bg-accent px-6 py-3.5">
                         <Text className="font-semibold text-white">Practice again</Text>
