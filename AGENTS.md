@@ -197,6 +197,14 @@ The odd numbers are the previous values preserved: NativeWind resolves `1rem` to
 
 **Multiline** inputs (`p-2.5 text-sm` book notes / review / sentence) keep the plain paired line-height on both platforms — it sets line spacing, and top-aligned text has nothing to be centred against.
 
+### ⚠️ `adjustsFontSizeToFit` does nothing on web
+
+React Native Web ignores `adjustsFontSizeToFit`/`minimumFontScale`, so a label that shrinks to fit on iOS/Android is simply ellipsized on web (seen on the Read List's "Currently reading" filter). For any label that must fit a fixed-width pill, use [`FitText`](src/components/FitText.tsx) instead of a bare `<Text adjustsFontSizeToFit>` — it keeps the native prop on iOS/Android and measures + scales on web.
+
+Two pitfalls it already avoids, worth knowing if you touch it:
+- **Measure the container, never the text.** An earlier version measured a `self-stretch` wrapper that ended up shrink-wrapping the label: each shrink narrowed the measured width, which shrank the label again — a feedback loop down to the minimum (even "All" rendered tiny). The wrapper is `w-full` so its width comes from the `flex-1` pill alone.
+- **Measure at the size you render.** The web font size is always set inline from the `fontSize` prop, so the canvas measurement and the rendered text agree — a size coming only from the class could differ and throw the fit off.
+
 Raw color values still come from `Colors[scheme]` (indexed via `useColorScheme()`) for the cases above. `ACCENT`, `Colors`, and `Fonts` live in [styles/global.ts](src/styles/global.ts). `Fonts` maps semantic roles (`serif`, `mono`, `sans`, `rounded`) to platform font families — currently `Fonts.serif` for book titles and `Fonts.mono` for phonetics/IPA and the language code.
 
 ## Code style

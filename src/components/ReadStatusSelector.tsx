@@ -1,7 +1,9 @@
 import type { ReadStatus } from "@/models/read-list-book";
 import { READ_STATUS_LABELS, READ_STATUS_ORDER } from "@/models/read-list-book";
 
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+
+import FitText from "@/components/FitText";
 
 type ReadStatusSelectorProps = {
     value: ReadStatus;
@@ -22,14 +24,9 @@ export default function ReadStatusSelector({ value, onChange }: ReadStatusSelect
                         accessibilityState={{ selected }}
                         accessibilityLabel={READ_STATUS_LABELS[status]}
                     >
-                        <Text
-                            className={`text-[13px] font-semibold ${selected ? "text-white" : "text-muted"}`}
-                            numberOfLines={1}
-                            adjustsFontSizeToFit
-                            minimumFontScale={0.7}
-                        >
+                        <FitText className={`text-[13px] font-semibold ${selected ? "text-white" : "text-muted"}`} fontSize={13}>
                             {READ_STATUS_LABELS[status]}
-                        </Text>
+                        </FitText>
                     </Pressable>
                 );
             })}

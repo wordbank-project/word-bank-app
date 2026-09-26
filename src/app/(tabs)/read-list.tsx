@@ -19,6 +19,7 @@ import { ACCENT } from "@/styles/global";
 import { openBook } from "@/utils/open-book";
 import { openAddBookMenu } from "@/utils/open-add-book-menu";
 
+import FitText from "@/components/FitText";
 import ReadListItem from "@/components/ReadListItem";
 
 // The filter buttons shown at the top: "All" plus one per reading status.
@@ -169,14 +170,9 @@ export default function ReadListScreen() {
                             accessibilityRole="button"
                             accessibilityState={{ selected }}
                         >
-                            <Text
-                                className={`text-xs font-semibold ${selected ? "text-white" : "text-muted"}`}
-                                numberOfLines={1}
-                                adjustsFontSizeToFit
-                                minimumFontScale={0.7}
-                            >
+                            <FitText className={`text-xs font-semibold ${selected ? "text-white" : "text-muted"}`} fontSize={12}>
                                 {label}
-                            </Text>
+                            </FitText>
                         </Pressable>
                     );
                 })}

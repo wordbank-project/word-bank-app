@@ -1,4 +1,6 @@
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
+
+import FitText from "@/components/FitText";
 
 type ChipProps = {
     label: string;
@@ -23,14 +25,9 @@ export default function Chip({ label, selected, onPress }: ChipProps) {
             accessibilityRole="button"
             accessibilityState={{ selected }}
         >
-            <Text
-                className={`text-xs font-semibold ${selected ? "text-white" : "text-muted"}`}
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.7}
-            >
+            <FitText className={`text-xs font-semibold ${selected ? "text-white" : "text-muted"}`} fontSize={12}>
                 {label}
-            </Text>
+            </FitText>
         </Pressable>
     );
 }
