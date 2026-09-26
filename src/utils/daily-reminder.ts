@@ -154,7 +154,7 @@ export async function rescheduleDailyReminder(
         return;
     }
     const text: string = knewCount === total
-        ? "You knew every word in your last practice — keep it up! 📚"
+        ? "You knew all words in your last practice — keep it up! 📚"
         : `You knew ${knewCount}/${total} words in your last practice — let's practice again! 📚`;
     await scheduleDailyReminder(text, hour, minute);
 }
