@@ -106,3 +106,13 @@
         --color-tab-inactive: #9ba1a6;
     }
 }
+
+/* Web only: focused text fields (React Native Web renders TextInput as <input>/<textarea>)
+   get the accent blue instead of the browser's default focus ring, which on macOS follows
+   the system accent colour (orange, purple, ...) and clashes with the app. The ring stays
+   visible for keyboard users; only its colour changes. Native ignores element selectors. */
+input:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -1px;
+}
