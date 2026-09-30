@@ -42,7 +42,7 @@ import { useWordSuggestions } from "@/hooks/use-word-suggestions";
 
 import { Colors, Fonts } from "@/styles/global";
 
-import { LanguageModalSkeleton, NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/skeletons/BookDetailSkeletons";
+import { EditDetailsSkeleton, LanguageModalSkeleton, NoteCardSkeleton, ReadStatusSkeleton, SaveButtonSkeleton, WordCardSkeletons, WordCountSkeleton } from "@/components/skeletons/BookDetailSkeletons";
 import ClearableTextInput from "@/components/ClearableTextInput";
 import CoverImage from "@/components/CoverImage";
 import CoverPlaceholder from "@/components/CoverPlaceholder";
@@ -845,7 +845,9 @@ export default function BookDetail() {
                                             {words.length} {words.length === 1 ? 'word' : 'words'}
                                         </Text>
                                     )}
-                                    {isCustomBook && (
+                                    {isCustomBook && (loadingEntry ? (
+                                        <EditDetailsSkeleton />
+                                    ) : (
                                         <Pressable
                                             onPress={() => {
                                                 // Seed the edit form from the current, authoritative values
@@ -863,7 +865,7 @@ export default function BookDetail() {
                                         >
                                             <Text className="text-[13px] font-medium text-accent">Edit details</Text>
                                         </Pressable>
-                                    )}
+                                    ))}
                                     {words.length > 0 && (
                                         <Pressable
                                             onPress={() => scrollRef.current?.scrollTo({ y: bookNotesY.current, animated: true })}

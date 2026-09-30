@@ -70,6 +70,19 @@ export function WordCountSkeleton() {
     );
 }
 
+// Placeholder for a custom book's header "Edit details" link while the
+// read-list entry loads — the form seeds from the title/author/year that load
+// corrects, so the link isn't offered until then.
+export function EditDetailsSkeleton() {
+    const animStyle = usePulse();
+
+    return (
+        <Reanimated.View style={animStyle} className="mt-0.5 self-start">
+            <View className="rounded bg-cover-placeholder" style={{ width: 72, height: 13 }} />
+        </Reanimated.View>
+    );
+}
+
 // Placeholder for a LanguageModal trigger row while its saved language hasn't
 // loaded yet (see useSavedLanguage's languageReady / book.tsx's own
 // translateToLanguageReady) — keeps the row's chrome (border, label) and only
