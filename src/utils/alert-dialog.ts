@@ -9,8 +9,8 @@ import type { DontShowAgainOptions } from "@/models/dont-show-again";
 // alert renders through a dedicated centered Modal instead (AlertDialogBridge,
 // mounted at the app root) — mirrors how show-action-sheet.ts backs its
 // imperative API with a root bridge. Web uses `window.confirm` instead of
-// `window.alert` so it gets a real Cancel too (still no room for a checkbox —
-// `dontShowAgain` is native-only either way).
+// `window.alert` so it gets a real Cancel too (still no room for a checkbox, so
+// on web an OK on a `dontShowAgain` alert is remembered as if it were checked).
 
 type AlertDialogOptions = {
     dontShowAgain?: DontShowAgainOptions;
@@ -52,12 +52,12 @@ export function registerAlertDialog(fn: ShowDialogFn): () => void {
  * Shows a Cancel + OK dialog on every platform — `window.confirm` on web, a
  * native alert (dismissable by tapping outside it or the Android back button
  * too) on iOS/Android. Optionally adds a "don't show again" checkbox (native
- * only) whose choice is persisted — once checked, future calls with the same
- * `dontShowAgain.id` skip the alert entirely.
+ * only) whose choice is persisted — once checked (or, on web, once OK is
+ * clicked), future calls with the same `dontShowAgain.id` skip the alert entirely.
  *
  * @param {string} title The alert's title.
  * @param {string} [message] The alert's body text.
- * @param {AlertDialogOptions} [options] `dontShowAgain` adds the checkbox (native only) and keys its persisted state; `onAcknowledge` fires when OK is tapped, including when the alert was skipped for being already-dismissed; `onCancel` fires when Cancel (or, native-only, the backdrop/back button) closes it instead — the caller's follow-up action belongs in one of these, not after this call.
+ * @param {AlertDialogOptions} [options] `dontShowAgain` adds the checkbox (native only; on web OK persists it instead) and keys its persisted state; `onAcknowledge` fires when OK is tapped, including when the alert was skipped for being already-dismissed; `onCancel` fires when Cancel (or, native-only, the backdrop/back button) closes it instead — the caller's follow-up action belongs in one of these, not after this call.
  *
  * @returns {Promise<void>} Resolves once the alert has been shown (or skipped) and, on web, dismissed.
  *
@@ -68,8 +68,14 @@ export async function alertDialog(title: string, message?: string, options?: Ale
         return;
     }
     if (Platform.OS === "web") {
-        const confirmed = window.confirm(message ? `${title}\n\n${message}` : title);
-        if (confirmed) {
+        const confirmedDialog: boolean = window.confirm(message ? `${title}\n\n${message}` : title);
+        if (confirmedDialog) {
+            // web has no room for a "don't show again" checkbox: treat OK as checking it,
+            // so users aren't repeatedly warned about the same thing
+            if (options?.dontShowAgain) {
+                dismissAlert(options.dontShowAgain.id)
+                    .catch((error) => (console.error(error)));
+            }
             options?.onAcknowledge?.();
         } else {
             options?.onCancel?.();

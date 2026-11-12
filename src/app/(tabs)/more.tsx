@@ -174,7 +174,7 @@ function handleComingSoon(feature: string): void {
 
 /**
  * Shows a one-time "here's what this does" notice (with a "don't show again"
- * checkbox), then kicks off the actual export.
+ * checkbox natively; on web the first OK is remembered), then kicks off the actual export.
  *
  * @returns {void} Returns nothing — the notice's acknowledgement drives `exportData`.
  *
@@ -192,7 +192,7 @@ function handleExportData(): void {
 
 /**
  * Shows a one-time "here's what this does" notice (with a "don't show again"
- * checkbox), then kicks off the import file picker.
+ * checkbox natively; on web the first OK is remembered), then kicks off the import file picker.
  *
  * @returns {void} Returns nothing — the notice's acknowledgement drives `importData`.
  *

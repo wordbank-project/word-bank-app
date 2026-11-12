@@ -23,8 +23,8 @@ import { fetchMostSavedWords } from '@/utils/api/words-feed-api';
  * since it's also useful before revealing to explain what "Tap to reveal"
  * even is.
  *
- * @returns {void} Returns nothing — shows the dialog (or skips it silently if
- * already dismissed, per alertDialog's own contract).
+ * @returns {void} Returns nothing — shows the dialog 
+ * (or skips it silently if already dismissed, per alertDialog's own contract).
  *
  */
 function handleInfoPress(): void {

@@ -33,6 +33,7 @@ import { fetchSuggestions } from "@/utils/api/suggestions-api";
 import { translateWord } from "@/utils/api/translate-api";
 import { fetchDefinition } from "@/utils/api/words-api";
 import { postWordToFeed } from "@/utils/api/words-feed-api";
+import { alertDialog } from "@/utils/alert-dialog";
 
 import { HIGHLIGHT_BORDER_STYLE, useHighlightFlash } from "@/hooks/use-highlight-flash";
 import { useResolvedSuggestions } from "@/hooks/use-resolved-suggestions";
@@ -484,6 +485,27 @@ export default function BookDetail() {
         await upsertReadListBook(buildReadListEntry({ bookNotes: trimmedNotes || undefined }));
         setInReadList(true);
         setEditingBookNotes(false);
+    /**
+     * Shows a one-time heads-up that the notes leave the device (natively via
+     * "don't show again", on web remembered after the first OK), then asks the server to explain them.
+     *
+     * @returns {void} Returns nothing — the heads-up's acknowledgement starts the request.
+     *
+     */
+    function handleAnalyzeBookNotes(): void {
+        alertDialog(
+            "Analyze your notes",
+            "Your book notes, plus this book's title and author, are sent to the Word Bank server for an AI explanation. Nothing else is sent.",
+            {
+                dontShowAgain: { id: "analyze-book-notes", checkboxLabel: "Don't show this again" },
+                onAcknowledge: () => {
+                    // Starts the AI analysis and scroll the insight card into view
+                    runBookNotesAnalysis().catch((error) => (console.error(error)));
+                    scrollCardIntoView(bookNotesY.current + reviewY.current + 16); // Scroll to the AI insight card
+                },
+            },
+        ).catch((error) => (console.error(error)));
+    }
     }
 
     function handleSelectLanguage(language: Language): void {
