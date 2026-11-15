@@ -95,17 +95,19 @@ export default function CustomBookScreen() {
     useEffect(() => {
         if (titleQueryParam) {
             setTitle(titleQueryParam);
+            setAuthorPlaceholder('');
+            setYearPlaceholder('');
             router.setParams({ title: undefined });
         }
     }, [titleQueryParam]);
 
     useEffect(() => {
-        if (!matchedSuggestion) {
+        if (!matchedSuggestion || title) {
             return;
         }
         setAuthorPlaceholder(matchedSuggestion.author);
         setYearPlaceholder(matchedSuggestion.year);
-    }, [matchedSuggestion]);
+    }, [matchedSuggestion, title]);
 
     async function handlePickImage(): Promise<void> {
         const uri = await pickCoverImage(coverUri !== null);
@@ -195,7 +197,7 @@ export default function CustomBookScreen() {
                         <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Author</Text>
                         <ClearableTextInput
                             className="rounded-lg border border-border-input bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg"
-                            placeholder={authorPlaceholder || "Loading..."}
+                            placeholder={authorPlaceholder || (title ? "Author" : "Loading...")}
                             placeholderTextColor={placeholderColor}
                             value={author}
                             onChangeText={setAuthor}
@@ -207,7 +209,7 @@ export default function CustomBookScreen() {
                         <Text className="text-[13px] font-semibold uppercase tracking-[0.5px] text-muted">Year</Text>
                         <ClearableTextInput
                             className="rounded-lg border border-border-input bg-input pt-3 pr-3.5 pb-3 pl-3.5 text-[14px] android:leading-[21px] text-fg"
-                            placeholder={yearPlaceholder || "Loading..."}
+                            placeholder={yearPlaceholder || (title ? "Year" : "Loading...")}
                             placeholderTextColor={placeholderColor}
                             value={year}
                             onChangeText={validateCustomInput}
