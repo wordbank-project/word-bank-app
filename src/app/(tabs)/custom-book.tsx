@@ -25,22 +25,23 @@ import { openBook } from '@/utils/open-book';
 import { pickCoverImage } from '@/utils/pick-cover-image';
 import { fetchSuggestions } from '@/utils/api/suggestions-api';
 import { sanitizeYearInput } from '@/utils/numeric-text-input';
+import { yearsAgo } from '@/utils/date';
 
 import { useIsFocused } from '@react-navigation/native';
 
 import type { SuggestedBook } from '@/models/suggestion';
 
 const RANDOM_BOOKS_WITH_AUTHORS_AND_YEARS: SuggestedBook[] = [
-    { title: "My Reading Notes", author: "John Doe", year: "2020" },
-    { title: "Reflections on Life", author: "Jane Smith", year: "2018" },
-    { title: "The Art of Learning", author: "Albert Johnson", year: "2019" },
-    { title: "Journeys and Discoveries", author: "Emily Davis", year: "2021" },
-    { title: "Thoughts and Musings", author: "Michael Brown", year: "2017" },
-    { title: "The World Through My Eyes", author: "Sarah Wilson", year: "2022" },
-    { title: "Lessons from the Past", author: "David Lee", year: "2016" },
-    { title: "Adventures in Knowledge", author: "Laura Martinez", year: "2023" },
-    { title: "The Mind's Eye", author: "Christopher Garcia", year: "2015" },
-    { title: "Exploring the Unknown", author: "Patricia Anderson", year: "2024" },
+    { title: "My Reading Notes", author: "John Doe", year: yearsAgo(0) },
+    { title: "Reflections on Life", author: "Jane Smith", year: yearsAgo(0) },
+    { title: "The Art of Learning", author: "Albert Johnson", year: yearsAgo(7) },
+    { title: "Journeys and Discoveries", author: "Emily Davis", year: yearsAgo(5) },
+    { title: "Thoughts and Musings", author: "Michael Brown", year: yearsAgo(9) },
+    { title: "The World Through My Eyes", author: "Sarah Wilson", year: yearsAgo(4) },
+    { title: "Lessons from the Past", author: "David Lee", year: yearsAgo(10) },
+    { title: "Adventures in Knowledge", author: "Laura Martinez", year: yearsAgo(3) },
+    { title: "The Mind's Eye", author: "Christopher Garcia", year: yearsAgo(11) },
+    { title: "Exploring the Unknown", author: "Patricia Anderson", year: yearsAgo(2) },
 ];
 
 export default function CustomBookScreen() {

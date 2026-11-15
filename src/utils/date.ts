@@ -1,6 +1,6 @@
 // Small date/time helpers shared by anything that needs to build or display a
-// time-of-day value — currently the Memory tab's daily reminder (picking and
-// showing its fire time).
+// time-of-day value, or a year relative to today — currently the Memory tab's
+// daily reminder (picking and showing its fire time) and custom-book's example books.
 
 /**
  * Builds today's date stamped at the given hour/minute, with seconds and
@@ -29,4 +29,16 @@ export function dateFromTime(hour: number, minute: number): Date {
  */
 export function formatTime(hour: number, minute: number): string {
     return dateFromTime(hour, minute).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+/**
+ * Formats a year relative to the current one, 
+ * e.g. for example data that shouldn't go stale.
+ *
+ * @param {number} years How many years before the current year (0 = this year).
+ * @returns {string} The year as a string, e.g. "2024".
+ *
+ */
+export function yearsAgo(years: number): string {
+    return String(new Date().getFullYear() - years);
 }
