@@ -11,6 +11,7 @@ export default function HomeScreen() {
         loadingMore,
         searched,
         loadMoreError,
+        query,
         search,
         loadMore,
         retryLoadMore,
@@ -30,6 +31,7 @@ export default function HomeScreen() {
                 searched={searched}
                 loadingMore={loadingMore}
                 loadMoreError={loadMoreError}
+                query={query}
                 onLoadMore={loadMore}
                 onRetryLoadMore={retryLoadMore}
                 header={header}

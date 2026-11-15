@@ -46,6 +46,7 @@ type BooksListProps = {
     searched?: boolean;
     loadingMore?: boolean;
     loadMoreError?: boolean;
+    query?: string;
     onLoadMore?: () => void;
     onRetryLoadMore?: () => void;
     header?: React.ReactElement;
@@ -59,6 +60,7 @@ export default function BooksList({
     searched,
     loadingMore,
     loadMoreError,
+    query,
     onLoadMore,
     onRetryLoadMore,
     header,
@@ -84,7 +86,8 @@ export default function BooksList({
                     loading ? (
                         <BookSkeletons />
                     ) : searched && books.length === 0 ? (
-                        <Link href="/custom-book" className="text-center text-sm text-accent">
+                        // If a search has been performed and no books were found, send the query as a param to the custom-book screen.
+                        <Link href={{ pathname: '/custom-book', params: { title: query } }} className="text-center text-sm text-accent">
                             Book not found. Add it?
                         </Link>
                     ) : (

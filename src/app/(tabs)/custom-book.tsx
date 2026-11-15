@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardToolbar } from 'react-native-keyboard-controller';
 
@@ -88,6 +88,17 @@ export default function CustomBookScreen() {
     // from the AI or fallback list array of objects.
     const [authorPlaceholder, setAuthorPlaceholder] = useState<string>('');
     const [yearPlaceholder, setYearPlaceholder] = useState<string>('');
+
+    // If the user navigates to this screen with a title query param, prefill the title input with it.
+    const { title: titleQueryParam } = useLocalSearchParams<{ title?: string }>();
+
+    useEffect(() => {
+        if (titleQueryParam) {
+            setTitle(titleQueryParam);
+            router.setParams({ title: undefined });
+        }
+    }, [titleQueryParam]);
+
     useEffect(() => {
         if (!matchedSuggestion) {
             return;

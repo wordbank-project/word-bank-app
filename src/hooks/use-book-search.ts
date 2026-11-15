@@ -13,6 +13,7 @@ export type BookSearchState = {
     loadingMore: boolean;
     searched: boolean;
     loadMoreError: boolean;
+    query: string;
     search: (query: string) => void;
     loadMore: () => void;
     retryLoadMore: () => void;
@@ -24,6 +25,7 @@ export function useBookSearch(): BookSearchState {
     const [loadingMore, setLoadingMore] = useState(false);
     const [searched, setSearched] = useState(false);
     const [loadMoreError, setLoadMoreError] = useState(false);
+    const [query, setQuery] = useState<string>('');
 
     // Refs hold pagination state so onEndReached closures always read current values
     const offsetRef = useRef(0);
@@ -48,6 +50,7 @@ export function useBookSearch(): BookSearchState {
         setSearched(true);
         setBooks([]);
         setLoadMoreError(false);
+        setQuery(trimmed);
 
         try {
             const res = await fetch(
@@ -105,5 +108,5 @@ export function useBookSearch(): BookSearchState {
         fetchNextPage();
     }
 
-    return { books, loading, loadingMore, searched, loadMoreError, search, loadMore, retryLoadMore };
+    return { books, loading, loadingMore, searched, loadMoreError, query, search, loadMore, retryLoadMore };
 }
