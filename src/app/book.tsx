@@ -52,6 +52,7 @@ import LanguageModal from "@/components/modal/LanguageModal";
 import ReadStatusSelector from "@/components/ReadStatusSelector";
 import StarRating from "@/components/StarRating";
 import { alertDialog } from "@/utils/alert-dialog";
+import LoadingDots from "@/components/LoadingDots";
 
 const RANDOM_DICTIONARY_WORDS = [
     "serendipity",
@@ -1122,9 +1123,7 @@ export default function BookDetail() {
                                     </Pressable>
                                 </React.Fragment>
                             ) : bookNotes ? (
-                                <Pressable onPress={() => { setBookNotesDraft(bookNotes); setEditingBookNotes(true); scrollCardIntoView(bookNotesY.current); }}>
-                                    <Text className="text-sm leading-5 text-meta">{bookNotes}</Text>
-                                </Pressable>
+                                                    <LoadingDots className="text-[13px] font-semibold text-accent" />
                             ) : (
                                 <Pressable onPress={() => { setBookNotesDraft(''); setEditingBookNotes(true); scrollCardIntoView(bookNotesY.current); }}>
                                     <Text className="text-sm text-muted">Add book notes…</Text>
