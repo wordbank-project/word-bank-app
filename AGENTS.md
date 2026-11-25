@@ -35,7 +35,7 @@ storage/                    # AsyncStorage wrappers (the data layer)
 models/                     # TypeScript types + constant data
 utils/                       # pure helpers + API clients
 global.css                   # NativeWind semantic theme tokens (light @theme + dark media-query overrides)
-styles/global.ts             # Colors (light/dark) for raw color-value props, ACCENT, Fonts (serif/mono/etc.)
+styles/global.ts             # Colors (light/dark) for raw color-value props, ACCENT, SELECTION_PROPS, Fonts (serif/mono/etc.)
 ```
 
 ## Routing
@@ -68,7 +68,7 @@ styles/global.ts             # Colors (light/dark) for raw color-value props, AC
 | `ReadListItem` | `React.memo` card for a saved book: cover, status badge, word count, `StarRating` (read-only, when a "read" book has a rating), remove |
 | `ReadStatusSelector` | Three-pill selector for Want / Currently reading / Have Read |
 | `WordListItem` | `React.memo` card on the Words List: word + phonetic + part of speech + definition + the saved sentence (when present) + source-book label |
-| `ClearableTextInput` | `TextInput` wrapper with a ✕ button that appears while there's text and clears the field; reused by all search/add inputs |
+| `ClearableTextInput` | `TextInput` wrapper with a ✕ button that appears while there's text and clears the field; reused by all search/add inputs. Applies `SELECTION_PROPS` (brand-blue selection) by default |
 | `SearchButton` | The accent action button shared by Search, Words List, and Analyze. `label`/`loadingLabel` customize the idle/loading text (defaults `"Search"`/`"Searching"`); `suggestion` (the live typewriter word/title/sentence) echoes what an empty-field press will actually submit, e.g. `Analyze "…"` |
 | `SearchBar` | Book search field; types out an AI-generated example title (in the saved dictionary language, via `useSavedLanguage`) as a placeholder, accepted on empty submit |
 | `LanguageModal` | Bottom-sheet dictionary-language picker with search; a self-contained trigger row (label + current selection) + the picker itself. Reused on `book.tsx` (dictionary language + "Translate to") and `analyze.tsx` |
@@ -205,7 +205,7 @@ Two pitfalls it already avoids, worth knowing if you touch it:
 - **Measure the container, never the text.** An earlier version measured a `self-stretch` wrapper that ended up shrink-wrapping the label: each shrink narrowed the measured width, which shrank the label again — a feedback loop down to the minimum (even "All" rendered tiny). The wrapper is `w-full` so its width comes from the `flex-1` pill alone.
 - **Measure at the size you render.** The web font size is always set inline from the `fontSize` prop, so the canvas measurement and the rendered text agree — a size coming only from the class could differ and throw the fit off.
 
-Raw color values still come from `Colors[scheme]` (indexed via `useColorScheme()`) for the cases above. `ACCENT`, `Colors`, and `Fonts` live in [styles/global.ts](src/styles/global.ts). `Fonts` maps semantic roles (`serif`, `mono`, `sans`, `rounded`) to platform font families — currently `Fonts.serif` for book titles and `Fonts.mono` for phonetics/IPA and the language code.
+Raw color values still come from `Colors[scheme]` (indexed via `useColorScheme()`) for the cases above. `ACCENT`, `SELECTION_PROPS`, `Colors`, and `Fonts` live in [styles/global.ts](src/styles/global.ts). `SELECTION_PROPS` gives text selection (highlight, cursor, handles) the brand blue — `ClearableTextInput` applies it, so any new **raw** `TextInput` should spread `{...SELECTION_PROPS}` too (the highlight is translucent on Android, which draws it in exactly the given color). `Fonts` maps semantic roles (`serif`, `mono`, `sans`, `rounded`) to platform font families — currently `Fonts.serif` for book titles and `Fonts.mono` for phonetics/IPA and the language code.
 
 ## Code style
 

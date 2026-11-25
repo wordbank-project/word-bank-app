@@ -1,5 +1,7 @@
 import { Pressable, Text, TextInput, View, type TextInputProps } from "react-native";
 
+import { SELECTION_PROPS } from "@/styles/global";
+
 type ClearableTextInputProps = TextInputProps & {
     // Layout classes for the wrapper (e.g. flex/width/margin). The input's own
     // look is passed via `className`, like a normal TextInput.
@@ -8,6 +10,13 @@ type ClearableTextInputProps = TextInputProps & {
 
 // A TextInput with a clear (✕) button that appears only while there's text.
 // Tapping it empties the field via onChangeText(''), and the button disappears.
+// Selection uses the brand blue (SELECTION_PROPS); a caller's own props still win.
+//
+// The ✕ is always mounted and the input's padding never changes — the button is
+// only hidden (and made untouchable/unfocusable) while the field is empty. On
+// Android, mounting the button and re-padding the EditText in the same frames as
+// focusing it (a field opened for editing with text already in it) swallowed the
+// keyboard: the field got focus but the soft keyboard never opened.
 export default function ClearableTextInput({
     containerClassName,
     className,
@@ -20,6 +29,7 @@ export default function ClearableTextInput({
     return (
         <View className={`relative justify-center ${containerClassName ?? ""}`}>
             <TextInput
+                {...SELECTION_PROPS}
                 {...props}
                 value={value}
                 onChangeText={onChangeText}

@@ -7,7 +7,7 @@ import { useColorScheme } from "@/context/theme-context";
 import type { Language } from "@/models/language";
 import { LANGUAGES } from "@/models/language";
 
-import { Colors, Fonts } from "@/styles/global";
+import { Colors, Fonts, SELECTION_PROPS } from "@/styles/global";
 
 type LanguageModalProps = {
     selected: Language;
@@ -117,6 +117,7 @@ export default function LanguageModal({ selected, onSelect, label = "Dictionary 
                             </View>
 
                             <TextInput
+                                {...SELECTION_PROPS}
                                 ref={searchInputRef}
                                 className="mx-4 rounded-lg border border-border-input bg-input p-3 text-[15px] text-fg"
                                 placeholder="Search languages..."

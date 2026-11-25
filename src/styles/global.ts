@@ -1,6 +1,15 @@
-import { Platform } from 'react-native';
+import { Platform, type TextInputProps } from 'react-native';
 
 export const ACCENT = '#208AEF';
+
+// Brand-blue text selection (highlight, cursor, drag handles) for every TextInput —
+// spread it onto a raw TextInput; ClearableTextInput already applies it. Android
+// draws the highlight in exactly this color, so it's translucent (~30%) there to keep
+// the selected text readable; iOS fades the highlight itself.
+export const SELECTION_PROPS: TextInputProps = Platform.select<TextInputProps>({
+    android: { selectionColor: `${ACCENT}4D`, cursorColor: ACCENT, selectionHandleColor: ACCENT },
+    default: { selectionColor: ACCENT },
+});
 
 export const Colors = {
     light: {

@@ -6,7 +6,7 @@ import { useColorScheme } from "@/context/theme-context";
 
 import type { WordDefinition } from "@/models/word-entry";
 
-import { Colors } from "@/styles/global";
+import { Colors, SELECTION_PROPS } from "@/styles/global";
 import { posColor, capitalizePosLabel } from "@/utils/part-of-speech";
 
 type DefinitionModalProps = {
@@ -119,6 +119,7 @@ export default function DefinitionModal({ visible, onClose, word, definitions, s
                         </View>
 
                         <TextInput
+                            {...SELECTION_PROPS}
                             className="mx-4 rounded-lg border border-border-input bg-input p-3 text-[14px] android:leading-[21px] text-fg"
                             placeholder="Search definitions..."
                             placeholderTextColor={placeholderColor}
