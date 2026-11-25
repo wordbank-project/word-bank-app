@@ -104,6 +104,7 @@ export default function TabLayout() {
                                 {children}
                             </Text>
                         ),
+                        tabBarLabelPosition: 'below-icon', // On every width the icon and text should always be below eachother
                     }}
                 >
                     <Tabs.Screen
