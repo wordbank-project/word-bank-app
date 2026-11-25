@@ -6,6 +6,8 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { ScrollProvider } from '@/context/scroll-context';
 import { useColorScheme } from '@/context/theme-context';
 
+import { useTabBarHeight } from '@/hooks/use-tab-bar-height';
+
 import { Colors } from '@/styles/global';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -49,6 +51,7 @@ function renderTabIcon(name: ComponentProps<typeof Ionicons>['name']) {
 export default function TabLayout() {
     const colorScheme = useColorScheme();
     const C = Colors[colorScheme];
+    const tabBar = useTabBarHeight();
 
     return (
         <ScrollProvider>
@@ -90,8 +93,8 @@ export default function TabLayout() {
                         tabBarStyle: {
                             backgroundColor: Platform.OS === 'web' ? 'transparent' : C.background,
                             borderTopColor: C.border,
-                            paddingBottom: 50,
-                            height: 105,
+                            paddingBottom: tabBar.paddingBottom,
+                            height: tabBar.height,
                         },
                         tabBarActiveTintColor: C.tint,
                         tabBarInactiveTintColor: C.tabIconDefault,

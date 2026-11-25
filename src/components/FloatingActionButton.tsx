@@ -1,17 +1,18 @@
 import { useScrollContext } from "@/context/scroll-context";
+import { useTabBarHeight } from "@/hooks/use-tab-bar-height";
 import { openAddBookMenu } from "@/utils/open-add-book-menu";
 import { usePathname } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Pressable, Text } from "react-native";
 
 const SCROLL_THRESHOLD = 20;
-const TAB_BAR_HEIGHT = 105;
 
 export default function FloatingActionButton() {
     const { scrollY, scrollToTop } = useScrollContext();
     const showScrollTop = scrollY > SCROLL_THRESHOLD;
 
     const pathname = usePathname();
+    const tabBar = useTabBarHeight();
 
     const opacity = useRef(new Animated.Value(1)).current;
     const prevShowScrollTop = useRef(showScrollTop);
@@ -37,7 +38,7 @@ export default function FloatingActionButton() {
 
     return (
         // Animated opacity + computed bottom stay inline; FAB sits 16dp above the tab bar.
-        <Animated.View style={{ position: 'absolute', right: 16, zIndex: 100, opacity, bottom: TAB_BAR_HEIGHT + 16 }}>
+        <Animated.View style={{ position: 'absolute', right: 16, zIndex: 100, opacity, bottom: tabBar.height + 16 }}>
             <Pressable
                 className="h-14 w-14 items-center justify-center rounded-full bg-accent"
                 // Native shadow/elevation kept inline (not expressible as classes reliably).

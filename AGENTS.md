@@ -101,6 +101,7 @@ styles/global.ts             # Colors (light/dark) for raw color-value props, AC
 | `usePulse` | Reanimated opacity-pulse style for loading skeletons |
 | `useTypewriterPlaceholder(words, active)` | Types out one example word/title/sentence then stops; returns `{ text, word }` so a screen can show `text` as the placeholder and accept `word` on Enter/empty-submit. Pauses when `active` is false (field non-empty or screen blurred) |
 | `useWordSuggestions(input, langCode, enabled)` | Debounced (250ms) as-you-type dictionary suggestions for the add-word input: min 2 chars, max 6, AbortController-per-request, `[]` on any failure. Backs the suggestion chip row on the book screen |
+| `useTabBarHeight()` | The tab bar's `{ height, paddingBottom }`: a 56px content height plus the bottom safe-area inset (min 8px padding), so the bar is compact on web / 3-button Android and clears the home indicator / gesture bar elsewhere. Shared by `(tabs)/_layout.tsx`'s `tabBarStyle` and `FloatingActionButton` (which floats 16px above it) so the two can't drift |
 | `useBackTo(href)` | Routes the Android hardware/gesture back press to `href` while the screen is focused, instead of the default back behavior. No-op on iOS/web (no hardware back button). Used by screens reached from a fixed place (e.g. `analyze.tsx`/`support.tsx` → back to `/more`) so back doesn't depend on navigation history |
 
 ## Context (`src/context/`)
