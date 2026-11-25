@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Pressable, Text, View, type StyleProp, type ViewStyle } from "react-native";
 
 import LoadingDots from "@/components/LoadingDots";
