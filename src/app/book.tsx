@@ -72,36 +72,34 @@ const RANDOM_DICTIONARY_WORDS = [
     "diligent",
 ];
 
-// Short-lived "✓ +1" pop above the add-word row after a successful add — the
-// juice that makes saving a word feel rewarding. `trigger` increments per add,
-// so back-to-back adds each replay the spring-in (keyed remount) and the pop
-// auto-hides via reanimated's exiting fade.
-function AddCelebration({ trigger }: { trigger: number }) {
-    const [visible, setVisible] = useState<boolean>(false);
+// Highlight keys for the two book-level cards. Word cards use the word itself as
+// their key; the "__" prefix keeps these from ever clashing with a saved word.
+const BOOK_NOTES_HIGHLIGHT_KEY = "__book-notes";
+const REVIEW_HIGHLIGHT_KEY = "__review";
 
-    useEffect(() => {
-        if (trigger === 0) {
-            return;
-        }
-        setVisible(true);
-        const timeout = setTimeout(() => setVisible(false), 900);
-        return () => clearTimeout(timeout);
-    }, [trigger]);
+// How long the definition picker's `slide` Modal takes to close, and how long an
+// animated scrollTo takes to land — waited out before flashing the glow.
+const PICKER_CLOSE_MS = 350;
+const SCROLL_SETTLE_MS = 300;
 
-    if (!visible) {
-        return null;
+// Upper bound on waiting for the keyboard to close, so a dismiss() that never
+// resolves (e.g. an odd keyboard/OEM) can't swallow the glow.
+const KEYBOARD_CLOSE_MAX_MS = 800;
+
+/**
+ * Closes the keyboard and resolves once it's fully hidden (right away if it
+ * already is), or after KEYBOARD_CLOSE_MAX_MS at the latest. Web has no
+ * on-screen keyboard to wait for, so it resolves at once.
+ *
+ * @returns {Promise<void>} Resolves when the keyboard is gone.
+ *
+ */
+function dismissKeyboard(): Promise<void> {
+    if (Platform.OS === "web") {
+        Keyboard.dismiss();
+        return Promise.resolve();
     }
-    return (
-        <Animated.View
-            key={trigger}
-            entering={ZoomIn.springify()}
-            exiting={FadeOut.duration(200)}
-            pointerEvents="none"
-            className="absolute -top-4 right-4 z-10 rounded-full bg-accent px-3 py-1"
-        >
-            <Text className="text-[13px] font-bold text-white">✓ +1</Text>
-        </Animated.View>
-    );
+    return Promise.race([KeyboardController.dismiss(), waitFor(KEYBOARD_CLOSE_MAX_MS)]);
 }
 
 export default function BookDetail() {
@@ -167,8 +165,6 @@ export default function BookDetail() {
     const [draftYear, setDraftYear] = useState<string>('');
 
     const [wordAdded, setWordAdded] = useState<boolean>(false);
-    // Increments on every successful add; drives the ✓ +1 celebration pop.
-    const [celebrateTick, setCelebrateTick] = useState<number>(0);
 
     // Book-level review and general notes (saved on the read-list entry).
     const [review, setReview] = useState<string>('');
@@ -579,7 +575,6 @@ export default function BookDetail() {
                 phonetic: newEntry.phonetic,
             });
             setWordAdded(true);
-            setCelebrateTick((t) => t + 1);
             setInput("");
 
             // Goes to the edit screen of the newly added word to encourage users to add sentence and notes.
@@ -730,7 +725,6 @@ export default function BookDetail() {
             <View className="flex-1 bg-background">
                 {!editingWord && (
                     <View className="flex-row gap-2 p-3 pb-1">
-                        <AddCelebration trigger={celebrateTick} />
                         <ClearableTextInput
                             containerClassName="flex-1"
                             className="rounded-lg border border-border-input bg-input p-3 text-[14px] android:leading-[21px] text-fg"
